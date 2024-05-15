@@ -1,0 +1,5 @@
+<library path="lib/libnav2_smac_planner">
+	<class name="smac_planner/HybridAStar" type="nav2_smac_planner::SmacPlannerHybrid" base_class_type="mbf_costmap_core::CostmapPlanner">
+	  <description>Hybrid-A* SMAC planner</description>
+	</class>
+</library>

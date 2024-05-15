@@ -1,0 +1,5 @@
+<library path="lib/libnav2_smac_planner_lattice">
+	<class name="smac_planner/LatticeAStar" type="nav2_smac_planner::SmacPlannerLattice" base_class_type="mbf_costmap_core::CostmapPlanner">
+	  <description>State Lattice SMAC planner</description>
+	</class>
+</library>
