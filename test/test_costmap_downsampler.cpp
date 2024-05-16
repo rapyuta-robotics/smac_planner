@@ -18,7 +18,7 @@
 #include "gtest/gtest.h"
 #include <ros/ros.h>
 #include "costmap_2d/costmap_2d.h"
-#include "nav2_smac_planner/costmap_downsampler.hpp"
+#include "smac_planner/costmap_downsampler.hpp"
 
 class RclCppFixture
 {
@@ -32,7 +32,7 @@ TEST(CostmapDownsampler, costmap_downsample_test)
 {
   nav2_util::LifecycleNode::SharedPtr node = std::make_shared<nav2_util::LifecycleNode>(
     "CostmapDownsamplerTest");
-  nav2_smac_planner::CostmapDownsampler downsampler;
+  smac_planner::CostmapDownsampler downsampler;
 
   // create basic costmap
   costmap_2d::Costmap2D costmapA(10, 10, 0.05, 0.0, 0.0, 0);

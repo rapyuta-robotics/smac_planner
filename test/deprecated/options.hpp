@@ -17,17 +17,17 @@
 
 #include <string>
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 /**
- * @struct nav2_smac_planner::SmootherParams
+ * @struct smac_planner::SmootherParams
  * @brief Parameters for the smoother cost function
  */
 struct SmootherParams
 {
   /**
-   * @brief A constructor for nav2_smac_planner::SmootherParams
+   * @brief A constructor for smac_planner::SmootherParams
    */
   SmootherParams()
   {
@@ -70,7 +70,7 @@ struct SmootherParams
 };
 
 /**
- * @struct nav2_smac_planner::OptimizerParams
+ * @struct smac_planner::OptimizerParams
  * @brief Parameters for the ceres optimizer
  */
 struct OptimizerParams
@@ -200,6 +200,6 @@ struct OptimizerParams
   AdvancedParams advanced;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
 #endif  // DEPRECATED__OPTIONS_HPP_

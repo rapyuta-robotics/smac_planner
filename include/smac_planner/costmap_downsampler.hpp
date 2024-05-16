@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__COSTMAP_DOWNSAMPLER_HPP_
-#define NAV2_SMAC_PLANNER__COSTMAP_DOWNSAMPLER_HPP_
+#ifndef SMAC_PLANNER__COSTMAP_DOWNSAMPLER_HPP_
+#define SMAC_PLANNER__COSTMAP_DOWNSAMPLER_HPP_
 
 #include <algorithm>
 #include <string>
 #include <memory>
 
 #include "costmap_2d/costmap_2d_ros.h"
-#include "nav2_smac_planner/constants.hpp"
+#include "smac_planner/constants.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 /**
- * @class nav2_smac_planner::CostmapDownsampler
+ * @class smac_planner::CostmapDownsampler
  * @brief A costmap downsampler for more efficient path planning
  */
 class CostmapDownsampler
@@ -113,6 +113,6 @@ protected:
   std::unique_ptr<costmap_2d::Costmap2DPublisher> _downsampled_costmap_pub;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__COSTMAP_DOWNSAMPLER_HPP_
+#endif  // SMAC_PLANNER__COSTMAP_DOWNSAMPLER_HPP_

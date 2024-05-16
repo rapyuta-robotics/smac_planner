@@ -18,11 +18,11 @@
 #include <limits>
 #include <algorithm>
 
-#include "nav2_smac_planner/smac_planner_2d.hpp"
+#include "smac_planner/smac_planner_2d.hpp"
 
 // #define BENCHMARK_TESTING
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 using namespace std::chrono;  // NOLINT
 using rcl_interfaces::ParameterType;
@@ -414,7 +414,7 @@ SmacPlanner2D::dynamicParametersCallback(std::vector<ros::Parameter> parameters)
   return result;
 }
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
 #include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(nav2_smac_planner::SmacPlanner2D, mbf_costmap_core::CostmapPlanner)
+PLUGINLIB_EXPORT_CLASS(smac_planner::SmacPlanner2D, mbf_costmap_core::CostmapPlanner)

@@ -21,10 +21,10 @@
 #include <ros/ros.h>
 #include "costmap_2d/costmap_2d.h"
 #include "geometry_msgs/PoseStamped.h"
-#include "nav2_smac_planner/node_hybrid.hpp"
-#include "nav2_smac_planner/a_star.hpp"
-#include "nav2_smac_planner/collision_checker.hpp"
-#include "nav2_smac_planner/smac_planner_lattice.hpp"
+#include "smac_planner/node_hybrid.hpp"
+#include "smac_planner/a_star.hpp"
+#include "smac_planner/collision_checker.hpp"
+#include "smac_planner/smac_planner_lattice.hpp"
 
 class RclCppFixture
 {
@@ -35,7 +35,7 @@ public:
 RclCppFixture g_rclcppfixture;
 
 // Simple wrapper to be able to call a private member
-class LatticeWrap : public nav2_smac_planner::SmacPlannerLattice
+class LatticeWrap : public smac_planner::SmacPlannerLattice
 {
 public:
   void callDynamicParams(std::vector<ros::Parameter> parameters)
@@ -69,7 +69,7 @@ TEST(SmacTest, test_smac_lattice)
   goal.pose.position.x = 1.0;
   goal.pose.position.y = 1.0;
   goal.pose.orientation.w = 1.0;
-  auto planner = std::make_unique<nav2_smac_planner::SmacPlannerLattice>();
+  auto planner = std::make_unique<smac_planner::SmacPlannerLattice>();
   try {
     // Expect to throw due to invalid prims file in param
     planner->configure(nodeLattice, "test", nullptr, costmap_ros);

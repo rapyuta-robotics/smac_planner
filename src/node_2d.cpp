@@ -13,12 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#include "nav2_smac_planner/node_2d.hpp"
+#include "smac_planner/node_2d.hpp"
 
 #include <vector>
 #include <limits>
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 // defining static member for all instance to share
@@ -108,7 +108,7 @@ void Node2D::initMotionModel(
 }
 
 void Node2D::getNeighbors(
-  std::function<bool(const unsigned int &, nav2_smac_planner::Node2D * &)> & NeighborGetter,
+  std::function<bool(const unsigned int &, smac_planner::Node2D * &)> & NeighborGetter,
   GridCollisionChecker * collision_checker,
   const bool & traverse_unknown,
   NodeVector & neighbors)
@@ -167,4 +167,4 @@ bool Node2D::backtracePath(CoordinateVector & path)
   return true;
 }
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner

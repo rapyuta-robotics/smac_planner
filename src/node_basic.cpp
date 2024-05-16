@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#include "nav2_smac_planner/node_basic.hpp"
+#include "smac_planner/node_basic.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 template<typename Node2D>
@@ -75,4 +75,4 @@ template class NodeBasic<Node2D>;
 template class NodeBasic<NodeHybrid>;
 template class NodeBasic<NodeLattice>;
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner

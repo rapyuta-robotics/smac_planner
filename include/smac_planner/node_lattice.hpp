@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__NODE_LATTICE_HPP_
-#define NAV2_SMAC_PLANNER__NODE_LATTICE_HPP_
+#ifndef SMAC_PLANNER__NODE_LATTICE_HPP_
+#define SMAC_PLANNER__NODE_LATTICE_HPP_
 
 #include <math.h>
 
@@ -31,13 +31,13 @@
 #include "ompl/base/StateSpace.h"
 #include "angles/angles.h"
 
-#include "nav2_smac_planner/constants.hpp"
-#include "nav2_smac_planner/types.hpp"
-#include "nav2_smac_planner/collision_checker.hpp"
-#include "nav2_smac_planner/node_hybrid.hpp"
-#include "nav2_smac_planner/utils.hpp"
+#include "smac_planner/constants.hpp"
+#include "smac_planner/types.hpp"
+#include "smac_planner/collision_checker.hpp"
+#include "smac_planner/node_hybrid.hpp"
+#include "smac_planner/utils.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 // forward declare
@@ -45,13 +45,13 @@ class NodeLattice;
 class NodeHybrid;
 
 /**
- * @struct nav2_smac_planner::LatticeMotionTable
+ * @struct smac_planner::LatticeMotionTable
  * @brief A table of motion primitives and related functions
  */
 struct LatticeMotionTable
 {
   /**
-   * @brief A constructor for nav2_smac_planner::LatticeMotionTable
+   * @brief A constructor for smac_planner::LatticeMotionTable
    */
   LatticeMotionTable() {}
 
@@ -116,7 +116,7 @@ struct LatticeMotionTable
 };
 
 /**
- * @class nav2_smac_planner::NodeLattice
+ * @class smac_planner::NodeLattice
  * @brief NodeLattice implementation for graph, Hybrid-A*
  */
 class NodeLattice
@@ -129,13 +129,13 @@ public:
   typedef NodeHybrid::CoordinateVector CoordinateVector;
 
   /**
-   * @brief A constructor for nav2_smac_planner::NodeLattice
+   * @brief A constructor for smac_planner::NodeLattice
    * @param index The index of this node for self-reference
    */
   explicit NodeLattice(const unsigned int index);
 
   /**
-   * @brief A destructor for nav2_smac_planner::NodeLattice
+   * @brief A destructor for smac_planner::NodeLattice
    */
   ~NodeLattice();
 
@@ -397,7 +397,7 @@ public:
    */
   void getNeighbors(
     std::function<bool(const unsigned int &,
-    nav2_smac_planner::NodeLattice * &)> & validity_checker,
+    smac_planner::NodeLattice * &)> & validity_checker,
     GridCollisionChecker * collision_checker,
     const bool & traverse_unknown,
     NodeVector & neighbors);
@@ -431,6 +431,6 @@ private:
   bool _backwards;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__NODE_LATTICE_HPP_
+#endif  // SMAC_PLANNER__NODE_LATTICE_HPP_

@@ -19,11 +19,11 @@
 #include <limits>
 
 #include "Eigen/Core"
-#include "nav2_smac_planner/smac_planner_lattice.hpp"
+#include "smac_planner/smac_planner_lattice.hpp"
 
 // #define BENCHMARK_TESTING
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 using namespace std::chrono;  // NOLINT
@@ -81,7 +81,7 @@ void SmacPlannerLattice::initialize(
   // Default to a well rounded model: 16 bin, 0.4m turning radius, ackermann model
   nav2_util::declare_parameter_if_not_declared(
     node, name + ".lattice_filepath", ros::ParameterValue(
-      ros::package::getPath("nav2_smac_planner") +
+      ros::package::getPath("smac_planner") +
       "/sample_primitives/5cm_resolution/0.5m_turning_radius/ackermann/output.json"));
   node->get_parameter(name + ".lattice_filepath", _search_info.lattice_filepath);
   nav2_util::declare_parameter_if_not_declared(
@@ -571,7 +571,7 @@ SmacPlannerLattice::dynamicParametersCallback(std::vector<ros::Parameter> parame
   return result;
 }
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
 #include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(nav2_smac_planner::SmacPlannerLattice, mbf_costmap_core::CostmapPlanner)
+PLUGINLIB_EXPORT_CLASS(smac_planner::SmacPlannerLattice, mbf_costmap_core::CostmapPlanner)

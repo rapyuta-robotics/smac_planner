@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__TYPES_HPP_
-#define NAV2_SMAC_PLANNER__TYPES_HPP_
+#ifndef SMAC_PLANNER__TYPES_HPP_
+#define SMAC_PLANNER__TYPES_HPP_
 
 #include <vector>
 #include <utility>
@@ -21,13 +21,13 @@
 #include <memory>
 
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 typedef std::pair<float, unsigned int> NodeHeuristicPair;
 
 /**
- * @struct nav2_smac_planner::SearchInfo
+ * @struct smac_planner::SearchInfo
  * @brief Search properties and penalties
  */
 struct SearchInfo
@@ -52,7 +52,7 @@ struct SearchInfo
 };
 
 /**
- * @struct nav2_smac_planner::TurnDirection
+ * @struct smac_planner::TurnDirection
  * @brief A struct with the motion primitive's direction embedded
  */
 enum struct TurnDirection
@@ -67,18 +67,18 @@ enum struct TurnDirection
 };
 
 /**
- * @struct nav2_smac_planner::MotionPose
+ * @struct smac_planner::MotionPose
  * @brief A struct for poses in motion primitives
  */
 struct MotionPose
 {
   /**
-   * @brief A constructor for nav2_smac_planner::MotionPose
+   * @brief A constructor for smac_planner::MotionPose
    */
   MotionPose() {}
 
   /**
-   * @brief A constructor for nav2_smac_planner::MotionPose
+   * @brief A constructor for smac_planner::MotionPose
    * @param x X pose
    * @param y Y pose
    * @param theta Angle of pose
@@ -103,7 +103,7 @@ struct MotionPose
 typedef std::vector<MotionPose> MotionPoses;
 
 /**
- * @struct nav2_smac_planner::LatticeMetadata
+ * @struct smac_planner::LatticeMetadata
  * @brief A struct of all lattice metadata
  */
 struct LatticeMetadata
@@ -117,7 +117,7 @@ struct LatticeMetadata
 };
 
 /**
- * @struct nav2_smac_planner::MotionPrimitive
+ * @struct smac_planner::MotionPrimitive
  * @brief A struct of all motion primitive data
  */
 struct MotionPrimitive
@@ -136,6 +136,6 @@ struct MotionPrimitive
 typedef std::vector<MotionPrimitive> MotionPrimitives;
 typedef std::vector<MotionPrimitive *> MotionPrimitivePtrs;
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__TYPES_HPP_
+#endif  // SMAC_PLANNER__TYPES_HPP_

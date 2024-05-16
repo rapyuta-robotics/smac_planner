@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__ANALYTIC_EXPANSION_HPP_
-#define NAV2_SMAC_PLANNER__ANALYTIC_EXPANSION_HPP_
+#ifndef SMAC_PLANNER__ANALYTIC_EXPANSION_HPP_
+#define SMAC_PLANNER__ANALYTIC_EXPANSION_HPP_
 
 #include <string>
 #include <vector>
 #include <list>
 #include <memory>
 
-#include "nav2_smac_planner/node_2d.hpp"
-#include "nav2_smac_planner/node_hybrid.hpp"
-#include "nav2_smac_planner/node_lattice.hpp"
-#include "nav2_smac_planner/types.hpp"
-#include "nav2_smac_planner/constants.hpp"
+#include "smac_planner/node_2d.hpp"
+#include "smac_planner/node_hybrid.hpp"
+#include "smac_planner/node_lattice.hpp"
+#include "smac_planner/types.hpp"
+#include "smac_planner/constants.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 template<typename NodeT>
@@ -38,7 +38,7 @@ public:
   typedef std::function<bool (const unsigned int &, NodeT * &)> NodeGetter;
 
   /**
-   * @struct nav2_smac_planner::AnalyticExpansion::AnalyticExpansionNodes
+   * @struct smac_planner::AnalyticExpansion::AnalyticExpansionNodes
    * @brief Analytic expansion nodes and associated metadata
    */
   struct AnalyticExpansionNode
@@ -129,6 +129,6 @@ protected:
   std::list<std::unique_ptr<NodeT>> _detached_nodes;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__ANALYTIC_EXPANSION_HPP_
+#endif  // SMAC_PLANNER__ANALYTIC_EXPANSION_HPP_

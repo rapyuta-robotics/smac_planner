@@ -31,8 +31,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef NAV2_SMAC_PLANNER__THIRDPARTY__ROBIN_HOOD_H_
-#define NAV2_SMAC_PLANNER__THIRDPARTY__ROBIN_HOOD_H_
+#ifndef SMAC_PLANNER__THIRDPARTY__ROBIN_HOOD_H_
+#define SMAC_PLANNER__THIRDPARTY__ROBIN_HOOD_H_
 
 // see https://semver.org/
 #define ROBIN_HOOD_VERSION_MAJOR 3  // for incompatible API changes
@@ -2536,4 +2536,4 @@ using unordered_set = detail::Table < sizeof(Key) <= sizeof(size_t) * 6 &&
 }  // namespace robin_hood
 /* *INDENT-ON* */
 
-#endif  // NAV2_SMAC_PLANNER__THIRDPARTY__ROBIN_HOOD_H_
+#endif  // SMAC_PLANNER__THIRDPARTY__ROBIN_HOOD_H_

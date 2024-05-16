@@ -20,9 +20,9 @@
 #include <vector>
 #include <memory>
 
-#include "nav2_smac_planner/analytic_expansion.hpp"
+#include "smac_planner/analytic_expansion.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 template<typename NodeT>
@@ -367,4 +367,4 @@ template class AnalyticExpansion<Node2D>;
 template class AnalyticExpansion<NodeHybrid>;
 template class AnalyticExpansion<NodeLattice>;
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner

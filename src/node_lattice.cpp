@@ -27,9 +27,9 @@
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
 
-#include "nav2_smac_planner/node_lattice.hpp"
+#include "smac_planner/node_lattice.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 // defining static member for all instance to share
@@ -467,7 +467,7 @@ void NodeLattice::precomputeDistanceHeuristic(
 }
 
 void NodeLattice::getNeighbors(
-  std::function<bool(const unsigned int &, nav2_smac_planner::NodeLattice * &)> & NeighborGetter,
+  std::function<bool(const unsigned int &, smac_planner::NodeLattice * &)> & NeighborGetter,
   GridCollisionChecker * collision_checker,
   const bool & traverse_unknown,
   NodeVector & neighbors)
@@ -591,4 +591,4 @@ void NodeLattice::addNodeToPath(
   }
 }
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__SMOOTHER_HPP_
-#define NAV2_SMAC_PLANNER__SMOOTHER_HPP_
+#ifndef SMAC_PLANNER__SMOOTHER_HPP_
+#define SMAC_PLANNER__SMOOTHER_HPP_
 
 #include <cmath>
 #include <vector>
@@ -24,20 +24,20 @@
 
 #include "costmap_2d/costmap_2d.h"
 #include <dynamic_reconfigure/server.h>
-#include "nav2_smac_planner/types.hpp"
-#include "nav2_smac_planner/constants.hpp"
-#include "nav2_smac_planner/SmootherConfig.h"
+#include "smac_planner/types.hpp"
+#include "smac_planner/constants.hpp"
+#include "smac_planner/SmootherConfig.h"
 #include "nav_msgs/Path.h"
 #include "angles/angles.h"
 #include "tf2/utils.h"
 #include "ompl/base/StateSpace.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 /**
- * @class nav2_smac_planner::PathSegment
+ * @class smac_planner::PathSegment
  * @brief A segment of a path in start/end indices
  */
 struct PathSegment
@@ -47,7 +47,7 @@ struct PathSegment
 };
 
 /**
- * @struct nav2_smac_planner::BoundaryPoints
+ * @struct smac_planner::BoundaryPoints
  * @brief Set of boundary condition points from expansion
  */
 struct BoundaryPoints
@@ -65,7 +65,7 @@ struct BoundaryPoints
 };
 
 /**
- * @struct nav2_smac_planner::BoundaryExpansion
+ * @struct smac_planner::BoundaryExpansion
  * @brief Boundary expansion state
  */
 struct BoundaryExpansion
@@ -82,19 +82,19 @@ typedef std::vector<geometry_msgs::PoseStamped>::iterator PathIterator;
 typedef std::vector<geometry_msgs::PoseStamped>::reverse_iterator ReversePathIterator;
 
 /**
- * @class nav2_smac_planner::Smoother
+ * @class smac_planner::Smoother
  * @brief A path smoother implementation
  */
 class Smoother
 {
 public:
   /**
-   * @brief A constructor for nav2_smac_planner::Smoother
+   * @brief A constructor for smac_planner::Smoother
    */
   explicit Smoother();
 
   /**
-   * @brief A destructor for nav2_smac_planner::Smoother
+   * @brief A destructor for smac_planner::Smoother
    */
   ~Smoother() {}
 
@@ -241,6 +241,6 @@ protected:
   ompl::base::StateSpacePtr state_space_;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__SMOOTHER_HPP_
+#endif  // SMAC_PLANNER__SMOOTHER_HPP_

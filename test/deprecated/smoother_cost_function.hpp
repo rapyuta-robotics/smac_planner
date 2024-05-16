@@ -25,17 +25,17 @@
 
 #include "ceres/ceres.h"
 #include "Eigen/Core"
-#include "nav2_smac_planner/types.hpp"
+#include "smac_planner/types.hpp"
 #include "costmap_2d/costmap_2d.h"
-#include "nav2_smac_planner/options.hpp"
+#include "smac_planner/options.hpp"
 
 #define EPSILON 0.0001
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 /**
- * @struct nav2_smac_planner::UnconstrainedSmootherCostFunction
+ * @struct smac_planner::UnconstrainedSmootherCostFunction
  * @brief Cost function for path smoothing with multiple terms
  * including curvature, smoothness, collision, and avoid obstacles.
  */
@@ -43,7 +43,7 @@ class UnconstrainedSmootherCostFunction : public ceres::FirstOrderFunction
 {
 public:
   /**
-   * @brief A constructor for nav2_smac_planner::UnconstrainedSmootherCostFunction
+   * @brief A constructor for smac_planner::UnconstrainedSmootherCostFunction
    * @param original_path Original unsmoothed path to smooth
    * @param costmap A costmap to get values for collision and obstacle avoidance
    */
@@ -81,7 +81,7 @@ public:
   struct CurvatureComputations
   {
     /**
-     * @brief A constructor for nav2_smac_planner::CurvatureComputations
+     * @brief A constructor for smac_planner::CurvatureComputations
      */
     CurvatureComputations()
     {
@@ -537,6 +537,6 @@ protected:
   // DynamicVoronoi voronoiDiagram;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
 #endif  // DEPRECATED__SMOOTHER_COST_FUNCTION_HPP_

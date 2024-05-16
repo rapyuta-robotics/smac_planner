@@ -22,18 +22,18 @@
 #include <ros/ros.h>
 #include <tf2_ros/transform_listener.h>
 #include "costmap_2d/costmap_2d.h"
-#include "nav2_smac_planner/node_hybrid.hpp"
-#include "nav2_smac_planner/node_lattice.hpp"
-#include "nav2_smac_planner/a_star.hpp"
-#include "nav2_smac_planner/collision_checker.hpp"
+#include "smac_planner/node_hybrid.hpp"
+#include "smac_planner/node_lattice.hpp"
+#include "smac_planner/a_star.hpp"
+#include "smac_planner/collision_checker.hpp"
 
 tf2_ros::Buffer g_tf2_buffer;
 
 TEST(AStarTest, test_a_star_2d)
 {
-  nav2_smac_planner::SearchInfo info;
-  nav2_smac_planner::AStarAlgorithm<nav2_smac_planner::Node2D> a_star(
-    nav2_smac_planner::MotionModel::TWOD, info);
+  smac_planner::SearchInfo info;
+  smac_planner::AStarAlgorithm<smac_planner::Node2D> a_star(
+    smac_planner::MotionModel::TWOD, info);
   int max_iterations = 10000;
   float tolerance = 0.0;
   float some_tolerance = 20.0;
@@ -65,12 +65,12 @@ TEST(AStarTest, test_a_star_2d)
     };
 
   // functional case testing
-  std::unique_ptr<nav2_smac_planner::GridCollisionChecker> checker =
-    std::make_unique<nav2_smac_planner::GridCollisionChecker>(costmap_ros, 1);
+  std::unique_ptr<smac_planner::GridCollisionChecker> checker =
+    std::make_unique<smac_planner::GridCollisionChecker>(costmap_ros, 1);
   a_star.setCollisionChecker(checker.get());
   a_star.setStart(20u, 20u, 0);
   a_star.setGoal(80u, 80u, 0);
-  nav2_smac_planner::Node2D::CoordinateVector path;
+  smac_planner::Node2D::CoordinateVector path;
   EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker));
   EXPECT_EQ(num_it, 2414);
 
@@ -86,8 +86,8 @@ TEST(AStarTest, test_a_star_2d)
 
   path.clear();
   // failure cases with invalid inputs
-  nav2_smac_planner::AStarAlgorithm<nav2_smac_planner::Node2D> a_star_2(
-    nav2_smac_planner::MotionModel::TWOD, info);
+  smac_planner::AStarAlgorithm<smac_planner::Node2D> a_star_2(
+    smac_planner::MotionModel::TWOD, info);
   a_star_2.initialize(
     false, max_iterations, it_on_approach, terminal_checking_interval,
     max_planning_time, 0, 1);
@@ -132,7 +132,7 @@ TEST(AStarTest, test_a_star_2d)
 
 TEST(AStarTest, test_a_star_se2)
 {
-  nav2_smac_planner::SearchInfo info;
+  smac_planner::SearchInfo info;
   info.change_penalty = 0.1;
   info.non_straight_penalty = 1.1;
   info.reverse_penalty = 2.0;
@@ -142,8 +142,8 @@ TEST(AStarTest, test_a_star_se2)
   info.analytic_expansion_ratio = 3.5;
   unsigned int size_theta = 72;
   info.cost_penalty = 1.7;
-  nav2_smac_planner::AStarAlgorithm<nav2_smac_planner::NodeHybrid> a_star(
-    nav2_smac_planner::MotionModel::DUBIN, info);
+  smac_planner::AStarAlgorithm<smac_planner::NodeHybrid> a_star(
+    smac_planner::MotionModel::DUBIN, info);
   int max_iterations = 10000;
   float tolerance = 10.0;
   int it_on_approach = 10;
@@ -169,14 +169,14 @@ TEST(AStarTest, test_a_star_se2)
   auto costmap = costmap_ros->getCostmap();
   *costmap = *costmapA;
 
-  std::unique_ptr<nav2_smac_planner::GridCollisionChecker> checker =
-    std::make_unique<nav2_smac_planner::GridCollisionChecker>(costmap_ros, size_theta);
+  std::unique_ptr<smac_planner::GridCollisionChecker> checker =
+    std::make_unique<smac_planner::GridCollisionChecker>(costmap_ros, size_theta);
 
   // functional case testing
   a_star.setCollisionChecker(checker.get());
   a_star.setStart(10u, 10u, 0u);
   a_star.setGoal(80u, 80u, 40u);
-  nav2_smac_planner::NodeHybrid::CoordinateVector path;
+  smac_planner::NodeHybrid::CoordinateVector path;
   std::unique_ptr<std::vector<std::tuple<float, float, float>>> expansions = nullptr;
   expansions = std::make_unique<std::vector<std::tuple<float, float, float>>>();
 
@@ -205,22 +205,22 @@ TEST(AStarTest, test_a_star_se2)
 
 TEST(AStarTest, test_a_star_lattice)
 {
-  nav2_smac_planner::SearchInfo info;
+  smac_planner::SearchInfo info;
   info.change_penalty = 0.05;
   info.non_straight_penalty = 1.05;
   info.reverse_penalty = 2.0;
   info.retrospective_penalty = 0.1;
   info.analytic_expansion_ratio = 3.5;
   info.lattice_filepath =
-    ros::package::getPath("nav2_smac_planner") +
+    ros::package::getPath("smac_planner") +
     "/sample_primitives/5cm_resolution/0.5m_turning_radius/ackermann" +
     "/output.json";
   info.minimum_turning_radius = 8;  // in grid coordinates 0.4/0.05
   info.analytic_expansion_max_length = 20.0;  // in grid coordinates
   unsigned int size_theta = 16;
   info.cost_penalty = 2.0;
-  nav2_smac_planner::AStarAlgorithm<nav2_smac_planner::NodeLattice> a_star(
-    nav2_smac_planner::MotionModel::STATE_LATTICE, info);
+  smac_planner::AStarAlgorithm<smac_planner::NodeLattice> a_star(
+    smac_planner::MotionModel::STATE_LATTICE, info);
   int max_iterations = 10000;
   float tolerance = 10.0;
   int it_on_approach = 10;
@@ -247,8 +247,8 @@ TEST(AStarTest, test_a_star_lattice)
   auto costmap = costmap_ros->getCostmap();
   *costmap = *costmapA;
 
-  std::unique_ptr<nav2_smac_planner::GridCollisionChecker> checker =
-    std::make_unique<nav2_smac_planner::GridCollisionChecker>(costmap_ros, size_theta);
+  std::unique_ptr<smac_planner::GridCollisionChecker> checker =
+    std::make_unique<smac_planner::GridCollisionChecker>(costmap_ros, size_theta);
 
   auto dummy_cancel_checker = []() {
       return false;
@@ -258,7 +258,7 @@ TEST(AStarTest, test_a_star_lattice)
   a_star.setCollisionChecker(checker.get());
   a_star.setStart(5u, 5u, 0u);
   a_star.setGoal(40u, 40u, 1u);
-  nav2_smac_planner::NodeLattice::CoordinateVector path;
+  smac_planner::NodeLattice::CoordinateVector path;
   EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker));
 
   // check path is the right size and collision free
@@ -277,7 +277,7 @@ TEST(AStarTest, test_a_star_lattice)
 
 TEST(AStarTest, test_se2_single_pose_path)
 {
-  nav2_smac_planner::SearchInfo info;
+  smac_planner::SearchInfo info;
   info.change_penalty = 0.1;
   info.non_straight_penalty = 1.1;
   info.reverse_penalty = 2.0;
@@ -287,8 +287,8 @@ TEST(AStarTest, test_se2_single_pose_path)
   info.analytic_expansion_ratio = 3.5;
   unsigned int size_theta = 72;
   info.cost_penalty = 1.7;
-  nav2_smac_planner::AStarAlgorithm<nav2_smac_planner::NodeHybrid> a_star(
-    nav2_smac_planner::MotionModel::DUBIN, info);
+  smac_planner::AStarAlgorithm<smac_planner::NodeHybrid> a_star(
+    smac_planner::MotionModel::DUBIN, info);
   int max_iterations = 100;
   float tolerance = 10.0;
   int it_on_approach = 10;
@@ -308,8 +308,8 @@ TEST(AStarTest, test_se2_single_pose_path)
   auto costmap = costmap_ros->getCostmap();
   *costmap = *costmapA;
 
-  std::unique_ptr<nav2_smac_planner::GridCollisionChecker> checker =
-    std::make_unique<nav2_smac_planner::GridCollisionChecker>(costmap_ros, size_theta);
+  std::unique_ptr<smac_planner::GridCollisionChecker> checker =
+    std::make_unique<smac_planner::GridCollisionChecker>(costmap_ros, size_theta);
 
   auto dummy_cancel_checker = []() {
       return false;
@@ -319,7 +319,7 @@ TEST(AStarTest, test_se2_single_pose_path)
   a_star.setStart(10u, 10u, 0u);
   // Goal is one costmap cell away
   a_star.setGoal(12u, 10u, 0u);
-  nav2_smac_planner::NodeHybrid::CoordinateVector path;
+  smac_planner::NodeHybrid::CoordinateVector path;
   EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker));
 
   // Check that the path is length one
@@ -332,23 +332,23 @@ TEST(AStarTest, test_se2_single_pose_path)
 
 TEST(AStarTest, test_constants)
 {
-  nav2_smac_planner::MotionModel mm = nav2_smac_planner::MotionModel::UNKNOWN;  // unknown
-  EXPECT_EQ(nav2_smac_planner::toString(mm), std::string("Unknown"));
-  mm = nav2_smac_planner::MotionModel::TWOD;  // 2d
-  EXPECT_EQ(nav2_smac_planner::toString(mm), std::string("2D"));
-  mm = nav2_smac_planner::MotionModel::DUBIN;  // dubin
-  EXPECT_EQ(nav2_smac_planner::toString(mm), std::string("Dubin"));
-  mm = nav2_smac_planner::MotionModel::REEDS_SHEPP;  // reeds-shepp
-  EXPECT_EQ(nav2_smac_planner::toString(mm), std::string("Reeds-Shepp"));
+  smac_planner::MotionModel mm = smac_planner::MotionModel::UNKNOWN;  // unknown
+  EXPECT_EQ(smac_planner::toString(mm), std::string("Unknown"));
+  mm = smac_planner::MotionModel::TWOD;  // 2d
+  EXPECT_EQ(smac_planner::toString(mm), std::string("2D"));
+  mm = smac_planner::MotionModel::DUBIN;  // dubin
+  EXPECT_EQ(smac_planner::toString(mm), std::string("Dubin"));
+  mm = smac_planner::MotionModel::REEDS_SHEPP;  // reeds-shepp
+  EXPECT_EQ(smac_planner::toString(mm), std::string("Reeds-Shepp"));
 
   EXPECT_EQ(
-    nav2_smac_planner::fromString(
-      "2D"), nav2_smac_planner::MotionModel::TWOD);
-  EXPECT_EQ(nav2_smac_planner::fromString("DUBIN"), nav2_smac_planner::MotionModel::DUBIN);
+    smac_planner::fromString(
+      "2D"), smac_planner::MotionModel::TWOD);
+  EXPECT_EQ(smac_planner::fromString("DUBIN"), smac_planner::MotionModel::DUBIN);
   EXPECT_EQ(
-    nav2_smac_planner::fromString(
-      "REEDS_SHEPP"), nav2_smac_planner::MotionModel::REEDS_SHEPP);
-  EXPECT_EQ(nav2_smac_planner::fromString("NONE"), nav2_smac_planner::MotionModel::UNKNOWN);
+    smac_planner::fromString(
+      "REEDS_SHEPP"), smac_planner::MotionModel::REEDS_SHEPP);
+  EXPECT_EQ(smac_planner::fromString("NONE"), smac_planner::MotionModel::UNKNOWN);
 }
 
 int main(int argc, char** argv)

@@ -13,13 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#include "nav2_smac_planner/costmap_downsampler.hpp"
+#include "smac_planner/costmap_downsampler.hpp"
 
 #include <string>
 #include <memory>
 #include <algorithm>
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 CostmapDownsampler::CostmapDownsampler()
@@ -135,4 +135,4 @@ void CostmapDownsampler::setCostOfCell(
   _downsampled_costmap->setCost(new_mx, new_my, cost);
 }
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner

@@ -20,9 +20,9 @@
 #include <tf/tf.h>
 
 #include "gtest/gtest.h"
-#include "nav2_smac_planner/utils.hpp"
+#include "smac_planner/utils.hpp"
 
-using namespace nav2_smac_planner;  // NOLINT
+using namespace smac_planner;  // NOLINT
 
 TEST(transform_footprint_to_edges, test_basic)
 {

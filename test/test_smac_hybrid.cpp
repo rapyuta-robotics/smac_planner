@@ -21,11 +21,11 @@
 #include <ros/ros.h>
 #include "costmap_2d/costmap_2d.h"
 #include "geometry_msgs/PoseStamped.h"
-#include "nav2_smac_planner/node_hybrid.hpp"
-#include "nav2_smac_planner/a_star.hpp"
-#include "nav2_smac_planner/collision_checker.hpp"
-#include "nav2_smac_planner/smac_planner_hybrid.hpp"
-#include "nav2_smac_planner/smac_planner_2d.hpp"
+#include "smac_planner/node_hybrid.hpp"
+#include "smac_planner/a_star.hpp"
+#include "smac_planner/collision_checker.hpp"
+#include "smac_planner/smac_planner_hybrid.hpp"
+#include "smac_planner/smac_planner_2d.hpp"
 
 class RclCppFixture
 {
@@ -65,7 +65,7 @@ TEST(SmacTest, test_smac_se2)
   goal.pose.position.x = 1.0;
   goal.pose.position.y = 1.0;
   goal.pose.orientation.w = 1.0;
-  auto planner = std::make_unique<nav2_smac_planner::SmacPlannerHybrid>();
+  auto planner = std::make_unique<smac_planner::SmacPlannerHybrid>();
   planner->configure(nodeSE2, "test", nullptr, costmap_ros);
   planner->activate();
 
@@ -92,7 +92,7 @@ TEST(SmacTest, test_smac_se2_reconfigure)
     std::make_shared<costmap_2d::Costmap2DROS>("global_costmap");
   costmap_ros->on_configure(rclcpp_lifecycle::State());
 
-  auto planner = std::make_unique<nav2_smac_planner::SmacPlannerHybrid>();
+  auto planner = std::make_unique<smac_planner::SmacPlannerHybrid>();
   planner->configure(nodeSE2, "test", nullptr, costmap_ros);
   planner->activate();
 

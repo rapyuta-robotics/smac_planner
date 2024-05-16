@@ -22,29 +22,29 @@
 #include <queue>
 #include <utility>
 
-#include "nav2_smac_planner/types.hpp"
-#include "nav2_smac_planner/smoother_cost_function.hpp"
+#include "smac_planner/types.hpp"
+#include "smac_planner/smoother_cost_function.hpp"
 
 #include "ceres/ceres.h"
 #include "Eigen/Core"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 /**
- * @class nav2_smac_planner::Smoother
+ * @class smac_planner::Smoother
  * @brief A Conjugate Gradient 2D path smoother implementation
  */
 class Smoother
 {
 public:
   /**
-   * @brief A constructor for nav2_smac_planner::Smoother
+   * @brief A constructor for smac_planner::Smoother
    */
   Smoother() {}
 
   /**
-   * @brief A destructor for nav2_smac_planner::Smoother
+   * @brief A destructor for smac_planner::Smoother
    */
   ~Smoother() {}
 
@@ -141,6 +141,6 @@ private:
   ceres::GradientProblemSolver::Options _options;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
 #endif  // DEPRECATED__SMOOTHER_HPP_

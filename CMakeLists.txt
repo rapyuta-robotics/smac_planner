@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(nav2_smac_planner)
+project(smac_planner)
 
 find_package(catkin REQUIRED COMPONENTS
         roscpp

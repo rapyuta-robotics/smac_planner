@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__SMAC_PLANNER_LATTICE_HPP_
-#define NAV2_SMAC_PLANNER__SMAC_PLANNER_LATTICE_HPP_
+#ifndef SMAC_PLANNER__SMAC_PLANNER_LATTICE_HPP_
+#define SMAC_PLANNER__SMAC_PLANNER_LATTICE_HPP_
 
 #include <memory>
 #include <vector>
 #include <string>
 
-#include "nav2_smac_planner/a_star.hpp"
-#include "nav2_smac_planner/smoother.hpp"
-#include "nav2_smac_planner/utils.hpp"
+#include "smac_planner/a_star.hpp"
+#include "smac_planner/smoother.hpp"
+#include "smac_planner/utils.hpp"
 #include "nav_msgs/OccupancyGrid.h"
 #include "mbf_costmap_core/costmap_planner.h"
 #include "nav_msgs/Path.h"
@@ -31,7 +31,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "tf2/utils.h"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 class SmacPlannerLattice : public mbf_costmap_core::CostmapPlanner
@@ -107,6 +107,6 @@ protected:
   ros::node_interfaces::OnSetParametersCallbackHandle::SharedPtr _dyn_params_handler;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__SMAC_PLANNER_LATTICE_HPP_
+#endif  // SMAC_PLANNER__SMAC_PLANNER_LATTICE_HPP_

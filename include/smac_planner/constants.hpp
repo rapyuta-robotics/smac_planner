@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__CONSTANTS_HPP_
-#define NAV2_SMAC_PLANNER__CONSTANTS_HPP_
+#ifndef SMAC_PLANNER__CONSTANTS_HPP_
+#define SMAC_PLANNER__CONSTANTS_HPP_
 
 #include <string>
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 enum class MotionModel
 {
@@ -65,6 +65,6 @@ const float INSCRIBED = 253.0;
 const float MAX_NON_OBSTACLE = 252.0;
 const float FREE = 0;
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__CONSTANTS_HPP_
+#endif  // SMAC_PLANNER__CONSTANTS_HPP_

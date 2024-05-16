@@ -23,30 +23,30 @@
 #include <algorithm>
 #include <utility>
 
-#include "nav2_smac_planner/types.hpp"
-#include "nav2_smac_planner/upsampler_cost_function.hpp"
-#include "nav2_smac_planner/upsampler_cost_function_nlls.hpp"
+#include "smac_planner/types.hpp"
+#include "smac_planner/upsampler_cost_function.hpp"
+#include "smac_planner/upsampler_cost_function_nlls.hpp"
 
 #include "ceres/ceres.h"
 #include "Eigen/Core"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 /**
- * @class nav2_smac_planner::Upsampler
+ * @class smac_planner::Upsampler
  * @brief A Conjugate Gradient 2D path upsampler implementation
  */
 class Upsampler
 {
 public:
   /**
-   * @brief A constructor for nav2_smac_planner::Upsampler
+   * @brief A constructor for smac_planner::Upsampler
    */
   Upsampler() {}
 
   /**
-   * @brief A destructor for nav2_smac_planner::Upsampler
+   * @brief A destructor for smac_planner::Upsampler
    */
   ~Upsampler() {}
 
@@ -208,6 +208,6 @@ private:
   ceres::GradientProblemSolver::Options _options;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
 #endif  // DEPRECATED__UPSAMPLER_HPP_

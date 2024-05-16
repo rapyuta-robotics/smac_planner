@@ -21,12 +21,12 @@
 #include "gtest/gtest.h"
 #include <ros/ros.h>
 #include "costmap_2d/costmap_2d.h"
-#include "nav2_smac_planner/node_hybrid.hpp"
-#include "nav2_smac_planner/a_star.hpp"
-#include "nav2_smac_planner/collision_checker.hpp"
-#include "nav2_smac_planner/smoother.hpp"
+#include "smac_planner/node_hybrid.hpp"
+#include "smac_planner/a_star.hpp"
+#include "smac_planner/collision_checker.hpp"
+#include "smac_planner/smoother.hpp"
 
-using namespace nav2_smac_planner;  // NOLINT
+using namespace smac_planner;  // NOLINT
 
 class RclCppFixture
 {
@@ -36,11 +36,11 @@ public:
 };
 RclCppFixture g_rclcppfixture;
 
-class SmootherWrapper : public nav2_smac_planner::Smoother
+class SmootherWrapper : public smac_planner::Smoother
 {
 public:
   explicit SmootherWrapper(const SmootherParams & params)
-  : nav2_smac_planner::Smoother(params)
+  : smac_planner::Smoother(params)
   {}
 
   std::vector<PathSegment> findDirectionalPathSegmentsWrapper(nav_msgs::Path path)
@@ -53,7 +53,7 @@ TEST(SmootherTest, test_full_smoother)
 {
   rclcpp_lifecycle::LifecycleNode::SharedPtr node =
     std::make_shared<rclcpp_lifecycle::LifecycleNode>("SmacSmootherTest");
-  nav2_smac_planner::SmootherParams params;
+  smac_planner::SmootherParams params;
   params.get(node, "test");
   double maxtime = 1.0;
 
@@ -71,7 +71,7 @@ TEST(SmootherTest, test_full_smoother)
   }
 
   // Setup A* search to get path to smooth
-  nav2_smac_planner::SearchInfo info;
+  smac_planner::SearchInfo info;
   info.change_penalty = 0.05;
   info.non_straight_penalty = 1.05;
   info.reverse_penalty = 2.0;
@@ -81,8 +81,8 @@ TEST(SmootherTest, test_full_smoother)
   info.minimum_turning_radius = 8;  // in grid coordinates 0.4/0.05
   info.analytic_expansion_max_length = 20.0;  // in grid coordinates
   unsigned int size_theta = 72;
-  nav2_smac_planner::AStarAlgorithm<nav2_smac_planner::NodeHybrid> a_star(
-    nav2_smac_planner::MotionModel::REEDS_SHEPP, info);
+  smac_planner::AStarAlgorithm<smac_planner::NodeHybrid> a_star(
+    smac_planner::MotionModel::REEDS_SHEPP, info);
   int max_iterations = 10000;
   float tolerance = 10.0;
   int it_on_approach = 10;
@@ -100,8 +100,8 @@ TEST(SmootherTest, test_full_smoother)
   auto costmapi = costmap_ros->getCostmap();
   *costmapi = *costmap;
 
-  std::unique_ptr<nav2_smac_planner::GridCollisionChecker> checker =
-    std::make_unique<nav2_smac_planner::GridCollisionChecker>(costmap_ros, size_theta, node);
+  std::unique_ptr<smac_planner::GridCollisionChecker> checker =
+    std::make_unique<smac_planner::GridCollisionChecker>(costmap_ros, size_theta, node);
 
   auto dummy_cancel_checker = []() {
       return false;
@@ -111,7 +111,7 @@ TEST(SmootherTest, test_full_smoother)
   a_star.setCollisionChecker(checker.get());
   a_star.setStart(5u, 5u, 0u);
   a_star.setGoal(45u, 45u, 36u);
-  nav2_smac_planner::NodeHybrid::CoordinateVector path;
+  smac_planner::NodeHybrid::CoordinateVector path;
   EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker));
 
   // Convert to world coordinates and get length to compare to smoothed length
@@ -129,8 +129,8 @@ TEST(SmootherTest, test_full_smoother)
   double x_m = path[path.size() - 1].x, y_m = path[path.size() - 1].y;
   plan.poses.reserve(path.size());
   for (int i = path.size() - 1; i >= 0; --i) {
-    pose.pose = nav2_smac_planner::getWorldCoords(path[i].x, path[i].y, costmap);
-    pose.pose.orientation = nav2_smac_planner::getWorldOrientation(path[i].theta);
+    pose.pose = smac_planner::getWorldCoords(path[i].x, path[i].y, costmap);
+    pose.pose.orientation = smac_planner::getWorldOrientation(path[i].theta);
     plan.poses.push_back(pose);
     initial_length += hypot(path[i].x - x_m, path[i].y - y_m);
     x_m = path[i].x;

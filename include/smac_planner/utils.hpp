@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__UTILS_HPP_
-#define NAV2_SMAC_PLANNER__UTILS_HPP_
+#ifndef SMAC_PLANNER__UTILS_HPP_
+#define SMAC_PLANNER__UTILS_HPP_
 
 #include <vector>
 #include <memory>
@@ -28,10 +28,10 @@
 #include "costmap_2d/costmap_2d_ros.h"
 #include "costmap_2d/inflation_layer.h"
 #include "visualization_msgs/MarkerArray.h"
-#include "nav2_smac_planner/types.hpp"
+#include "smac_planner/types.hpp"
 #include <ros/ros.h>
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 class Utils {
@@ -236,6 +236,6 @@ public:
   }
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__UTILS_HPP_
+#endif  // SMAC_PLANNER__UTILS_HPP_

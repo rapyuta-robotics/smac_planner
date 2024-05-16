@@ -1,5 +1,5 @@
-<library path="lib/libnav2_smac_planner_2d">
-  <class name="smac_planner/2DAStar" type="nav2_smac_planner::SmacPlanner2D" base_class_type="mbf_costmap_core::CostmapPlanner">
+<library path="lib/libsmac_planner_2d">
+  <class name="smac_planner/2DAStar" type="smac_planner::SmacPlanner2D" base_class_type="mbf_costmap_core::CostmapPlanner">
     <description>2D A* SMAC Planner</description>
   </class>
 </library>

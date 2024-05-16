@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__NODE_2D_HPP_
-#define NAV2_SMAC_PLANNER__NODE_2D_HPP_
+#ifndef SMAC_PLANNER__NODE_2D_HPP_
+#define SMAC_PLANNER__NODE_2D_HPP_
 
 #include <math.h>
 #include <vector>
@@ -24,16 +24,16 @@
 #include <utility>
 #include <functional>
 
-#include "nav2_smac_planner/types.hpp"
-#include "nav2_smac_planner/constants.hpp"
-#include "nav2_smac_planner/collision_checker.hpp"
-#include "nav2_smac_planner/node_hybrid.hpp"
+#include "smac_planner/types.hpp"
+#include "smac_planner/constants.hpp"
+#include "smac_planner/collision_checker.hpp"
+#include "smac_planner/node_hybrid.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 /**
- * @class nav2_smac_planner::Node2D
+ * @class smac_planner::Node2D
  * @brief Node2D implementation for graph
  */
 class Node2D
@@ -44,7 +44,7 @@ public:
   typedef std::vector<NodePtr> NodeVector;
 
   /**
-   * @class nav2_smac_planner::Node2D::Coordinates
+   * @class smac_planner::Node2D::Coordinates
    * @brief Node2D implementation of coordinate structure
    */
   struct Coordinates
@@ -59,13 +59,13 @@ public:
   typedef std::vector<Coordinates> CoordinateVector;
 
   /**
-   * @brief A constructor for nav2_smac_planner::Node2D
+   * @brief A constructor for smac_planner::Node2D
    * @param index The index of this node for self-reference
    */
   explicit Node2D(const unsigned int index);
 
   /**
-   * @brief A destructor for nav2_smac_planner::Node2D
+   * @brief A destructor for smac_planner::Node2D
    */
   ~Node2D();
 
@@ -253,7 +253,7 @@ public:
    * @param neighbors Vector of neighbors to be filled
    */
   void getNeighbors(
-    std::function<bool(const unsigned int &, nav2_smac_planner::Node2D * &)> & validity_checker,
+    std::function<bool(const unsigned int &, smac_planner::Node2D * &)> & validity_checker,
     GridCollisionChecker * collision_checker,
     const bool & traverse_unknown,
     NodeVector & neighbors);
@@ -277,6 +277,6 @@ private:
   bool _is_queued;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__NODE_2D_HPP_
+#endif  // SMAC_PLANNER__NODE_2D_HPP_

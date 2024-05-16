@@ -20,7 +20,7 @@
 #include <tf2_ros/transform_listener.h>
 
 #include "gtest/gtest.h"
-#include "nav2_smac_planner/collision_checker.hpp"
+#include "smac_planner/collision_checker.hpp"
 
 using namespace costmap_2d;  // NOLINT
 
@@ -43,14 +43,14 @@ TEST(collision_footprint, test_basic)
   p4.x = 0.0;
   p4.y = -0.5;
 
-  nav2_smac_planner::GridCollisionChecker::Footprint footprint = {p1, p2, p3, p4};
+  smac_planner::GridCollisionChecker::Footprint footprint = {p1, p2, p3, p4};
 
   // Convert raw costmap into a costmap ros object
   auto costmap_ros = std::make_shared<costmap_2d::Costmap2DROS>("dummy_costmap", g_tf2_buffer);
   auto costmap = costmap_ros->getCostmap();
   *costmap = *costmap_;
 
-  nav2_smac_planner::GridCollisionChecker collision_checker(costmap_ros, 72);
+  smac_planner::GridCollisionChecker collision_checker(costmap_ros, 72);
   collision_checker.setFootprint(footprint, false /*use footprint*/, 0.0);
   collision_checker.inCollision(5.0, 5.0, 0.0, false);
   float cost = collision_checker.getCost();
@@ -67,8 +67,8 @@ TEST(collision_footprint, test_point_cost)
   auto costmap = costmap_ros->getCostmap();
   *costmap = *costmap_;
 
-  nav2_smac_planner::GridCollisionChecker collision_checker(costmap_ros, 72);
-  nav2_smac_planner::GridCollisionChecker::Footprint footprint;
+  smac_planner::GridCollisionChecker collision_checker(costmap_ros, 72);
+  smac_planner::GridCollisionChecker::Footprint footprint;
   collision_checker.setFootprint(footprint, true /*radius / pointcose*/, 0.0);
 
   collision_checker.inCollision(5.0, 5.0, 0.0, false);
@@ -86,8 +86,8 @@ TEST(collision_footprint, test_world_to_map)
   auto costmap = costmap_ros->getCostmap();
   *costmap = *costmap_;
 
-  nav2_smac_planner::GridCollisionChecker collision_checker(costmap_ros, 72);
-  nav2_smac_planner::GridCollisionChecker::Footprint footprint;
+  smac_planner::GridCollisionChecker collision_checker(costmap_ros, 72);
+  smac_planner::GridCollisionChecker::Footprint footprint;
   collision_checker.setFootprint(footprint, true /*radius / point cost*/, 0.0);
 
   unsigned int x, y;
@@ -130,14 +130,14 @@ TEST(collision_footprint, test_footprint_at_pose_with_movement)
   p4.x = -1.0;
   p4.y = -1.0;
 
-  nav2_smac_planner::GridCollisionChecker::Footprint footprint = {p1, p2, p3, p4};
+  smac_planner::GridCollisionChecker::Footprint footprint = {p1, p2, p3, p4};
 
   // Convert raw costmap into a costmap ros object
   auto costmap_ros = std::make_shared<costmap_2d::Costmap2DROS>("dummy_costmap", g_tf2_buffer);
   auto costmap = costmap_ros->getCostmap();
   *costmap = *costmap_;
 
-  nav2_smac_planner::GridCollisionChecker collision_checker(costmap_ros, 72);
+  smac_planner::GridCollisionChecker collision_checker(costmap_ros, 72);
   collision_checker.setFootprint(footprint, false /*use footprint*/, 0.0);
 
   collision_checker.inCollision(50, 50, 0.0, false);
@@ -175,14 +175,14 @@ TEST(collision_footprint, test_point_and_line_cost)
   p4.x = -1.0;
   p4.y = -1.0;
 
-  nav2_smac_planner::GridCollisionChecker::Footprint footprint = {p1, p2, p3, p4};
+  smac_planner::GridCollisionChecker::Footprint footprint = {p1, p2, p3, p4};
 
   // Convert raw costmap into a costmap ros object
   auto costmap_ros = std::make_shared<costmap_2d::Costmap2DROS>("dummy_costmap_costmap", g_tf2_buffer);
   auto costmap = costmap_ros->getCostmap();
   *costmap = *costmap_;
 
-  nav2_smac_planner::GridCollisionChecker collision_checker(costmap_ros, 72);
+  smac_planner::GridCollisionChecker collision_checker(costmap_ros, 72);
   collision_checker.setFootprint(footprint, false /*use footprint*/, 0.0);
 
   collision_checker.inCollision(50, 50, 0.0, false);

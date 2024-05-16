@@ -25,11 +25,11 @@
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
 
-#include "nav2_smac_planner/utils.hpp"
+#include "smac_planner/utils.hpp"
 
-#include "nav2_smac_planner/node_hybrid.hpp"
+#include "smac_planner/node_hybrid.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 // defining static member for all instance to share
@@ -853,7 +853,7 @@ void NodeHybrid::precomputeDistanceHeuristic(
 }
 
 void NodeHybrid::getNeighbors(
-  std::function<bool(const unsigned int &, nav2_smac_planner::NodeHybrid * &)> & NeighborGetter,
+  std::function<bool(const unsigned int &, smac_planner::NodeHybrid * &)> & NeighborGetter,
   GridCollisionChecker * collision_checker,
   const bool & traverse_unknown,
   NodeVector & neighbors)
@@ -912,4 +912,4 @@ bool NodeHybrid::backtracePath(CoordinateVector & path)
   return true;
 }
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner

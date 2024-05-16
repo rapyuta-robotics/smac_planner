@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#include "nav2_smac_planner/utils.hpp"
+#include "smac_planner/utils.hpp"
 
-#include "nav2_smac_planner/collision_checker.hpp"
+#include "smac_planner/collision_checker.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 GridCollisionChecker::GridCollisionChecker(
@@ -93,7 +93,7 @@ bool GridCollisionChecker::inCollision(
           "Inflation layer either not found or inflation is not set sufficiently for "
           "optimized non-circular collision checking capabilities. It is HIGHLY recommended to set"
           " the inflation radius to be at MINIMUM half of the robot's largest cross-section. See "
-          "github.com/ros-planning/navigation2/tree/main/nav2_smac_planner#potential-fields"
+          "github.com/ros-planning/navigation2/tree/main/smac_planner#potential-fields"
           " for full instructions. This will substantially impact run-time performance.");
       }
     }
@@ -162,4 +162,4 @@ bool GridCollisionChecker::outsideRange(const unsigned int & max, const float & 
   return value < 0.0f || value > max;
 }
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner

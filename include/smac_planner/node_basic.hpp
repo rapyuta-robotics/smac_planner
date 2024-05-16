@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__NODE_BASIC_HPP_
-#define NAV2_SMAC_PLANNER__NODE_BASIC_HPP_
+#ifndef SMAC_PLANNER__NODE_BASIC_HPP_
+#define SMAC_PLANNER__NODE_BASIC_HPP_
 
 #include <math.h>
 #include <vector>
@@ -27,18 +27,18 @@
 
 #include "ompl/base/StateSpace.h"
 
-#include "nav2_smac_planner/constants.hpp"
-#include "nav2_smac_planner/node_hybrid.hpp"
-#include "nav2_smac_planner/node_lattice.hpp"
-#include "nav2_smac_planner/node_2d.hpp"
-#include "nav2_smac_planner/types.hpp"
-#include "nav2_smac_planner/collision_checker.hpp"
+#include "smac_planner/constants.hpp"
+#include "smac_planner/node_hybrid.hpp"
+#include "smac_planner/node_lattice.hpp"
+#include "smac_planner/node_2d.hpp"
+#include "smac_planner/types.hpp"
+#include "smac_planner/collision_checker.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 /**
- * @class nav2_smac_planner::NodeBasic
+ * @class smac_planner::NodeBasic
  * @brief NodeBasic implementation for priority queue insertion
  */
 template<typename NodeT>
@@ -46,7 +46,7 @@ class NodeBasic
 {
 public:
   /**
-   * @brief A constructor for nav2_smac_planner::NodeBasic
+   * @brief A constructor for smac_planner::NodeBasic
    * @param index The index of this node for self-reference
    */
   explicit NodeBasic(const unsigned int index)
@@ -78,6 +78,6 @@ public:
   TurnDirection turn_dir;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__NODE_BASIC_HPP_
+#endif  // SMAC_PLANNER__NODE_BASIC_HPP_

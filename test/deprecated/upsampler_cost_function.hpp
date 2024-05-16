@@ -25,15 +25,15 @@
 
 #include "ceres/ceres.h"
 #include "Eigen/Core"
-#include "nav2_smac_planner/types.hpp"
-#include "nav2_smac_planner/options.hpp"
+#include "smac_planner/types.hpp"
+#include "smac_planner/options.hpp"
 
 #define EPSILON 0.0001
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 /**
- * @struct nav2_smac_planner::UpsamplerCostFunction
+ * @struct smac_planner::UpsamplerCostFunction
  * @brief Cost function for path upsampling with multiple terms using unconstrained
  * optimization including curvature, smoothness, collision, and avoid obstacles.
  */
@@ -41,7 +41,7 @@ class UpsamplerCostFunction : public ceres::FirstOrderFunction
 {
 public:
   /**
-   * @brief A constructor for nav2_smac_planner::UpsamplerCostFunction
+   * @brief A constructor for smac_planner::UpsamplerCostFunction
    * @param num_points Number of path points to consider
    */
   UpsamplerCostFunction(
@@ -63,7 +63,7 @@ public:
   struct CurvatureComputations
   {
     /**
-     * @brief A constructor for nav2_smac_planner::CurvatureComputations
+     * @brief A constructor for smac_planner::CurvatureComputations
      */
     CurvatureComputations()
     {
@@ -361,6 +361,6 @@ protected:
   std::vector<Eigen::Vector2d> _path;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
 #endif  // DEPRECATED__UPSAMPLER_COST_FUNCTION_HPP_

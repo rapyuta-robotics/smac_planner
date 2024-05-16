@@ -26,9 +26,9 @@
 
 #include "mbf_msgs/GetPathResult.h"
 
-#include "nav2_smac_planner/a_star.hpp"
+#include "smac_planner/a_star.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 template<typename NodeT>
@@ -507,4 +507,4 @@ template class AStarAlgorithm<Node2D>;
 template class AStarAlgorithm<NodeHybrid>;
 template class AStarAlgorithm<NodeLattice>;
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner

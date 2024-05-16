@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__A_STAR_HPP_
-#define NAV2_SMAC_PLANNER__A_STAR_HPP_
+#ifndef SMAC_PLANNER__A_STAR_HPP_
+#define SMAC_PLANNER__A_STAR_HPP_
 
 #include <vector>
 #include <iostream>
@@ -27,20 +27,20 @@
 
 #include "costmap_2d/costmap_2d.h"
 
-#include "nav2_smac_planner/thirdparty/robin_hood.h"
-#include "nav2_smac_planner/analytic_expansion.hpp"
-#include "nav2_smac_planner/node_2d.hpp"
-#include "nav2_smac_planner/node_hybrid.hpp"
-#include "nav2_smac_planner/node_lattice.hpp"
-#include "nav2_smac_planner/node_basic.hpp"
-#include "nav2_smac_planner/types.hpp"
-#include "nav2_smac_planner/constants.hpp"
+#include "smac_planner/thirdparty/robin_hood.h"
+#include "smac_planner/analytic_expansion.hpp"
+#include "smac_planner/node_2d.hpp"
+#include "smac_planner/node_hybrid.hpp"
+#include "smac_planner/node_lattice.hpp"
+#include "smac_planner/node_basic.hpp"
+#include "smac_planner/types.hpp"
+#include "smac_planner/constants.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 /**
- * @class nav2_smac_planner::AStarAlgorithm
+ * @class smac_planner::AStarAlgorithm
  * @brief An A* implementation for planning in a costmap. Templated based on the Node type.
  */
 template<typename NodeT>
@@ -57,7 +57,7 @@ public:
   typedef std::function<bool (const unsigned int &, NodeT * &)> NodeGetter;
 
   /**
-   * @struct nav2_smac_planner::NodeComparator
+   * @struct smac_planner::NodeComparator
    * @brief Node comparison for priority queue sorting
    */
   struct NodeComparator
@@ -71,12 +71,12 @@ public:
   typedef std::priority_queue<NodeElement, std::vector<NodeElement>, NodeComparator> NodeQueue;
 
   /**
-   * @brief A constructor for nav2_smac_planner::AStarAlgorithm
+   * @brief A constructor for smac_planner::AStarAlgorithm
    */
   explicit AStarAlgorithm(const MotionModel & motion_model, const SearchInfo & search_info);
 
   /**
-   * @brief A destructor for nav2_smac_planner::AStarAlgorithm
+   * @brief A destructor for smac_planner::AStarAlgorithm
    */
   ~AStarAlgorithm();
 
@@ -281,6 +281,6 @@ protected:
   std::unique_ptr<AnalyticExpansion<NodeT>> _expander;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__A_STAR_HPP_
+#endif  // SMAC_PLANNER__A_STAR_HPP_

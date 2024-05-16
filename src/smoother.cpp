@@ -17,9 +17,9 @@
 #include <vector>
 #include <memory>
 #include <tf/tf.h>
-#include "nav2_smac_planner/smoother.hpp"
+#include "smac_planner/smoother.hpp"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 Smoother::Smoother()
 {
@@ -512,4 +512,4 @@ void Smoother::enforceEndBoundaryConditions(
   }
 }
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner

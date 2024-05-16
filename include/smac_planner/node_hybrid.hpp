@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#ifndef NAV2_SMAC_PLANNER__NODE_HYBRID_HPP_
-#define NAV2_SMAC_PLANNER__NODE_HYBRID_HPP_
+#ifndef SMAC_PLANNER__NODE_HYBRID_HPP_
+#define SMAC_PLANNER__NODE_HYBRID_HPP_
 
 #include <math.h>
 #include <vector>
@@ -27,14 +27,14 @@
 
 #include "ompl/base/StateSpace.h"
 
-#include "nav2_smac_planner/constants.hpp"
-#include "nav2_smac_planner/types.hpp"
-#include "nav2_smac_planner/collision_checker.hpp"
-#include "nav2_smac_planner/costmap_downsampler.hpp"
+#include "smac_planner/constants.hpp"
+#include "smac_planner/types.hpp"
+#include "smac_planner/collision_checker.hpp"
+#include "smac_planner/costmap_downsampler.hpp"
 #include "costmap_2d/costmap_2d_ros.h"
 #include "costmap_2d/inflation_layer.h"
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 typedef std::vector<float> LookupTable;
@@ -55,13 +55,13 @@ typedef std::vector<ObstacleHeuristicElement> ObstacleHeuristicQueue;
 class NodeHybrid;
 
 /**
- * @struct nav2_smac_planner::HybridMotionTable
+ * @struct smac_planner::HybridMotionTable
  * @brief A table of motion primitives and related functions
  */
 struct HybridMotionTable
 {
   /**
-   * @brief A constructor for nav2_smac_planner::HybridMotionTable
+   * @brief A constructor for smac_planner::HybridMotionTable
    */
   HybridMotionTable() {}
 
@@ -134,7 +134,7 @@ struct HybridMotionTable
 };
 
 /**
- * @class nav2_smac_planner::NodeHybrid
+ * @class smac_planner::NodeHybrid
  * @brief NodeHybrid implementation for graph, Hybrid-A*
  */
 class NodeHybrid
@@ -145,18 +145,18 @@ public:
   typedef std::vector<NodePtr> NodeVector;
 
   /**
-   * @class nav2_smac_planner::NodeHybrid::Coordinates
+   * @class smac_planner::NodeHybrid::Coordinates
    * @brief NodeHybrid implementation of coordinate structure
    */
   struct Coordinates
   {
     /**
-     * @brief A constructor for nav2_smac_planner::NodeHybrid::Coordinates
+     * @brief A constructor for smac_planner::NodeHybrid::Coordinates
      */
     Coordinates() {}
 
     /**
-     * @brief A constructor for nav2_smac_planner::NodeHybrid::Coordinates
+     * @brief A constructor for smac_planner::NodeHybrid::Coordinates
      * @param x_in X coordinate
      * @param y_in Y coordinate
      * @param theta_in Theta coordinate
@@ -181,13 +181,13 @@ public:
   typedef std::vector<Coordinates> CoordinateVector;
 
   /**
-   * @brief A constructor for nav2_smac_planner::NodeHybrid
+   * @brief A constructor for smac_planner::NodeHybrid
    * @param index The index of this node for self-reference
    */
   explicit NodeHybrid(const unsigned int index);
 
   /**
-   * @brief A destructor for nav2_smac_planner::NodeHybrid
+   * @brief A destructor for smac_planner::NodeHybrid
    */
   ~NodeHybrid();
 
@@ -447,7 +447,7 @@ public:
    * @param neighbors Vector of neighbors to be filled
    */
   void getNeighbors(
-    std::function<bool(const unsigned int &, nav2_smac_planner::NodeHybrid * &)> & validity_checker,
+    std::function<bool(const unsigned int &, smac_planner::NodeHybrid * &)> & validity_checker,
     GridCollisionChecker * collision_checker,
     const bool & traverse_unknown,
     NodeVector & neighbors);
@@ -484,6 +484,6 @@ private:
   TurnDirection _turn_dir;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__NODE_HYBRID_HPP_
+#endif  // SMAC_PLANNER__NODE_HYBRID_HPP_

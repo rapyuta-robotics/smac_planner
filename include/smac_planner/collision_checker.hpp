@@ -17,16 +17,16 @@
 
 #include "base_local_planner/costmap_model.h"
 #include "costmap_2d/costmap_2d_ros.h"
-#include "nav2_smac_planner/constants.hpp"
+#include "smac_planner/constants.hpp"
 
-#ifndef NAV2_SMAC_PLANNER__COLLISION_CHECKER_HPP_
-#define NAV2_SMAC_PLANNER__COLLISION_CHECKER_HPP_
+#ifndef SMAC_PLANNER__COLLISION_CHECKER_HPP_
+#define SMAC_PLANNER__COLLISION_CHECKER_HPP_
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 /**
- * @class nav2_smac_planner::GridCollisionChecker
+ * @class smac_planner::GridCollisionChecker
  * @brief A costmap grid collision checker
  */
 class GridCollisionChecker
@@ -35,7 +35,7 @@ public:
   typedef std::vector<geometry_msgs::Point> Footprint;
 
   /**
-   * @brief A constructor for nav2_smac_planner::GridCollisionChecker
+   * @brief A constructor for smac_planner::GridCollisionChecker
    * for use when regular bin intervals are appropriate
    * @param costmap The costmap to collision check against
    * @param num_quantizations The number of quantizations to precompute footprint
@@ -134,6 +134,6 @@ protected:
   float possible_collision_cost_{-1};
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
-#endif  // NAV2_SMAC_PLANNER__COLLISION_CHECKER_HPP_
+#endif  // SMAC_PLANNER__COLLISION_CHECKER_HPP_

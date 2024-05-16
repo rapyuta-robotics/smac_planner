@@ -22,11 +22,11 @@
 
 #include "mbf_msgs/GetPathResult.h"
 
-#include "nav2_smac_planner/smac_planner_hybrid.hpp"
+#include "smac_planner/smac_planner_hybrid.hpp"
 
 // #define BENCHMARK_TESTING
 
-namespace nav2_smac_planner
+namespace smac_planner
 {
 
 SmacPlannerHybrid::SmacPlannerHybrid()
@@ -376,7 +376,7 @@ bool SmacPlannerHybrid::cancel() {
   return true;
 };
 
-}  // namespace nav2_smac_planner
+}  // namespace smac_planner
 
 #include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(nav2_smac_planner::SmacPlannerHybrid, mbf_costmap_core::CostmapPlanner)
+PLUGINLIB_EXPORT_CLASS(smac_planner::SmacPlannerHybrid, mbf_costmap_core::CostmapPlanner)

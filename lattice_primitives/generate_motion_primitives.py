@@ -41,7 +41,7 @@ def handle_arg_parsing():
 
     """
     parser = argparse.ArgumentParser(
-        description="Generate motionprimitives for Nav2's State Lattice Planner"
+        description="Generate motionprimitives for Smac State Lattice Planner"
     )
     parser.add_argument(
         '--config',
