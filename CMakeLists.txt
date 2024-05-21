@@ -57,6 +57,10 @@ target_link_libraries(${library_name}
         ${OMPL_LIBRARIES}
 )
 
+add_dependencies(${library_name}
+        ${PROJECT_NAME}_gencfg
+)
+
 # TODO 2D plugin
 #add_library(${library_name}_2d SHARED
 #        src/smac_planner_2d.cpp
@@ -76,6 +80,10 @@ target_link_libraries(${library_name}
 #        ${OMPL_LIBRARIES}
 #)
 #
+#add_dependencies(${library_name}_2d
+#        ${PROJECT_NAME}_gencfg
+#)
+#
 ## TODO Lattice plugin
 #add_library(${library_name}_lattice SHARED
 #        src/smac_planner_lattice.cpp
@@ -93,6 +101,10 @@ target_link_libraries(${library_name}
 #target_link_libraries(${library_name}_lattice
 #        ${catkin_LIBRARIES}
 #        ${OMPL_LIBRARIES}
+#)
+#
+#add_dependencies(${library_name}_lattice
+#        ${PROJECT_NAME}_gencfg
 #)
 
 install(TARGETS ${library_name} # ${library_name}_2d ${library_name}_lattice
