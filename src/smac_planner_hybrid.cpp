@@ -184,9 +184,12 @@ uint32_t SmacPlannerHybrid::makePlan(
     costmap = _costmap_downsampler->downsample(_config.downsampling_factor);
     _collision_checker.setCostmap(costmap);
   }
-
-  // Set collision checker and costmap information TODO probably can remove
-  _a_star->setCollisionChecker(&_collision_checker);
+  // Set collision checker and costmap information
+  _collision_checker.setFootprint(
+      _costmap_ros->getRobotFootprint(),
+      _costmap_ros->getUseRadius(),
+      Utils::findCircumscribedCost(_costmap_ros.get()));
+  _a_star->setCollisionChecker(&_collision_checker);  // TODO probably can remove
 
   // Set starting point, in A* bin search coordinates
   float mx, my;
