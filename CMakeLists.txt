@@ -114,6 +114,10 @@ install(TARGETS ${library_name} # ${library_name}_2d ${library_name}_lattice
 install(DIRECTORY include/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
+install(FILES smac_plugin_hybrid.xml # smac_plugin_2d.xml smac_plugin_lattice.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 
 # TODO
 #install(DIRECTORY lattice_primitives/sample_primitives
