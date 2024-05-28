@@ -32,7 +32,9 @@
   <export>
     <build_type>catkin</build_type>
     <mbf_costmap_core plugin="${prefix}/smac_plugin_hybrid.xml"/>
+<!--
     <mbf_costmap_core plugin="${prefix}/smac_plugin_2d.xml"/>
     <mbf_costmap_core plugin="${prefix}/smac_plugin_lattice.xml"/>
+-->
   </export>
 </package>
