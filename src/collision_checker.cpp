@@ -23,6 +23,14 @@ GridCollisionChecker::GridCollisionChecker(
   std::shared_ptr<costmap_2d::Costmap2DROS> costmap_ros,
   unsigned int num_quantizations)
 {
+  // Convert number of regular bins into angles
+  float bin_size = 2 * M_PI / static_cast<float>(num_quantizations);
+  angles_.clear();
+  angles_.reserve(num_quantizations);
+  for (unsigned int i = 0; i != num_quantizations; i++) {
+    angles_.push_back(bin_size * i);
+  }
+
   if (costmap_ros) {
     costmap_ros_ = costmap_ros;
     costmap_ = std::shared_ptr<costmap_2d::Costmap2D>(costmap_ros_->getCostmap());
@@ -31,14 +39,6 @@ GridCollisionChecker::GridCollisionChecker(
         costmap_ros_->getRobotFootprint(),
         costmap_ros_->getUseRadius(),
         Utils::findCircumscribedCost(costmap_ros_.get()));
-  }
-
-  // Convert number of regular bins into angles
-  float bin_size = 2 * M_PI / static_cast<float>(num_quantizations);
-  angles_.clear();
-  angles_.reserve(num_quantizations);
-  for (unsigned int i = 0; i != num_quantizations; i++) {
-    angles_.push_back(bin_size * i);
   }
 }
 
@@ -54,12 +54,42 @@ void GridCollisionChecker::setFootprint(
     const double & possible_collision_cost)
 {
   possible_collision_cost_ = static_cast<float>(possible_collision_cost);
-  unoriented_footprint_ = footprint;
   footprint_is_radius_ = radius;
 
-  // ROS 2 version precomputes here rotated footprints for all the orientation bins, I suppose to speedup checking
-  // the cost. We cannot do the same, as the WorldModel::footprintCost method that we use rotates the footprint itself.
-  // TODO: It would be interesting to check how much we can save for complex footprints, though
+  // Use radius, no caching required
+  if (radius) {
+    return;
+  }
+
+  // No change, no updates required
+  if (footprint == unoriented_footprint_) {
+    return;
+  }
+
+  oriented_footprints_.clear();
+  oriented_footprints_.reserve(angles_.size());
+  double sin_th, cos_th;
+  geometry_msgs::Point new_pt;
+  const unsigned int footprint_size = footprint.size();
+
+  // Precompute the orientation bins for checking to use
+  for (unsigned int i = 0; i != angles_.size(); i++) {
+    sin_th = sin(angles_[i]);
+    cos_th = cos(angles_[i]);
+    Footprint oriented_footprint;
+    oriented_footprint.reserve(footprint_size);
+
+    for (unsigned int j = 0; j < footprint_size; j++) {
+      new_pt.x = footprint[j].x * cos_th - footprint[j].y * sin_th;
+      new_pt.y = footprint[j].x * sin_th + footprint[j].y * cos_th;
+      oriented_footprint.push_back(new_pt);
+    }
+
+    oriented_footprints_.push_back(oriented_footprint);
+  }
+
+  unoriented_footprint_ = footprint;
+  costmap_2d::calculateMinAndMaxDistances(footprint, inscribed_radius_, circumscribed_radius_);
 }
 
 bool GridCollisionChecker::inCollision(
@@ -76,9 +106,6 @@ bool GridCollisionChecker::inCollision(
   }
 
   // Assumes setFootprint already set
-  double wx, wy;
-  costmap_->mapToWorld(static_cast<double>(x), static_cast<double>(y), wx, wy);
-
   if (!footprint_is_radius_) {
     // if footprint, then we check for the footprint's points, but first see
     // if the robot is even potentially in an inscribed collision
@@ -108,9 +135,19 @@ bool GridCollisionChecker::inCollision(
       return true;
     }
 
-    // if possible inscribed, need to check actual footprint pose
-    float theta = angles_[angle_bin];
-    double cost = world_model_->footprintCost(wx, wy, theta, unoriented_footprint_);
+    geometry_msgs::Point robot_position;
+    costmap_->mapToWorld(static_cast<unsigned int>(x), static_cast<unsigned int>(y),
+                         robot_position.x, robot_position.y);
+
+    // if possible inscribed, need to check actual footprint pose.
+    // Use precomputed oriented footprints are done on initialization,
+    // offset by translation value to collision check
+    Footprint current_footprint = oriented_footprints_[angle_bin];
+    for (auto& pt: current_footprint) {
+      pt.x += robot_position.x;
+      pt.y += robot_position.y;
+    }
+    double cost = world_model_->footprintCost(robot_position, current_footprint, inscribed_radius_, circumscribed_radius_);
     if (cost <= -2.0)
       footprint_cost_ = UNKNOWN; // also for outside (-3), but we have no constant
     else if (cost == -1.0)
