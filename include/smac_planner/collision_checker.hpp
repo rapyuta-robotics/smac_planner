@@ -127,7 +127,10 @@ protected:
   std::unique_ptr<base_local_planner::CostmapModel> world_model_;
   std::shared_ptr<costmap_2d::Costmap2DROS> costmap_ros_;
   std::shared_ptr<costmap_2d::Costmap2D> costmap_;
+  std::vector<Footprint> oriented_footprints_;
   Footprint unoriented_footprint_;
+  double inscribed_radius_;
+  double circumscribed_radius_;
   float footprint_cost_;
   bool footprint_is_radius_;
   std::vector<float> angles_;
