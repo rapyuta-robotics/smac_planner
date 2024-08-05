@@ -199,7 +199,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     return mbf_msgs::GetPathResult::OUT_OF_MAP;
   }
 
-  double orientation_bin = tf2::getYaw(start.pose.orientation) / _angle_bin_size;
+  double orientation_bin = std::round(tf2::getYaw(start.pose.orientation) / _angle_bin_size);
   while (orientation_bin < 0.0) {
     orientation_bin += static_cast<float>(_angle_quantizations);
   }
@@ -207,7 +207,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   if (orientation_bin >= static_cast<float>(_angle_quantizations)) {
     orientation_bin -= static_cast<float>(_angle_quantizations);
   }
-  unsigned int orientation_bin_id = static_cast<unsigned int>(floor(orientation_bin));
+  unsigned int orientation_bin_id = static_cast<unsigned int>(orientation_bin);
 
   if (_collision_checker.inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     message = "Start pose is blocked";
@@ -223,7 +223,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     return mbf_msgs::GetPathResult::OUT_OF_MAP;
   }
 
-  orientation_bin = tf2::getYaw(goal.pose.orientation) / _angle_bin_size;
+  orientation_bin = round(tf2::getYaw(goal.pose.orientation) / _angle_bin_size);
   while (orientation_bin < 0.0) {
     orientation_bin += static_cast<float>(_angle_quantizations);
   }
@@ -231,7 +231,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   if (orientation_bin >= static_cast<float>(_angle_quantizations)) {
     orientation_bin -= static_cast<float>(_angle_quantizations);
   }
-  orientation_bin_id = static_cast<unsigned int>(floor(orientation_bin));
+  orientation_bin_id = static_cast<unsigned int>(orientation_bin);
 
   if (_collision_checker.inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     message = "Goal pose is blocked";
