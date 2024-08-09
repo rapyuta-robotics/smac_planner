@@ -476,7 +476,7 @@ inline float distanceHeuristic2D(
 }
 
 void NodeHybrid::resetObstacleHeuristic(
-  std::shared_ptr<costmap_2d::Costmap2DROS> costmap_ros_i,
+  const std::shared_ptr<costmap_2d::Costmap2DROS> & costmap_ros_i,
   const unsigned int & start_x, const unsigned int & start_y,
   const unsigned int & goal_x, const unsigned int & goal_y)
 {

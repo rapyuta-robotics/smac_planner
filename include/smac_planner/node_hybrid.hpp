@@ -427,7 +427,7 @@ public:
    * @param goal_coords Coordinates to start heuristic expansion at
    */
   static void resetObstacleHeuristic(
-    std::shared_ptr<costmap_2d::Costmap2DROS> costmap_ros,
+    const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros,
     const unsigned int & start_x, const unsigned int & start_y,
     const unsigned int & goal_x, const unsigned int & goal_y);
 

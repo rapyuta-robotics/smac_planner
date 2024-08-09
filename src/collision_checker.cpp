@@ -33,8 +33,6 @@ GridCollisionChecker::GridCollisionChecker(
 
   if (costmap_ros) {
     costmap_ros_ = costmap_ros;
-    costmap_ = std::shared_ptr<costmap_2d::Costmap2D>(costmap_ros_->getCostmap());
-    world_model_ = std::make_unique<base_local_planner::CostmapModel>(*costmap_);
     setFootprint(
         costmap_ros_->getRobotFootprint(),
         costmap_ros_->getUseRadius(),
@@ -44,7 +42,7 @@ GridCollisionChecker::GridCollisionChecker(
 
 void GridCollisionChecker::setCostmap(costmap_2d::Costmap2D* costmap)
 {
-  costmap_ = std::shared_ptr<costmap_2d::Costmap2D>(costmap);
+  costmap_ = costmap;
   world_model_ = std::make_unique<base_local_planner::CostmapModel>(*costmap_);
 }
 
