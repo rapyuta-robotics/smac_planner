@@ -87,7 +87,7 @@ public:
 protected:
   // Dynamic parameters handler
   /**
-   * @brief Callback executed when a paramter change is detected
+   * @brief Callback executed when a parameter change is detected
    * @param config Planner configuration
    */
   void reconfigureCB(SmacPlannerHybridConfig& config, uint32_t level);

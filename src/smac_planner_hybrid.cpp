@@ -351,13 +351,15 @@ uint32_t SmacPlannerHybrid::makePlan(
 #endif
 
   // Smooth output_path
-  if (_config.smooth_path && num_iterations > 1) {
-    _path_smoother.smooth(output_path, costmap, time_remaining);
-
+  if (_config.smooth_path) {
     // Publish raw path for comparison
     if (_raw_plan_publisher.getNumSubscribers() > 0) {
       _raw_plan_publisher.publish(output_path);
     }
+    // overwrite start and goal poses to eliminate quantization-induced deviations
+    output_path.poses.front() = start;
+    output_path.poses.back() = goal;
+    _path_smoother.smooth(output_path, costmap, time_remaining);
   }
 
   if (_final_plan_publisher.getNumSubscribers() > 0) {
