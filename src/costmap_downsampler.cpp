@@ -51,7 +51,7 @@ void CostmapDownsampler::on_configure(
     _costmap->getOriginX(), _costmap->getOriginY(), UNKNOWN);
 
   _downsampled_costmap_pub = std::make_unique<costmap_2d::Costmap2DPublisher>(
-    &_pnh, _downsampled_costmap.get(), global_frame, topic_name, false);
+    &_pnh, _downsampled_costmap.get(), global_frame, topic_name, true);
 }
 
 void CostmapDownsampler::on_cleanup()
