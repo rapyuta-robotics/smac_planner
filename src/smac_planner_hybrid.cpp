@@ -325,17 +325,14 @@ uint32_t SmacPlannerHybrid::makePlan(
 
     // plot footprint path planned for debug
     if (_planned_footprints_publisher.getNumSubscribers() > 0) {
+      visualization_msgs::Marker clear_all_marker;
+      clear_all_marker.action = visualization_msgs::Marker::DELETEALL;
       visualization_msgs::MarkerArray marker_array;
+      marker_array.markers.push_back(clear_all_marker);
       for (size_t i = 0; i < output_path.poses.size(); i++) {
         const std::vector<geometry_msgs::Point> edge =
             Utils::transformFootprintToEdges(output_path.poses[i].pose, _costmap_ros->getRobotFootprint());
         marker_array.markers.push_back(Utils::createMarker(edge, i, _global_frame, ros::Time::now()));
-      }
-
-      if (marker_array.markers.empty()) {
-        visualization_msgs::Marker clear_all_marker;
-        clear_all_marker.action = visualization_msgs::Marker::DELETEALL;
-        marker_array.markers.push_back(clear_all_marker);
       }
       _planned_footprints_publisher.publish(marker_array);
     }

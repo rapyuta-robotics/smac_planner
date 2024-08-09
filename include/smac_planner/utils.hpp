@@ -205,33 +205,23 @@ public:
    * @return marker populated
    */
   static inline visualization_msgs::Marker createMarker(
-      const std::vector<geometry_msgs::Point> edge,
+      const std::vector<geometry_msgs::Point>& edge,
       unsigned int i, const std::string &frame_id, const ros::Time &timestamp) {
     visualization_msgs::Marker marker;
     marker.header.frame_id = frame_id;
     marker.header.stamp = timestamp;
     marker.frame_locked = false;
+    marker.id = i;
     marker.ns = "planned_footprint";
     marker.action = visualization_msgs::Marker::ADD;
     marker.type = visualization_msgs::Marker::LINE_LIST;
     marker.lifetime = ros::Duration(0, 0);
-
-    marker.id = i;
-    for (auto &point: edge) {
-      marker.points.push_back(point);
-    }
-
-    marker.pose.orientation.x = 0.0;
-    marker.pose.orientation.y = 0.0;
-    marker.pose.orientation.z = 0.0;
+    marker.points = edge;
     marker.pose.orientation.w = 1.0;
-    marker.scale.x = 0.05;
-    marker.scale.y = 0.05;
-    marker.scale.z = 0.05;
-    marker.color.r = 0.0f;
-    marker.color.g = 0.0f;
-    marker.color.b = 1.0f;
-    marker.color.a = 1.3f;
+    marker.scale.x = 0.01;
+    marker.color.r = 0.8f;
+    marker.color.g = 0.6f;
+    marker.color.a = 0.8f;
     return marker;
   }
 };
