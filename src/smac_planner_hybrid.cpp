@@ -31,7 +31,7 @@ namespace smac_planner
 
 SmacPlannerHybrid::SmacPlannerHybrid()
 : _a_star(nullptr),
-  _collision_checker(nullptr, 1),
+  _collision_checker(nullptr),
   _costmap(nullptr),
   _costmap_ros(nullptr),
   _costmap_downsampler(nullptr)
@@ -62,7 +62,7 @@ void SmacPlannerHybrid::initialize(
 
   _path_smoother.initialize(private_nh);
 
-  _collision_checker = GridCollisionChecker(_costmap_ros, _angle_quantizations);
+  _collision_checker = std::make_unique<GridCollisionChecker>(_costmap_ros, _angle_quantizations);
 
   _raw_plan_publisher = private_nh.advertise<nav_msgs::Path>("unsmoothed_plan", 1);
   _final_plan_publisher = private_nh.advertise<nav_msgs::Path>("plan", 1);
@@ -182,14 +182,14 @@ uint32_t SmacPlannerHybrid::makePlan(
   costmap_2d::Costmap2D * costmap = _costmap;
   if (_costmap_downsampler) {
     costmap = _costmap_downsampler->downsample(_config.downsampling_factor);
-    _collision_checker.setCostmap(costmap);
   }
+  _collision_checker->setCostmap(costmap);
   // Set collision checker and costmap information
-  _collision_checker.setFootprint(
+  _collision_checker->setFootprint(
       _costmap_ros->getRobotFootprint(),
       _costmap_ros->getUseRadius(),
       Utils::findCircumscribedCost(_costmap_ros.get()));
-  _a_star->setCollisionChecker(&_collision_checker);  // TODO probably can remove
+  _a_star->setCollisionChecker(_collision_checker.get());
 
   // Set starting point, in A* bin search coordinates
   float mx, my;
@@ -209,7 +209,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   }
   unsigned int orientation_bin_id = static_cast<unsigned int>(orientation_bin);
 
-  if (_collision_checker.inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
+  if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     message = "Start pose is blocked";
     return mbf_msgs::GetPathResult::BLOCKED_START;
   }
@@ -233,7 +233,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   }
   orientation_bin_id = static_cast<unsigned int>(orientation_bin);
 
-  if (_collision_checker.inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
+  if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     message = "Goal pose is blocked";
     return mbf_msgs::GetPathResult::BLOCKED_GOAL;
   }

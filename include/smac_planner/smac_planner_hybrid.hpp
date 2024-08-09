@@ -95,7 +95,7 @@ protected:
   std::unique_ptr<dynamic_reconfigure::Server<SmacPlannerHybridConfig>> dsrv_;
 
   std::unique_ptr<AStarAlgorithm<NodeHybrid>> _a_star;
-  GridCollisionChecker _collision_checker;
+  std::unique_ptr<GridCollisionChecker> _collision_checker;
   Smoother _path_smoother;
   costmap_2d::Costmap2D * _costmap;
   std::shared_ptr<costmap_2d::Costmap2DROS> _costmap_ros;

@@ -50,7 +50,7 @@ public:
    */
   costmap_2d::Costmap2D* getCostmap()
   {
-    return costmap_.get();
+    return costmap_;
   }
 
   /**
@@ -126,8 +126,8 @@ private:
 protected:
   std::unique_ptr<base_local_planner::CostmapModel> world_model_;
   std::shared_ptr<costmap_2d::Costmap2DROS> costmap_ros_;
-  std::shared_ptr<costmap_2d::Costmap2D> costmap_;
-  std::vector<Footprint> oriented_footprints_;
+  costmap_2d::Costmap2D* costmap_;  // this can point to the downsampled costmap instead of the one inside costmap_ros_
+  std::vector<Footprint> oriented_footprints_;  // footprints oriented for each of the angle bins
   Footprint unoriented_footprint_;
   double inscribed_radius_;
   double circumscribed_radius_;
