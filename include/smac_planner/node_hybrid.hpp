@@ -432,14 +432,6 @@ public:
     const unsigned int & goal_x, const unsigned int & goal_y);
 
   /**
-   * @brief Using the inflation layer, find the footprint's adjusted cost
-   * if the robot is non-circular
-   * @param cost Cost to adjust
-   * @return float Cost adjusted
-   */
-  static float adjustedFootprintCost(const float & cost);
-
-  /**
    * @brief Retrieve all valid neighbors of a node.
    * @param validity_checker Functor for state validity checking
    * @param collision_checker Collision checker to use
@@ -470,7 +462,6 @@ public:
   static ObstacleHeuristicQueue obstacle_heuristic_queue;
 
   static costmap_2d::Costmap2DROS* costmap_ros;
-  static costmap_2d::InflationLayer* inflation_layer;
   // Dubin / Reeds-Shepp lookup and size for dereferencing
   static LookupTable dist_heuristic_lookup_table;
   static float size_lookup;
