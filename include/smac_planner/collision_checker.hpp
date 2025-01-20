@@ -131,7 +131,7 @@ protected:
   Footprint unoriented_footprint_;
   double inscribed_radius_;
   double circumscribed_radius_;
-  float footprint_cost_;
+  float center_cost_;
   bool footprint_is_radius_;
   std::vector<float> angles_;
   float possible_collision_cost_{-1};
