@@ -283,6 +283,14 @@ uint32_t SmacPlannerHybrid::makePlan(
     // Note: If the start is blocked only one iteration will occur before failure,
     // but this should not happen because we check the start pose before planning
     if (num_iterations == 1) {
+      if (*_a_star->getStart() == *_a_star->getGoal())
+      {
+        ROS_ERROR_NAMED(
+            "smac_planner",
+            "Start and goal are the same according to costmap resolution and angle bin quantization; but goal tolerance is not met");
+        message = "Start and goal are the same";
+        return mbf_msgs::GetPathResult::INTERNAL_ERROR;
+      }
       message = "Start pose is blocked";
       return mbf_msgs::GetPathResult::BLOCKED_START;
     }
