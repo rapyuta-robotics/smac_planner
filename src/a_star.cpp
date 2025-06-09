@@ -365,7 +365,13 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       neighbor = *neighbor_iterator;
 
       // 4.1) Compute the cost to go to this node
-      g_cost = current_node->getAccumulatedCost() + current_node->getTraversalCost(neighbor);
+      auto current_coords = smac_planner::Node2D::getCoords(current_node->getIndex());
+      auto goal_node = getGoal();
+      auto goal_coords = smac_planner::Node2D::getCoords(goal_node->getIndex());
+      float distance = std::sqrt( std::pow(goal_coords.x-current_coords.x ,2) + std::pow(goal_coords.y- current_coords.y,2));
+      _search_info.distance_to_goal = distance;
+      std::cout << "\n\ndistance_to_goal: " << distance << "\n\n";
+      g_cost = current_node->getAccumulatedCost() + current_node->getTraversalCost(neighbor, _search_info);
 
       // 4.2) If this is a lower cost than prior, we set this as the new cost and new approach
       if (g_cost < neighbor->getAccumulatedCost()) {

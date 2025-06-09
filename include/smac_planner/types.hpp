@@ -49,6 +49,8 @@ struct SearchInfo
   bool allow_primitive_interpolation{false};
   bool downsample_obstacle_heuristic{true};
   bool use_quadratic_cost_penalty{false};
+  double_t retrospective_penalty_distance_thresh{0};
+  float distance_to_goal{0};
 };
 
 /**

@@ -273,8 +273,14 @@ bool NodeLattice::isNodeValid(
   return true;
 }
 
-float NodeLattice::getTraversalCost(const NodePtr & child)
+float NodeLattice::getTraversalCost(const NodePtr & child, SearchInfo search_info)
 {
+  std::cout << "\nDISTANCE: " << search_info.distance_to_goal << "\n";
+  if (search_info.distance_to_goal < search_info.retrospective_penalty_distance_thresh){
+    motion_table.travel_distance_reward = 1;
+  }
+
+  std::cout << "\nNodeLattice::getTraveersalCost\n";
   const float normalized_cost = child->getCost() / 252.0;
   if (std::isnan(normalized_cost)) {
     throw std::runtime_error(

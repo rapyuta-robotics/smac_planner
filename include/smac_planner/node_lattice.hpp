@@ -272,7 +272,7 @@ public:
    * @param child Node pointer to child
    * @return traversal cost
    */
-  float getTraversalCost(const NodePtr & child);
+  float getTraversalCost(const NodePtr & child, SearchInfo search_info);
 
   /**
    * @brief Get index at coordinates

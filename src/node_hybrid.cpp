@@ -20,7 +20,7 @@
 #include <queue>
 #include <limits>
 #include <utility>
-
+#include <cmath>
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
@@ -378,8 +378,12 @@ bool NodeHybrid::isNodeValid(
   return true;
 }
 
-float NodeHybrid::getTraversalCost(const NodePtr & child)
+float NodeHybrid::getTraversalCost(const NodePtr & child, SearchInfo search_info)
 {
+  if (search_info.distance_to_goal < search_info.retrospective_penalty_distance_thresh){
+    motion_table.travel_distance_reward = 1;
+  }
+
   const float normalized_cost = child->getCost() / 252.0f;
   if (std::isnan(normalized_cost)) {
     throw std::runtime_error(

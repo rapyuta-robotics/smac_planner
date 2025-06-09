@@ -176,7 +176,7 @@ public:
    * @param child Node pointer to this node's child
    * @return traversal cost
    */
-  float getTraversalCost(const NodePtr & child);
+  float getTraversalCost(const NodePtr & child, SearchInfo search_info);
 
   /**
    * @brief Get index

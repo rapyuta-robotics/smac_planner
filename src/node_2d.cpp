@@ -61,8 +61,9 @@ bool Node2D::isNodeValid(
   return true;
 }
 
-float Node2D::getTraversalCost(const NodePtr & child)
+float Node2D::getTraversalCost(const NodePtr & child, SearchInfo search_info)
 {
+  std::cout << "\nNode2D::getTraversalCost\n";
   float normalized_cost = child->getCost() / 252.0;
   const Coordinates A = getCoords(child->getIndex());
   const Coordinates B = getCoords(this->getIndex());
