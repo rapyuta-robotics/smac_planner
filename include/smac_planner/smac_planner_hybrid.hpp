@@ -92,6 +92,8 @@ protected:
    */
   void reconfigureCB(SmacPlannerHybridConfig& config, uint32_t level);
 
+  bool checkIfPoseBelowPose(const geometry_msgs::PoseStamped& start_pose, const geometry_msgs::PoseStamped& goal_pose);
+
   std::unique_ptr<dynamic_reconfigure::Server<SmacPlannerHybridConfig>> dsrv_;
 
   std::unique_ptr<AStarAlgorithm<NodeHybrid>> _a_star;
