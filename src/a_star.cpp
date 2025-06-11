@@ -123,7 +123,6 @@ void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& se
 {
   _search_info.search_bounds = search_bounds;
   _expander->setSearchBounds(search_bounds);
-  ROS_WARN("\n\n\n\n\n\n\n\n\n\n\n\n\n\nSET SEARCH BOUNDS CALLED!!!!!!\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 }
 
 template <typename NodeT>
