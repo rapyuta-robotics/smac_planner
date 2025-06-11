@@ -411,8 +411,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
 
     // 1) Pick Nbest from O s.t. min(f(Nbest)), remove from queue
     current_node = getNextNode();
-    std::vector<float> goal_vector {_goal_coordinates.x, _goal_coordinates.y};
-
+  
     // Save current node coordinates for debug
     if (expansions_log) {
       populateExpansionsLog(current_node, expansions_log);
