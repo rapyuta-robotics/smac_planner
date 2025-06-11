@@ -47,6 +47,20 @@ void AnalyticExpansion<NodeT>::setCollisionChecker(
 }
 
 template<typename NodeT>
+void AnalyticExpansion<NodeT>::setSearchBounds(
+  const geometry_msgs::PoseStamped &search_bounds)
+{
+  _search_info.search_bounds = search_bounds;
+}
+
+template<typename NodeT>
+void AnalyticExpansion<NodeT>::clearSearchBounds()
+{
+  _search_info.search_bounds.reset();
+}
+
+
+template<typename NodeT>
 typename AnalyticExpansion<NodeT>::NodePtr AnalyticExpansion<NodeT>::tryAnalyticExpansion(
   const NodePtr & current_node, const NodePtr & goal_node,
   const NodeGetter & getter, int & analytic_iterations,
@@ -209,39 +223,38 @@ typename AnalyticExpansion<NodeT>::AnalyticExpansionNodes AnalyticExpansion<Node
   std::vector<float> node_costs;
   node_costs.reserve(num_intervals);
 
-  // Get goal pose in world coordinates
-  float goal_x = _collision_checker->getCostmap()->getOriginX() +
-                ((goal->pose.x + 0.5f) * _collision_checker->getCostmap()->getResolution());
-  float goal_y = _collision_checker->getCostmap()->getOriginY() +
-                ((goal->pose.y + 0.5f) * _collision_checker->getCostmap()->getResolution());
-
-  // Check intermediary poses (non-goal, non-start)
   for (float i = 1; i < num_intervals; i++) {
     state_space->interpolate(from(), to(), i / num_intervals, s());
     reals = s.reals();
 
     // Check if this point is above the goal pose
-    float current_x = _collision_checker->getCostmap()->getOriginX() +
-                     ((reals[0] + 0.5f) * _collision_checker->getCostmap()->getResolution());
-    float current_y = _collision_checker->getCostmap()->getOriginY() +
-                     ((reals[1] + 0.5f) * _collision_checker->getCostmap()->getResolution());
+    if (_search_info.search_bounds.has_value()){
+      float current_x = _collision_checker->getCostmap()->getOriginX() +
+                      ((reals[0] + 0.5f) * _collision_checker->getCostmap()->getResolution());
+      float current_y = _collision_checker->getCostmap()->getOriginY() +
+                      ((reals[1] + 0.5f) * _collision_checker->getCostmap()->getResolution());
 
-    // Vector from goal to current point
-    float dx = current_x - goal_x;
-    float dy = current_y - goal_y;
+      // Vector from goal to current point
+      float dx = current_x - _search_info.search_bounds.value().pose.position.x;
+      float dy = current_y - _search_info.search_bounds.value().pose.position.y;
 
-    // Get goal orientation
-    float goal_theta = node->motion_table.getAngleFromBin(goal->pose.theta);
-    float goal_dx = cos(goal_theta);
-    float goal_dy = sin(goal_theta);
+      // Get goal orientation
+      float goal_theta = node->motion_table.getAngleFromBin(goal->pose.theta);
+      float goal_dx = cos(goal_theta);
+      float goal_dy = sin(goal_theta);
 
-    // Dot product to check if point is in front of goal
-    float dot = dx * goal_dx + dy * goal_dy;
+      // Dot product to check if point is in front of goal
+      float dot = dx * goal_dx + dy * goal_dy;
 
-    // If dot > 0, point is in front of goal (above the goal pose)
-    if (dot > 0) {
-      failure = true;
-      break;
+      // If dot > 0, point is in front of goal (above the goal pose)
+      if (dot > 0) {
+        failure = true;
+        break;
+      }
+    }
+
+    else{
+      ROS_ERROR("FAIL");
     }
     // Make sure in range [0, 2PI)
     theta = (reals[2] < 0.0) ? (reals[2] + 2.0 * M_PI) : reals[2];

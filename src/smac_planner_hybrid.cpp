@@ -95,6 +95,8 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   _search_info.allow_primitive_interpolation = _config.allow_primitive_interpolation;
   _search_info.downsample_obstacle_heuristic = _config.downsample_obstacle_heuristic;
   _search_info.use_quadratic_cost_penalty = _config.use_quadratic_cost_penalty;
+  _disable_goal_overshoot = config.disable_goal_overshoot;
+
 
   if (_config.max_on_approach_iterations <= 0) {
     ROS_WARN("On approach iteration selected as <= 0, "
@@ -190,7 +192,13 @@ uint32_t SmacPlannerHybrid::makePlan(
       _costmap_ros->getUseRadius(),
       Utils::findCircumscribedCost(_costmap_ros.get()));
   _a_star->setCollisionChecker(_collision_checker.get());
-  _a_star->setSearchBounds(goal); // astar will not expand search to cells ahead of goal pose, planning will fail if robot pose and goal pose are facing opposite side
+
+  if(_disable_goal_overshoot){
+    _a_star->setSearchBounds(goal); // astar will not expand search to cells ahead of goal pose, planning will fail if robot pose and goal pose are facing opposite side
+  }
+  else{
+   _a_star->clearSearchBounds();
+  }
 
   // Set starting point, in A* bin search coordinates
   float mx, my;

@@ -121,6 +121,8 @@ public:
   void setCollisionChecker(GridCollisionChecker * collision_checker);
 
   void setSearchBounds(const geometry_msgs::PoseStamped& search_bounds);
+  void clearSearchBounds();
+
   /**
    * @brief Set the goal for planning, as a node index
    * @param mx The node X index of the goal
@@ -278,7 +280,6 @@ protected:
 
   Graph _graph;
   NodeQueue _queue;
-  std::optional<geometry_msgs::PoseStamped> _search_bounds;
   MotionModel _motion_model;
   NodeHeuristicPair _best_heuristic_node;
 

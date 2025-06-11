@@ -119,6 +119,8 @@ public:
    * @param expanded_nodes Expanded node to clean up from search
    */
   void cleanNode(const NodePtr & nodes);
+  void setSearchBounds(const geometry_msgs::PoseStamped &search_bounds);
+  void clearSearchBounds();
 
 protected:
   MotionModel _motion_model;

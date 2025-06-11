@@ -121,7 +121,16 @@ void AStarAlgorithm<NodeT>::setCollisionChecker(GridCollisionChecker * collision
 template <typename NodeT>
 void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& search_bounds)
 {
-  _search_bounds = search_bounds;
+  _search_info.search_bounds = search_bounds;
+  _expander->setSearchBounds(search_bounds);
+  ROS_WARN("\n\n\n\n\n\n\n\n\n\n\n\n\n\nSET SEARCH BOUNDS CALLED!!!!!!\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+}
+
+template <typename NodeT>
+void AStarAlgorithm<NodeT>::clearSearchBounds()
+{
+  _search_info.search_bounds.reset();
+  _expander->clearSearchBounds();
 }
 
 
@@ -412,13 +421,16 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (index >= max_index) {
         return false;
       }
-      if (_search_bounds.has_value()){
+      if (_search_info.search_bounds.has_value()){
         auto iter = _graph.find(index);
         if (iter != _graph.end()) {
-          if (checkNodeBelowPose(&(iter->second), * _search_bounds))
-            ROS_ERROR("SKIPPED");
+          if (checkNodeBelowPose(&(iter->second), * _search_info.search_bounds))
             return false;
         }
+      }
+
+      else{
+        ROS_ERROR("FAIL AGAIN");
       }
       neighbor_rtn = addToGraph(index);
       return true;
@@ -488,11 +500,16 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
     {
       neighbor = *neighbor_iterator;
 
-      if (_search_bounds) {
-        if (!checkNodeBelowPose(neighbor, *_search_bounds)) {
+      if (_search_info.search_bounds) {
+        if (!checkNodeBelowPose(neighbor, * _search_info.search_bounds)) {
+          ROS_ERROR("value set");
           // Skip this neighbor, it's not "below" the search bounds pose
           continue;
         }
+      }
+
+      else{
+        ROS_ERROR("FAIL AGAIN AGAIN");
       }
 
       // 4.1) Compute the cost to go to this node

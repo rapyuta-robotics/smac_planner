@@ -19,7 +19,8 @@
 #include <utility>
 #include <string>
 #include <memory>
-
+#include <optional>
+#include "geometry_msgs/PoseStamped.h"
 
 namespace smac_planner
 {
@@ -49,6 +50,7 @@ struct SearchInfo
   bool allow_primitive_interpolation{false};
   bool downsample_obstacle_heuristic{true};
   bool use_quadratic_cost_penalty{false};
+  std::optional<geometry_msgs::PoseStamped> search_bounds;
 };
 
 /**
