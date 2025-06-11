@@ -428,10 +428,6 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
             return false;
         }
       }
-
-      else{
-        ROS_ERROR("FAIL AGAIN");
-      }
       neighbor_rtn = addToGraph(index);
       return true;
     };
@@ -452,7 +448,6 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
     current_node = getNextNode();
     std::vector<float> goal_vector {_goal_coordinates.x, _goal_coordinates.y};
     float distance = getDistanceToGoal(current_node, goal_vector);
-    ROS_ERROR("\n\n\nDistance to Goal: %.2f\n\n\n", distance);
 
     // Save current node coordinates for debug
     if (expansions_log) {
@@ -502,14 +497,9 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
 
       if (_search_info.search_bounds) {
         if (!checkNodeBelowPose(neighbor, * _search_info.search_bounds)) {
-          ROS_ERROR("value set");
           // Skip this neighbor, it's not "below" the search bounds pose
           continue;
         }
-      }
-
-      else{
-        ROS_ERROR("FAIL AGAIN AGAIN");
       }
 
       // 4.1) Compute the cost to go to this node
