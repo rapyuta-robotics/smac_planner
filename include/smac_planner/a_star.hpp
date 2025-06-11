@@ -251,9 +251,6 @@ protected:
   inline void populateExpansionsLog(
     const NodePtr & node, std::vector<std::tuple<float, float, float>> * expansions_log);
 
-  inline float getDistanceToGoal(
-      const NodePtr & node, std::vector<float> goal_pose);
-
   inline bool checkNodeBelowPose(
         const NodePtr & node, const geometry_msgs::PoseStamped & pose);
 

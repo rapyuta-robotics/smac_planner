@@ -188,40 +188,6 @@ void AStarAlgorithm<Node2D>::populateExpansionsLog(
 }
 
 template<>
-float AStarAlgorithm<Node2D>::getDistanceToGoal(
-  const NodePtr & node,
-  std::vector<float> goal_pose)
-{
-  Node2D::Coordinates coords = node->getCoords(node->getIndex());
-  float node_x = _costmap->getOriginX() + ((coords.x + 0.5) * _costmap->getResolution());
-  float node_y = _costmap->getOriginY() + ((coords.y + 0.5) * _costmap->getResolution());
-  float goal_x = _costmap->getOriginX() + ((goal_pose[0] + 0.5) * _costmap->getResolution());
-  float goal_y = _costmap->getOriginY() + ((goal_pose[1] + 0.5) * _costmap->getResolution());
-
-
-  float dx = node_x - goal_x;
-  float dy = node_y - goal_y;
-
-  return std::sqrt(dx * dx + dy * dy);
-}
-
-template<typename NodeT>
-float AStarAlgorithm<NodeT>::getDistanceToGoal(
-  const NodePtr & node,
-  std::vector<float> goal_pose)
-{
-  typename NodeT::Coordinates coords = node->pose;
-  float goal_x = _costmap->getOriginX() + ((goal_pose[0] + 0.5) * _costmap->getResolution());
-  float goal_y = _costmap->getOriginY() + ((goal_pose[1] + 0.5) * _costmap->getResolution());
-  float node_x = _costmap->getOriginX() + ((coords.x + 0.5) * _costmap->getResolution());
-  float node_y = _costmap->getOriginY() + ((coords.y + 0.5) * _costmap->getResolution());
-  float dx = node_x - goal_x;
-  float dy = node_y - goal_y;
-
-  return std::sqrt(dx * dx + dy * dy);
-}
-
-template<>
 bool AStarAlgorithm<Node2D>::checkNodeBelowPose(
   const NodePtr & node,
   const geometry_msgs::PoseStamped & pose)
@@ -446,7 +412,6 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
     // 1) Pick Nbest from O s.t. min(f(Nbest)), remove from queue
     current_node = getNextNode();
     std::vector<float> goal_vector {_goal_coordinates.x, _goal_coordinates.y};
-    float distance = getDistanceToGoal(current_node, goal_vector);
 
     // Save current node coordinates for debug
     if (expansions_log) {
