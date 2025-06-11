@@ -118,6 +118,13 @@ void AStarAlgorithm<NodeT>::setCollisionChecker(GridCollisionChecker * collision
   _expander->setCollisionChecker(_collision_checker);
 }
 
+template <typename NodeT>
+void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& search_bounds)
+{
+  _search_bounds = search_bounds;
+}
+
+
 template<typename NodeT>
 typename AStarAlgorithm<NodeT>::NodePtr AStarAlgorithm<NodeT>::addToGraph(
   const unsigned int & index)
@@ -170,6 +177,113 @@ void AStarAlgorithm<Node2D>::populateExpansionsLog(
     _costmap->getOriginX() + ((coords.x + 0.5) * _costmap->getResolution()),
     _costmap->getOriginY() + ((coords.y + 0.5) * _costmap->getResolution()),
     0.0);
+}
+
+template<>
+float AStarAlgorithm<Node2D>::getDistanceToGoal(
+  const NodePtr & node,
+  std::vector<float> goal_pose)
+{
+  Node2D::Coordinates coords = node->getCoords(node->getIndex());
+  float node_x = _costmap->getOriginX() + ((coords.x + 0.5) * _costmap->getResolution());
+  float node_y = _costmap->getOriginY() + ((coords.y + 0.5) * _costmap->getResolution());
+  float goal_x = _costmap->getOriginX() + ((goal_pose[0] + 0.5) * _costmap->getResolution());
+  float goal_y = _costmap->getOriginY() + ((goal_pose[1] + 0.5) * _costmap->getResolution());
+
+
+  float dx = node_x - goal_x;
+  float dy = node_y - goal_y;
+
+  return std::sqrt(dx * dx + dy * dy);
+}
+
+template<typename NodeT>
+float AStarAlgorithm<NodeT>::getDistanceToGoal(
+  const NodePtr & node,
+  std::vector<float> goal_pose)
+{
+  typename NodeT::Coordinates coords = node->pose;
+  float goal_x = _costmap->getOriginX() + ((goal_pose[0] + 0.5) * _costmap->getResolution());
+  float goal_y = _costmap->getOriginY() + ((goal_pose[1] + 0.5) * _costmap->getResolution());
+  float node_x = _costmap->getOriginX() + ((coords.x + 0.5) * _costmap->getResolution());
+  float node_y = _costmap->getOriginY() + ((coords.y + 0.5) * _costmap->getResolution());
+  float dx = node_x - goal_x;
+  float dy = node_y - goal_y;
+
+  return std::sqrt(dx * dx + dy * dy);
+}
+
+template<>
+bool AStarAlgorithm<Node2D>::checkNodeBelowPose(
+  const NodePtr & node,
+  const geometry_msgs::PoseStamped & pose)
+{
+  // Use getCoords for Node2D
+  Node2D::Coordinates coords = node->getCoords(node->getIndex());
+
+  float node_x = _costmap->getOriginX() + ((coords.x + 0.5f) * _costmap->getResolution());
+  float node_y = _costmap->getOriginY() + ((coords.y + 0.5f) * _costmap->getResolution());
+
+  float pose_x = pose.pose.position.x;
+  float pose_y = pose.pose.position.y;
+
+  tf2::Quaternion q(
+    pose.pose.orientation.x,
+    pose.pose.orientation.y,
+    pose.pose.orientation.z,
+    pose.pose.orientation.w);
+  double roll, pitch, yaw;
+  tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+  float dx = std::cos(yaw);
+  float dy = std::sin(yaw);
+
+  float vx = node_x - pose_x;
+  float vy = node_y - pose_y;
+
+  float dot = vx * dx + vy * dy;
+
+  return (dot < 0);
+}
+
+template<typename NodeT>
+bool AStarAlgorithm<NodeT>::checkNodeBelowPose(
+  const NodePtr & node,
+  const geometry_msgs::PoseStamped & pose)
+{
+  // Get node grid coordinates (assuming node has getCoords/getIndex method)
+  typename NodeT::Coordinates coords = node->pose;
+
+  // Convert node grid cell to world coordinates (meters)
+  float node_x = _costmap->getOriginX() + ((coords.x + 0.5f) * _costmap->getResolution());
+  float node_y = _costmap->getOriginY() + ((coords.y + 0.5f) * _costmap->getResolution());
+
+  // Extract pose position and yaw (orientation in radians)
+  float pose_x = pose.pose.position.x;
+  float pose_y = pose.pose.position.y;
+
+  // Convert quaternion to yaw (assuming pose.orientation is a quaternion)
+  tf2::Quaternion q(
+    pose.pose.orientation.x,
+    pose.pose.orientation.y,
+    pose.pose.orientation.z,
+    pose.pose.orientation.w);
+  double roll, pitch, yaw;
+  tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+  // Direction vector of pose (facing direction)
+  float dx = std::cos(yaw);
+  float dy = std::sin(yaw);
+
+  // Vector from pose to node
+  float vx = node_x - pose_x;
+  float vy = node_y - pose_y;
+
+  // Dot product to check if node is behind the perpendicular
+  float dot = vx * dx + vy * dy;
+
+  // If dot < 0, node is behind pose’s perpendicular line
+  return (dot < 0);
 }
 
 template<typename NodeT>
@@ -298,7 +412,14 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (index >= max_index) {
         return false;
       }
-
+      if (_search_bounds.has_value()){
+        auto iter = _graph.find(index);
+        if (iter != _graph.end()) {
+          if (checkNodeBelowPose(&(iter->second), * _search_bounds))
+            ROS_ERROR("SKIPPED");
+            return false;
+        }
+      }
       neighbor_rtn = addToGraph(index);
       return true;
     };
@@ -317,6 +438,9 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
 
     // 1) Pick Nbest from O s.t. min(f(Nbest)), remove from queue
     current_node = getNextNode();
+    std::vector<float> goal_vector {_goal_coordinates.x, _goal_coordinates.y};
+    float distance = getDistanceToGoal(current_node, goal_vector);
+    ROS_ERROR("\n\n\nDistance to Goal: %.2f\n\n\n", distance);
 
     // Save current node coordinates for debug
     if (expansions_log) {
@@ -363,6 +487,13 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       neighbor_iterator != neighbors.end(); ++neighbor_iterator)
     {
       neighbor = *neighbor_iterator;
+
+      if (_search_bounds) {
+        if (!checkNodeBelowPose(neighbor, *_search_bounds)) {
+          // Skip this neighbor, it's not "below" the search bounds pose
+          continue;
+        }
+      }
 
       // 4.1) Compute the cost to go to this node
       g_cost = current_node->getAccumulatedCost() + current_node->getTraversalCost(neighbor);

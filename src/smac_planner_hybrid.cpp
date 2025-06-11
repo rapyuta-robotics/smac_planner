@@ -190,6 +190,7 @@ uint32_t SmacPlannerHybrid::makePlan(
       _costmap_ros->getUseRadius(),
       Utils::findCircumscribedCost(_costmap_ros.get()));
   _a_star->setCollisionChecker(_collision_checker.get());
+  _a_star->setSearchBounds(goal); // astar will not expand search to cells ahead of goal pose, planning will fail if robot pose and goal pose are facing opposite side
 
   // Set starting point, in A* bin search coordinates
   float mx, my;

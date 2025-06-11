@@ -22,11 +22,10 @@
 #include <memory>
 #include <queue>
 #include <utility>
+#include <optional>
 #include <tuple>
 #include "Eigen/Core"
-
 #include "costmap_2d/costmap_2d.h"
-
 #include "smac_planner/thirdparty/robin_hood.h"
 #include "smac_planner/analytic_expansion.hpp"
 #include "smac_planner/node_2d.hpp"
@@ -121,6 +120,7 @@ public:
    */
   void setCollisionChecker(GridCollisionChecker * collision_checker);
 
+  void setSearchBounds(const geometry_msgs::PoseStamped& search_bounds);
   /**
    * @brief Set the goal for planning, as a node index
    * @param mx The node X index of the goal
@@ -249,7 +249,13 @@ protected:
   inline void populateExpansionsLog(
     const NodePtr & node, std::vector<std::tuple<float, float, float>> * expansions_log);
 
-  /**
+  inline float getDistanceToGoal(
+      const NodePtr & node, std::vector<float> goal_pose);
+
+  inline bool checkNodeBelowPose(
+        const NodePtr & node, const geometry_msgs::PoseStamped & pose);
+
+    /**
    * @brief Clear Start
    */
   void clearStart();
@@ -272,7 +278,7 @@ protected:
 
   Graph _graph;
   NodeQueue _queue;
-
+  std::optional<geometry_msgs::PoseStamped> _search_bounds;
   MotionModel _motion_model;
   NodeHeuristicPair _best_heuristic_node;
 

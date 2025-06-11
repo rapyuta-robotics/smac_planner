@@ -112,6 +112,7 @@ protected:
   ros::Publisher _final_plan_publisher;
   ros::Publisher _planned_footprints_publisher;
   ros::Publisher _expansions_publisher;
+  bool _set_search_bounds = false;
   std::mutex _mutex;
 };
 
