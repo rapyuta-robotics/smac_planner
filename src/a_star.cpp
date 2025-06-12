@@ -477,7 +477,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
 
       if (_search_info.search_bounds.first && !_search_info.search_bounds.second) {
         if (checkNodeBelowPose(neighbor, * _search_info.search_bounds.first)) {
-          // Skip this neighbor, it's not "below" the search bounds pose
+          // Skip this neighbor, it's "below" the search bounds pose
           continue;
         }
       }
