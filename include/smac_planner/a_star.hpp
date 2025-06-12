@@ -120,7 +120,7 @@ public:
    */
   void setCollisionChecker(GridCollisionChecker * collision_checker);
 
-  void setSearchBounds(const geometry_msgs::PoseStamped& search_bounds);
+  void setSearchBounds(const geometry_msgs::PoseStamped& search_bounds, bool behind);
   void clearSearchBounds();
 
   /**

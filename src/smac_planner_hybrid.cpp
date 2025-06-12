@@ -223,18 +223,10 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   if (_disable_goal_overshoot) {
     if (checkIfPoseBelowPose(start, goal)) {
-      _a_star->setSearchBounds(goal); // A* will not expand search ahead of goal pose
+      _a_star->setSearchBounds(goal, true); // A* will not expand search ahead of goal pose
     } else {
       ROS_ERROR("\n\nELSE SPECIAL CASE\n\n");
-      geometry_msgs::PoseStamped adjusted_goal = goal;
-      tf2::Quaternion q_orig, q_rot, q_new;
-      tf2::fromMsg(goal.pose.orientation, q_orig);
-      // 180 degrees rotation about Z axis
-      q_rot.setRPY(0, 0, M_PI);
-      q_new = q_rot * q_orig;
-      q_new.normalize();
-      adjusted_goal.pose.orientation = tf2::toMsg(q_new);
-      _a_star->setSearchBounds(adjusted_goal);
+      _a_star->setSearchBounds(goal, false); // A* will not expand search behind of goal pose
     }
   } else {
     _a_star->clearSearchBounds();

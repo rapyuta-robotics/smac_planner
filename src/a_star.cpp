@@ -119,16 +119,17 @@ void AStarAlgorithm<NodeT>::setCollisionChecker(GridCollisionChecker * collision
 }
 
 template <typename NodeT>
-void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& search_bounds)
+void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& search_bounds, bool behind)
 {
-  _search_info.search_bounds = search_bounds;
-  _expander->setSearchBounds(search_bounds);
+  _search_info.search_bounds.first = search_bounds;
+  _search_info.search_bounds.second = behind;
+  _expander->setSearchBounds(search_bounds, behind);
 }
 
 template <typename NodeT>
 void AStarAlgorithm<NodeT>::clearSearchBounds()
 {
-  _search_info.search_bounds.reset();
+  _search_info.search_bounds.first.reset();
   _expander->clearSearchBounds();
 }
 
@@ -386,11 +387,20 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (index >= max_index) {
         return false;
       }
-      if (_search_info.search_bounds.has_value()){
+      if (_search_info.search_bounds.first.has_value()){
         auto iter = _graph.find(index);
         if (iter != _graph.end()) {
-          if (checkNodeBelowPose(&(iter->second), * _search_info.search_bounds))
-            return false;
+          if (_search_info.search_bounds.second){
+            if (checkNodeBelowPose(&(iter->second), * _search_info.search_bounds.first)){
+              return false;
+            }
+          }
+          else{
+            if (!checkNodeBelowPose(&(iter->second), * _search_info.search_bounds.first)){
+              return false;
+            }
+          }
+
         }
       }
       neighbor_rtn = addToGraph(index);
@@ -411,7 +421,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
 
     // 1) Pick Nbest from O s.t. min(f(Nbest)), remove from queue
     current_node = getNextNode();
-  
+
     // Save current node coordinates for debug
     if (expansions_log) {
       populateExpansionsLog(current_node, expansions_log);
@@ -458,8 +468,15 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
     {
       neighbor = *neighbor_iterator;
 
-      if (_search_info.search_bounds) {
-        if (!checkNodeBelowPose(neighbor, * _search_info.search_bounds)) {
+      if (_search_info.search_bounds.first && _search_info.search_bounds.second) {
+        if (!checkNodeBelowPose(neighbor, * _search_info.search_bounds.first)) {
+          // Skip this neighbor, it's not "below" the search bounds pose
+          continue;
+        }
+      }
+
+      if (_search_info.search_bounds.first && !_search_info.search_bounds.second) {
+        if (checkNodeBelowPose(neighbor, * _search_info.search_bounds.first)) {
           // Skip this neighbor, it's not "below" the search bounds pose
           continue;
         }

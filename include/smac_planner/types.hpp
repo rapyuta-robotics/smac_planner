@@ -50,7 +50,7 @@ struct SearchInfo
   bool allow_primitive_interpolation{false};
   bool downsample_obstacle_heuristic{true};
   bool use_quadratic_cost_penalty{false};
-  std::optional<geometry_msgs::PoseStamped> search_bounds;
+  std::pair<std::optional<geometry_msgs::PoseStamped>, bool> search_bounds; // bool = true means behind the goal pose, bool = false means front of the goal pose
 };
 
 /**

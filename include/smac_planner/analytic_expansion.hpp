@@ -119,7 +119,7 @@ public:
    * @param expanded_nodes Expanded node to clean up from search
    */
   void cleanNode(const NodePtr & nodes);
-  void setSearchBounds(const geometry_msgs::PoseStamped &search_bounds);
+  void setSearchBounds(const geometry_msgs::PoseStamped &search_bounds, bool behind);
   void clearSearchBounds();
 
 protected:

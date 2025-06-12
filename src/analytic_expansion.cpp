@@ -48,15 +48,16 @@ void AnalyticExpansion<NodeT>::setCollisionChecker(
 
 template<typename NodeT>
 void AnalyticExpansion<NodeT>::setSearchBounds(
-  const geometry_msgs::PoseStamped &search_bounds)
+  const geometry_msgs::PoseStamped &search_bounds, bool behind)
 {
-  _search_info.search_bounds = search_bounds;
+  _search_info.search_bounds.first = search_bounds;
+  _search_info.search_bounds.second = behind;
 }
 
 template<typename NodeT>
 void AnalyticExpansion<NodeT>::clearSearchBounds()
 {
-  _search_info.search_bounds.reset();
+  _search_info.search_bounds.first.reset();
 }
 
 
@@ -228,15 +229,15 @@ typename AnalyticExpansion<NodeT>::AnalyticExpansionNodes AnalyticExpansion<Node
     reals = s.reals();
 
     // Check if this point is above the goal pose
-    if (_search_info.search_bounds.has_value()){
+    if (_search_info.search_bounds.first.has_value()){
       float current_x = _collision_checker->getCostmap()->getOriginX() +
                       ((reals[0] + 0.5f) * _collision_checker->getCostmap()->getResolution());
       float current_y = _collision_checker->getCostmap()->getOriginY() +
                       ((reals[1] + 0.5f) * _collision_checker->getCostmap()->getResolution());
 
       // Vector from goal to current point
-      float dx = current_x - _search_info.search_bounds.value().pose.position.x;
-      float dy = current_y - _search_info.search_bounds.value().pose.position.y;
+      float dx = current_x - _search_info.search_bounds.first.value().pose.position.x;
+      float dy = current_y - _search_info.search_bounds.first.value().pose.position.y;
 
       // Get goal orientation
       float goal_theta = node->motion_table.getAngleFromBin(goal->pose.theta);
@@ -247,7 +248,11 @@ typename AnalyticExpansion<NodeT>::AnalyticExpansionNodes AnalyticExpansion<Node
       float dot = dx * goal_dx + dy * goal_dy;
 
       // If dot > 0, point is in front of goal (above the goal pose)
-      if (dot > 0) {
+      if (dot > 0 && _search_info.search_bounds.second) {
+        failure = true;
+        break;
+      }
+      if (dot < 0 && !_search_info.search_bounds.second) {
         failure = true;
         break;
       }
