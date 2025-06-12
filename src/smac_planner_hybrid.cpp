@@ -225,7 +225,6 @@ uint32_t SmacPlannerHybrid::makePlan(
     if (checkIfPoseBelowPose(start, goal)) {
       _a_star->setSearchBounds(goal, true); // A* will not expand search ahead of goal pose
     } else {
-      ROS_ERROR("\n\nELSE SPECIAL CASE\n\n");
       _a_star->setSearchBounds(goal, false); // A* will not expand search behind of goal pose
     }
   } else {
