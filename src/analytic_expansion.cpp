@@ -48,16 +48,16 @@ void AnalyticExpansion<NodeT>::setCollisionChecker(
 
 template<typename NodeT>
 void AnalyticExpansion<NodeT>::setSearchBounds(
-  const geometry_msgs::PoseStamped &search_bounds, bool behind)
+  const geometry_msgs::PoseStamped &search_bounds, const geometry_msgs::PoseStamped& start)
 {
-  _search_info.search_bounds.first = search_bounds;
-  _search_info.search_bounds.second = behind;
+  _search_info.search_bounds = search_bounds;
+  _search_info.start_pose = start;
 }
 
 template<typename NodeT>
 void AnalyticExpansion<NodeT>::clearSearchBounds()
 {
-  _search_info.search_bounds.first.reset();
+  _search_info.search_bounds.reset();
 }
 
 
@@ -224,37 +224,22 @@ typename AnalyticExpansion<NodeT>::AnalyticExpansionNodes AnalyticExpansion<Node
   std::vector<float> node_costs;
   node_costs.reserve(num_intervals);
 
+  bool is_start_behind_goal;
+  if (_search_info.search_bounds.has_value()){
+    is_start_behind_goal = Utils::checkIfPointBelowPose(_search_info.start_pose.pose.position.x, _search_info.start_pose.pose.position.y, _search_info.search_bounds.value());
+  }
+
   for (float i = 1; i < num_intervals; i++) {
     state_space->interpolate(from(), to(), i / num_intervals, s());
     reals = s.reals();
 
-    // Check if this point is above the goal pose
-    if (_search_info.search_bounds.first.has_value()){
-      float current_x = _collision_checker->getCostmap()->getOriginX() +
-                      ((reals[0] + 0.5f) * _collision_checker->getCostmap()->getResolution());
-      float current_y = _collision_checker->getCostmap()->getOriginY() +
-                      ((reals[1] + 0.5f) * _collision_checker->getCostmap()->getResolution());
+    if (_search_info.search_bounds.has_value()){
 
-      // Vector from goal to current point
-      float dx = current_x - _search_info.search_bounds.first.value().pose.position.x;
-      float dy = current_y - _search_info.search_bounds.first.value().pose.position.y;
-
-      // Get goal orientation
-      float goal_theta = node->motion_table.getAngleFromBin(goal->pose.theta);
-      float goal_dx = cos(goal_theta);
-      float goal_dy = sin(goal_theta);
-
-      // Dot product to check if point is in front of goal
-      float dot = dx * goal_dx + dy * goal_dy;
-
-      // If dot > 0, point is in front of goal (above the goal pose)
-      if (dot > 0 && _search_info.search_bounds.second) {
-        failure = true;
-        break;
-      }
-      if (dot < 0 && !_search_info.search_bounds.second) {
-        failure = true;
-        break;
+      geometry_msgs::Pose node_in_world_frame = Utils::getWorldCoords(reals[0], reals[1], _collision_checker->getCostmap());
+      bool is_node_behind_goal = Utils::checkIfPointBelowPose(node_in_world_frame.position.x, node_in_world_frame.position.y, _search_info.search_bounds.value());
+      if (is_node_behind_goal != is_start_behind_goal){ // not equal means not on the same side
+          failure = true;
+          break;
       }
     }
 

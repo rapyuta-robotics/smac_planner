@@ -165,34 +165,6 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
     _config.tolerance, toString(_motion_model).c_str());
 }
 
-bool SmacPlannerHybrid::checkIfPoseBelowPose(const geometry_msgs::PoseStamped& start_pose, const geometry_msgs::PoseStamped& goal_pose){
-  float start_x = start_pose.pose.position.x;
-  float start_y = start_pose.pose.position.y;
-  float goal_x = goal_pose.pose.position.x;
-  float goal_y = goal_pose.pose.position.y;
-
-  tf2::Quaternion q(
-    goal_pose.pose.orientation.x,
-    goal_pose.pose.orientation.y,
-    goal_pose.pose.orientation.z,
-    goal_pose.pose.orientation.w);
-  double roll, pitch, yaw;
-  tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
-
-  float dx = std::cos(yaw);
-  float dy = std::sin(yaw);
-
-  // Vector from pose to node
-  float vx = start_x - goal_x;
-  float vy = start_y - goal_y;
-
-  // Dot product to check if node is behind the perpendicular
-  float dot = vx * dx + vy * dy;
-
-  // If dot < 0, node is behind pose’s perpendicular line
-  return (dot < 0);
-}
-
 uint32_t SmacPlannerHybrid::makePlan(
     const geometry_msgs::PoseStamped & start,
     const geometry_msgs::PoseStamped & goal,
@@ -202,7 +174,6 @@ uint32_t SmacPlannerHybrid::makePlan(
     std::string &message)
 {
   _planning_canceled = false;
-
   std::lock_guard<std::mutex> lock_reinit(_mutex);
   ros::Time a = ros::Time::now();
 
@@ -222,11 +193,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   _a_star->setCollisionChecker(_collision_checker.get());
 
   if (_disable_goal_overshoot) {
-    if (checkIfPoseBelowPose(start, goal)) {
-      _a_star->setSearchBounds(goal, true); // A* will not expand search ahead of goal pose
-    } else {
-      _a_star->setSearchBounds(goal, false); // A* will not expand search behind of goal pose
-    }
+      _a_star->setSearchBounds(goal, start);
   } else {
     _a_star->clearSearchBounds();
   }

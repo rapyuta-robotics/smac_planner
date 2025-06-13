@@ -54,6 +54,36 @@ public:
   }
 
   /**
+  * @brief Check if the position of given x,y point is below or above the pose
+  * @param x float of X coordinate
+  * @param y float of Y coordinate
+  * @param reference_pose the pose with respect to which we want to check the position of the x,y point
+  * @return Bool true means point is below pose, false means point is above pose
+  */
+  static inline bool checkIfPointBelowPose(
+    const float & x,
+    const float & y,
+    const geometry_msgs::PoseStamped & reference_pose){
+
+      tf2::Quaternion q(
+        reference_pose.pose.orientation.x,
+        reference_pose.pose.orientation.y,
+        reference_pose.pose.orientation.z,
+        reference_pose.pose.orientation.w);
+      double roll, pitch, yaw;
+      tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+      float dx = std::cos(yaw);
+      float dy = std::sin(yaw);
+
+      float vx = x - reference_pose.pose.position.x;
+      float vy = y - reference_pose.pose.position.y;
+
+      float dot = vx * dx + vy * dy;
+      return (dot < 0);
+    }
+
+  /**
   * @brief Create quaternion from radians
   * @param theta continuous bin coordinates angle
   * @return quaternion orientation in map frame

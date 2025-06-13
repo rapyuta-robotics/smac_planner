@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+
 #include "mbf_msgs/GetPathResult.h"
 
 #include "smac_planner/a_star.hpp"
@@ -119,17 +120,17 @@ void AStarAlgorithm<NodeT>::setCollisionChecker(GridCollisionChecker * collision
 }
 
 template <typename NodeT>
-void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& search_bounds, bool behind)
+void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& search_bounds,const geometry_msgs::PoseStamped& start)
 {
-  _search_info.search_bounds.first = search_bounds;
-  _search_info.search_bounds.second = behind;
-  _expander->setSearchBounds(search_bounds, behind);
+  _search_info.search_bounds = search_bounds;
+  _search_info.start_pose = start;
+  _expander->setSearchBounds(search_bounds, start);
 }
 
 template <typename NodeT>
 void AStarAlgorithm<NodeT>::clearSearchBounds()
 {
-  _search_info.search_bounds.first.reset();
+  _search_info.search_bounds.reset();
   _expander->clearSearchBounds();
 }
 
@@ -193,32 +194,9 @@ bool AStarAlgorithm<Node2D>::checkNodeBelowPose(
   const NodePtr & node,
   const geometry_msgs::PoseStamped & pose)
 {
-  // Use getCoords for Node2D
-  Node2D::Coordinates coords = node->getCoords(node->getIndex());
-
-  float node_x = _costmap->getOriginX() + ((coords.x + 0.5f) * _costmap->getResolution());
-  float node_y = _costmap->getOriginY() + ((coords.y + 0.5f) * _costmap->getResolution());
-
-  float pose_x = pose.pose.position.x;
-  float pose_y = pose.pose.position.y;
-
-  tf2::Quaternion q(
-    pose.pose.orientation.x,
-    pose.pose.orientation.y,
-    pose.pose.orientation.z,
-    pose.pose.orientation.w);
-  double roll, pitch, yaw;
-  tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
-
-  float dx = std::cos(yaw);
-  float dy = std::sin(yaw);
-
-  float vx = node_x - pose_x;
-  float vy = node_y - pose_y;
-
-  float dot = vx * dx + vy * dy;
-
-  return (dot < 0);
+  Node2D::Coordinates node_coords = node->getCoords(node->getIndex());
+  geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
+  return Utils::checkIfPointBelowPose(node_in_world_frame.position.x, node_in_world_frame.position.y, pose);
 }
 
 template<typename NodeT>
@@ -226,39 +204,9 @@ bool AStarAlgorithm<NodeT>::checkNodeBelowPose(
   const NodePtr & node,
   const geometry_msgs::PoseStamped & pose)
 {
-  // Get node grid coordinates (assuming node has getCoords/getIndex method)
-  typename NodeT::Coordinates coords = node->pose;
-
-  // Convert node grid cell to world coordinates (meters)
-  float node_x = _costmap->getOriginX() + ((coords.x + 0.5f) * _costmap->getResolution());
-  float node_y = _costmap->getOriginY() + ((coords.y + 0.5f) * _costmap->getResolution());
-
-  // Extract pose position and yaw (orientation in radians)
-  float pose_x = pose.pose.position.x;
-  float pose_y = pose.pose.position.y;
-
-  // Convert quaternion to yaw (assuming pose.orientation is a quaternion)
-  tf2::Quaternion q(
-    pose.pose.orientation.x,
-    pose.pose.orientation.y,
-    pose.pose.orientation.z,
-    pose.pose.orientation.w);
-  double roll, pitch, yaw;
-  tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
-
-  // Direction vector of pose (facing direction)
-  float dx = std::cos(yaw);
-  float dy = std::sin(yaw);
-
-  // Vector from pose to node
-  float vx = node_x - pose_x;
-  float vy = node_y - pose_y;
-
-  // Dot product to check if node is behind the perpendicular
-  float dot = vx * dx + vy * dy;
-
-  // If dot < 0, node is behind pose’s perpendicular line
-  return (dot < 0);
+  typename NodeT::Coordinates node_coords = node->pose;
+  geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
+  return Utils::checkIfPointBelowPose(node_in_world_frame.position.x, node_in_world_frame.position.y, pose);
 }
 
 template<typename NodeT>
@@ -379,6 +327,10 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
   int analytic_iterations = 0;
   int closest_distance = std::numeric_limits<int>::max();
 
+  bool is_start_behind_goal;
+  if (_search_info.search_bounds.has_value()){
+    is_start_behind_goal = Utils::checkIfPointBelowPose(_search_info.start_pose.pose.position.x, _search_info.start_pose.pose.position.y, _search_info.search_bounds.value());
+  }
   // Given an index, return a node ptr reference if its collision-free and valid
   const unsigned int max_index = getSizeX() * getSizeY() * getSizeDim3();
   NodeGetter neighborGetter =
@@ -387,22 +339,14 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (index >= max_index) {
         return false;
       }
-      if (_search_info.search_bounds.first.has_value()){
+      if (_search_info.search_bounds.has_value()){
         auto iter = _graph.find(index);
         if (iter != _graph.end()) {
-          if (_search_info.search_bounds.second){
-            if (checkNodeBelowPose(&(iter->second), * _search_info.search_bounds.first)){
-              return false;
+               if (checkNodeBelowPose(&(iter->second), * _search_info.search_bounds) != is_start_behind_goal){
+                return false;
+               }
             }
-          }
-          else{
-            if (!checkNodeBelowPose(&(iter->second), * _search_info.search_bounds.first)){
-              return false;
-            }
-          }
-
         }
-      }
       neighbor_rtn = addToGraph(index);
       return true;
     };
@@ -418,7 +362,6 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
         return mbf_msgs::GetPathResult::PAT_EXCEEDED;
       }
     }
-
     // 1) Pick Nbest from O s.t. min(f(Nbest)), remove from queue
     current_node = getNextNode();
 
@@ -468,16 +411,8 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
     {
       neighbor = *neighbor_iterator;
 
-      if (_search_info.search_bounds.first && _search_info.search_bounds.second) {
-        if (!checkNodeBelowPose(neighbor, * _search_info.search_bounds.first)) {
-          // Skip this neighbor, it's not "below" the search bounds pose
-          continue;
-        }
-      }
-
-      if (_search_info.search_bounds.first && !_search_info.search_bounds.second) {
-        if (checkNodeBelowPose(neighbor, * _search_info.search_bounds.first)) {
-          // Skip this neighbor, it's "below" the search bounds pose
+      if (_search_info.search_bounds) {
+        if ((checkNodeBelowPose(neighbor, * _search_info.search_bounds)) != is_start_behind_goal) {
           continue;
         }
       }

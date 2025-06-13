@@ -120,7 +120,7 @@ public:
    */
   void setCollisionChecker(GridCollisionChecker * collision_checker);
 
-  void setSearchBounds(const geometry_msgs::PoseStamped& search_bounds, bool behind);
+  void setSearchBounds(const geometry_msgs::PoseStamped& search_bounds, const geometry_msgs::PoseStamped& start);
   void clearSearchBounds();
 
   /**
@@ -251,8 +251,12 @@ protected:
   inline void populateExpansionsLog(
     const NodePtr & node, std::vector<std::tuple<float, float, float>> * expansions_log);
 
-  inline bool checkNodeBelowPose(
-        const NodePtr & node, const geometry_msgs::PoseStamped & pose);
+  /**
+   * @brief check the position of a node, with respect to a pose. If it is behind the pose then return true
+   * @param node the node which we want to check
+   * @param pose the pose relative to which we want to check the position of the node
+   */
+  inline bool checkNodeBelowPose(const NodePtr& node, const geometry_msgs::PoseStamped& pose);
 
     /**
    * @brief Clear Start
