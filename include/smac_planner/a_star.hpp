@@ -22,7 +22,6 @@
 #include <memory>
 #include <queue>
 #include <utility>
-#include <optional>
 #include <tuple>
 #include "Eigen/Core"
 #include "costmap_2d/costmap_2d.h"
