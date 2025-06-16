@@ -36,6 +36,7 @@ public:
   typedef NodeT * NodePtr;
   typedef typename NodeT::Coordinates Coordinates;
   typedef std::function<bool (const unsigned int &, NodeT * &)> NodeGetter;
+  bool _is_start_behind_goal = _is_start_behind_goal;
 
   /**
    * @struct smac_planner::AnalyticExpansion::AnalyticExpansionNodes
@@ -119,7 +120,7 @@ public:
    * @param expanded_nodes Expanded node to clean up from search
    */
   void cleanNode(const NodePtr & nodes);
-  void setSearchBounds(const geometry_msgs::PoseStamped &search_bounds, const geometry_msgs::PoseStamped& start);
+  void setSearchBounds(const geometry_msgs::PoseStamped &search_bounds, bool allow_goal_overshoot, bool is_start_behind_goal);
   void clearSearchBounds();
 
 protected:

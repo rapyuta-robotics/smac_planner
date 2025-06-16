@@ -21,6 +21,7 @@
 #include "Eigen/Core"
 
 #include "mbf_msgs/GetPathResult.h"
+#include "smac_planner/utils.hpp"
 
 #include "smac_planner/smac_planner_hybrid.hpp"
 
@@ -95,7 +96,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   _search_info.allow_primitive_interpolation = _config.allow_primitive_interpolation;
   _search_info.downsample_obstacle_heuristic = _config.downsample_obstacle_heuristic;
   _search_info.use_quadratic_cost_penalty = _config.use_quadratic_cost_penalty;
-  _disable_goal_overshoot = config.disable_goal_overshoot;
+  _allow_goal_overshoot = config.allow_goal_overshoot;
 
 
   if (_config.max_on_approach_iterations <= 0) {
@@ -191,12 +192,10 @@ uint32_t SmacPlannerHybrid::makePlan(
       _costmap_ros->getUseRadius(),
       Utils::findCircumscribedCost(_costmap_ros.get()));
   _a_star->setCollisionChecker(_collision_checker.get());
+  bool is_start_behind_goal = Utils::checkIfPointBelowPose(start.pose.position.x, start.pose.position.y, goal);
+  _a_star->setSearchBounds(goal, _allow_goal_overshoot, is_start_behind_goal);
 
-  if (_disable_goal_overshoot) {
-      _a_star->setSearchBounds(goal, start);
-  } else {
-    _a_star->clearSearchBounds();
-  }
+
 
   // Set starting point, in A* bin search coordinates
   float mx, my;

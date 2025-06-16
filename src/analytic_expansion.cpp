@@ -48,18 +48,12 @@ void AnalyticExpansion<NodeT>::setCollisionChecker(
 
 template<typename NodeT>
 void AnalyticExpansion<NodeT>::setSearchBounds(
-  const geometry_msgs::PoseStamped &search_bounds, const geometry_msgs::PoseStamped& start)
+  const geometry_msgs::PoseStamped &search_bounds, bool allow_goal_overshoot, bool is_start_behind_goal)
 {
   _search_info.search_bounds = search_bounds;
-  _search_info.start_pose = start;
+  _search_info.allow_goal_overshoot = allow_goal_overshoot;
+  _is_start_behind_goal = is_start_behind_goal;
 }
-
-template<typename NodeT>
-void AnalyticExpansion<NodeT>::clearSearchBounds()
-{
-  _search_info.search_bounds.reset();
-}
-
 
 template<typename NodeT>
 typename AnalyticExpansion<NodeT>::NodePtr AnalyticExpansion<NodeT>::tryAnalyticExpansion(
@@ -224,20 +218,14 @@ typename AnalyticExpansion<NodeT>::AnalyticExpansionNodes AnalyticExpansion<Node
   std::vector<float> node_costs;
   node_costs.reserve(num_intervals);
 
-  bool is_start_behind_goal;
-  if (_search_info.search_bounds.has_value()){
-    is_start_behind_goal = Utils::checkIfPointBelowPose(_search_info.start_pose.pose.position.x, _search_info.start_pose.pose.position.y, _search_info.search_bounds.value());
-  }
-
   for (float i = 1; i < num_intervals; i++) {
     state_space->interpolate(from(), to(), i / num_intervals, s());
     reals = s.reals();
 
-    if (_search_info.search_bounds.has_value()){
-
+    if (!_search_info.allow_goal_overshoot){
       geometry_msgs::Pose node_in_world_frame = Utils::getWorldCoords(reals[0], reals[1], _collision_checker->getCostmap());
-      bool is_node_behind_goal = Utils::checkIfPointBelowPose(node_in_world_frame.position.x, node_in_world_frame.position.y, _search_info.search_bounds.value());
-      if (is_node_behind_goal != is_start_behind_goal){ // not equal means not on the same side
+      bool is_node_behind_goal = Utils::checkIfPointBelowPose(node_in_world_frame.position.x, node_in_world_frame.position.y, _search_info.search_bounds);
+      if (is_node_behind_goal != _is_start_behind_goal){ // not equal means not on the same side
           failure = true;
           break;
       }

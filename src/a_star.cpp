@@ -25,7 +25,9 @@
 #include <vector>
 
 
+#include "geometry_msgs/Pose.h"
 #include "mbf_msgs/GetPathResult.h"
+#include "smac_planner/utils.hpp"
 
 #include "smac_planner/a_star.hpp"
 
@@ -119,19 +121,14 @@ void AStarAlgorithm<NodeT>::setCollisionChecker(GridCollisionChecker * collision
   _expander->setCollisionChecker(_collision_checker);
 }
 
-template <typename NodeT>
-void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& search_bounds,const geometry_msgs::PoseStamped& start)
-{
-  _search_info.search_bounds = search_bounds;
-  _search_info.start_pose = start;
-  _expander->setSearchBounds(search_bounds, start);
-}
 
 template <typename NodeT>
-void AStarAlgorithm<NodeT>::clearSearchBounds()
+void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& search_bounds, bool allow_goal_overshoot, bool is_start_behind_goal)
 {
-  _search_info.search_bounds.reset();
-  _expander->clearSearchBounds();
+  _search_info.search_bounds = search_bounds;
+  _search_info.allow_goal_overshoot = allow_goal_overshoot;
+  _is_start_behind_goal = is_start_behind_goal;
+  _expander->setSearchBounds(search_bounds, allow_goal_overshoot, is_start_behind_goal);
 }
 
 
@@ -327,10 +324,6 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
   int analytic_iterations = 0;
   int closest_distance = std::numeric_limits<int>::max();
 
-  bool is_start_behind_goal;
-  if (_search_info.search_bounds.has_value()){
-    is_start_behind_goal = Utils::checkIfPointBelowPose(_search_info.start_pose.pose.position.x, _search_info.start_pose.pose.position.y, _search_info.search_bounds.value());
-  }
   // Given an index, return a node ptr reference if its collision-free and valid
   const unsigned int max_index = getSizeX() * getSizeY() * getSizeDim3();
   NodeGetter neighborGetter =
@@ -339,10 +332,10 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (index >= max_index) {
         return false;
       }
-      if (_search_info.search_bounds.has_value()){
+      if (!_search_info.allow_goal_overshoot){
         auto iter = _graph.find(index);
         if (iter != _graph.end()) {
-               if (checkNodeBelowPose(&(iter->second), * _search_info.search_bounds) != is_start_behind_goal){
+               if (checkNodeBelowPose(&(iter->second), _search_info.search_bounds) != _is_start_behind_goal){
                 return false;
                }
             }
@@ -411,8 +404,8 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
     {
       neighbor = *neighbor_iterator;
 
-      if (_search_info.search_bounds) {
-        if ((checkNodeBelowPose(neighbor, * _search_info.search_bounds)) != is_start_behind_goal) {
+      if (!_search_info.allow_goal_overshoot) {
+        if ((checkNodeBelowPose(neighbor, _search_info.search_bounds)) != _is_start_behind_goal) {
           continue;
         }
       }

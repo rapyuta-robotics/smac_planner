@@ -25,6 +25,8 @@
 #include <tuple>
 #include "Eigen/Core"
 #include "costmap_2d/costmap_2d.h"
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "smac_planner/thirdparty/robin_hood.h"
 #include "smac_planner/analytic_expansion.hpp"
 #include "smac_planner/node_2d.hpp"
@@ -53,6 +55,7 @@ public:
   typedef typename NodeT::CoordinateVector CoordinateVector;
   typedef typename NodeVector::iterator NeighborIterator;
   typedef std::function<bool (const unsigned int &, NodeT * &)> NodeGetter;
+  bool _is_start_behind_goal;
 
   /**
    * @struct smac_planner::NodeComparator
@@ -118,9 +121,7 @@ public:
    * @param collision_checker Collision checker to use for checking state validity
    */
   void setCollisionChecker(GridCollisionChecker * collision_checker);
-
-  void setSearchBounds(const geometry_msgs::PoseStamped& search_bounds, const geometry_msgs::PoseStamped& start);
-  void clearSearchBounds();
+  void setSearchBounds(const geometry_msgs::PoseStamped& search_bounds, bool allow_goal_overshoot, bool is_start_behind_goal);
 
   /**
    * @brief Set the goal for planning, as a node index

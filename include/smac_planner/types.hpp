@@ -48,10 +48,10 @@ struct SearchInfo
   bool cache_obstacle_heuristic{false};
   bool allow_reverse_expansion{false};
   bool allow_primitive_interpolation{false};
+  bool allow_goal_overshoot{true};
   bool downsample_obstacle_heuristic{true};
   bool use_quadratic_cost_penalty{false};
-  std::optional<geometry_msgs::PoseStamped> search_bounds;
-  geometry_msgs::PoseStamped start_pose;
+  geometry_msgs::PoseStamped search_bounds;
 };
 
 /**
