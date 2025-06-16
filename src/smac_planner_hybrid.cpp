@@ -18,8 +18,6 @@
 #include <vector>
 #include <limits>
 
-#include "Eigen/Core"
-
 #include "mbf_msgs/GetPathResult.h"
 #include "smac_planner/utils.hpp"
 
@@ -175,6 +173,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     std::string &message)
 {
   _planning_canceled = false;
+
   std::lock_guard<std::mutex> lock_reinit(_mutex);
   ros::Time a = ros::Time::now();
 

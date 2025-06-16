@@ -17,15 +17,12 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
-#include <queue>
 #include <limits>
 #include <utility>
 
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
-
-#include "smac_planner/utils.hpp"
 
 #include "smac_planner/node_hybrid.hpp"
 
@@ -386,6 +383,7 @@ float NodeHybrid::getTraversalCost(const NodePtr & child)
             "Node attempted to get traversal "
             "cost without a known SE2 collision cost!");
   }
+
   // this is the first node
   if (getMotionPrimitiveIndex() == std::numeric_limits<unsigned int>::max()) {
     return NodeHybrid::travel_distance_cost;

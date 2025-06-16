@@ -19,8 +19,6 @@
 #include <memory>
 #include <algorithm>
 #include <limits>
-#include <type_traits>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -332,6 +330,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (index >= max_index) {
         return false;
       }
+
       if (!_search_info.allow_goal_overshoot){
         auto iter = _graph.find(index);
         if (iter != _graph.end()) {
@@ -355,6 +354,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
         return mbf_msgs::GetPathResult::PAT_EXCEEDED;
       }
     }
+
     // 1) Pick Nbest from O s.t. min(f(Nbest)), remove from queue
     current_node = getNextNode();
 

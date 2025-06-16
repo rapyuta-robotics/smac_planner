@@ -18,8 +18,6 @@
 #include <vector>
 #include <utility>
 #include <string>
-#include <memory>
-#include <optional>
 #include <geometry_msgs/PoseStamped.h>
 
 namespace smac_planner

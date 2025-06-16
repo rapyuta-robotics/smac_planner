@@ -17,21 +17,17 @@
 #define SMAC_PLANNER__A_STAR_HPP_
 
 #include <vector>
-#include <iostream>
-#include <unordered_map>
 #include <memory>
 #include <queue>
 #include <utility>
 #include <tuple>
-#include "Eigen/Core"
+
 #include "costmap_2d/costmap_2d.h"
-#include "geometry_msgs/Pose.h"
+
 #include "geometry_msgs/PoseStamped.h"
 #include "smac_planner/thirdparty/robin_hood.h"
 #include "smac_planner/analytic_expansion.hpp"
 #include "smac_planner/node_2d.hpp"
-#include "smac_planner/node_hybrid.hpp"
-#include "smac_planner/node_lattice.hpp"
 #include "smac_planner/node_basic.hpp"
 #include "smac_planner/types.hpp"
 #include "smac_planner/constants.hpp"
@@ -281,6 +277,7 @@ protected:
 
   Graph _graph;
   NodeQueue _queue;
+
   MotionModel _motion_model;
   NodeHeuristicPair _best_heuristic_node;
 
