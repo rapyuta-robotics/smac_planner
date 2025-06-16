@@ -60,9 +60,8 @@ public:
   * @param reference_pose the pose with respect to which we want to check the position of the x,y point
   * @return Bool true means point is below pose, false means point is above pose
   */
-  static inline bool checkIfPointBelowPose(
-    const float & x,
-    const float & y,
+  static inline bool isBehindPose(
+    const geometry_msgs::Pose & pose,
     const geometry_msgs::PoseStamped & reference_pose){
 
       tf2::Quaternion q(
@@ -76,8 +75,8 @@ public:
       float dx = std::cos(yaw);
       float dy = std::sin(yaw);
 
-      float vx = x - reference_pose.pose.position.x;
-      float vy = y - reference_pose.pose.position.y;
+      float vx = pose.position.x - reference_pose.pose.position.x;
+      float vy = pose.position.y - reference_pose.pose.position.y;
 
       float dot = vx * dx + vy * dy;
       return (dot < 0);

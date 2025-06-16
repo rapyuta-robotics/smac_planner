@@ -191,9 +191,9 @@ bool AStarAlgorithm<Node2D>::checkNodeBelowPose(
   const NodePtr & node,
   const geometry_msgs::PoseStamped & pose)
 {
-  Node2D::Coordinates node_coords = node->getCoords(node->getIndex());
-  geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
-  return Utils::checkIfPointBelowPose(node_in_world_frame.position.x, node_in_world_frame.position.y, pose);
+  const Node2D::Coordinates node_coords = node->getCoords(node->getIndex());
+  const geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
+  return Utils::isBehindPose(node_in_world_frame, pose);
 }
 
 template<typename NodeT>
@@ -202,8 +202,8 @@ bool AStarAlgorithm<NodeT>::checkNodeBelowPose(
   const geometry_msgs::PoseStamped & pose)
 {
   typename NodeT::Coordinates node_coords = node->pose;
-  geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
-  return Utils::checkIfPointBelowPose(node_in_world_frame.position.x, node_in_world_frame.position.y, pose);
+  const geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
+  return Utils::isBehindPose(node_in_world_frame, pose);
 }
 
 template<typename NodeT>
