@@ -94,7 +94,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   _search_info.allow_primitive_interpolation = _config.allow_primitive_interpolation;
   _search_info.downsample_obstacle_heuristic = _config.downsample_obstacle_heuristic;
   _search_info.use_quadratic_cost_penalty = _config.use_quadratic_cost_penalty;
-  _allow_goal_overshoot = config.allow_goal_overshoot;
+  _allow_goal_overshoot = _config.allow_goal_overshoot;
 
 
   if (_config.max_on_approach_iterations <= 0) {
