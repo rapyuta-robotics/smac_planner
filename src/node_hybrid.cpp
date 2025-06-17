@@ -17,15 +17,12 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
-#include <queue>
 #include <limits>
 #include <utility>
 
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
-
-#include "smac_planner/utils.hpp"
 
 #include "smac_planner/node_hybrid.hpp"
 

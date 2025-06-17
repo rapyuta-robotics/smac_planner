@@ -17,21 +17,17 @@
 #define SMAC_PLANNER__A_STAR_HPP_
 
 #include <vector>
-#include <iostream>
-#include <unordered_map>
 #include <memory>
 #include <queue>
 #include <utility>
 #include <tuple>
-#include "Eigen/Core"
 
 #include "costmap_2d/costmap_2d.h"
 
+#include "geometry_msgs/PoseStamped.h"
 #include "smac_planner/thirdparty/robin_hood.h"
 #include "smac_planner/analytic_expansion.hpp"
 #include "smac_planner/node_2d.hpp"
-#include "smac_planner/node_hybrid.hpp"
-#include "smac_planner/node_lattice.hpp"
 #include "smac_planner/node_basic.hpp"
 #include "smac_planner/types.hpp"
 #include "smac_planner/constants.hpp"
@@ -120,6 +116,14 @@ public:
    * @param collision_checker Collision checker to use for checking state validity
    */
   void setCollisionChecker(GridCollisionChecker * collision_checker);
+
+    /**
+   * @brief Used to limit the planner to explore ahead of the specified pose
+   * @param search_bounds the pose beyoind which we want to limit the planner
+   * @param start_point the start point
+   * @param allow_goal_overshoot enable/disable this feature
+   */
+  void setSearchBounds(const geometry_msgs::Pose& search_bounds, const geometry_msgs::Point& start_point, bool allow_goal_overshoot);
 
   /**
    * @brief Set the goal for planning, as a node index
@@ -250,6 +254,13 @@ protected:
     const NodePtr & node, std::vector<std::tuple<float, float, float>> * expansions_log);
 
   /**
+   * @brief check the position of a node, with respect to a pose. If it is behind the pose then return true
+   * @param node the node which we want to check
+   * @param pose the pose relative to which we want to check the position of the node
+   */
+  bool isBehindPose(const NodePtr& node, const geometry_msgs::Pose& pose);
+
+    /**
    * @brief Clear Start
    */
   void clearStart();
