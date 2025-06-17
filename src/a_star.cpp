@@ -185,7 +185,7 @@ void AStarAlgorithm<Node2D>::populateExpansionsLog(
 }
 
 template<>
-bool AStarAlgorithm<Node2D>::checkNodeBelowPose(
+bool AStarAlgorithm<Node2D>::isNodeBelowPose(
   const NodePtr & node,
   const geometry_msgs::PoseStamped & pose)
 {
@@ -195,7 +195,7 @@ bool AStarAlgorithm<Node2D>::checkNodeBelowPose(
 }
 
 template<typename NodeT>
-bool AStarAlgorithm<NodeT>::checkNodeBelowPose(
+bool AStarAlgorithm<NodeT>::isNodeBelowPose(
   const NodePtr & node,
   const geometry_msgs::PoseStamped & pose)
 {
@@ -334,7 +334,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (!_search_info.allow_goal_overshoot){
         auto iter = _graph.find(index);
         if (iter != _graph.end()) {
-               if (checkNodeBelowPose(&(iter->second), _search_info.search_bounds) != _is_start_behind_goal){
+               if (isNodeBelowPose(&(iter->second), _search_info.search_bounds) != _is_start_behind_goal){
                 return false;
                }
             }
@@ -405,7 +405,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       neighbor = *neighbor_iterator;
 
       if (!_search_info.allow_goal_overshoot) {
-        if ((checkNodeBelowPose(neighbor, _search_info.search_bounds)) != _is_start_behind_goal) {
+        if ((isNodeBelowPose(neighbor, _search_info.search_bounds)) != _is_start_behind_goal) {
           continue;
         }
       }
