@@ -20,8 +20,6 @@ void SearchInfo::setSearchBound(const geometry_msgs::Pose& search_bound){
 }
 
 bool SearchInfo::isStartBehindSearchBounds(){
-  assert(_start_pose.header.stamp != ros::Time(0) && "Start pose not set");
-  assert(_search_bound.header.stamp != ros::Time(0) && "Search bound pose not set");
 
   if (is_start_behind_goal){
     return *is_start_behind_goal;

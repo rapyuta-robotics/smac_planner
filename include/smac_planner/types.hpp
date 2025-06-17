@@ -15,12 +15,11 @@
 #ifndef SMAC_PLANNER__TYPES_HPP_
 #define SMAC_PLANNER__TYPES_HPP_
 
-#include <stdexcept>
 #include <vector>
 #include <utility>
 #include <string>
-#include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <optional>
 
 namespace smac_planner
 {
