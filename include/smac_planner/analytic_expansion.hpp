@@ -20,6 +20,7 @@
 #include <list>
 #include <memory>
 
+#include "geometry_msgs/Point.h"
 #include "smac_planner/node_2d.hpp"
 #include "smac_planner/node_hybrid.hpp"
 #include "smac_planner/node_lattice.hpp"
@@ -123,10 +124,10 @@ public:
   /**
    * @brief Used to limit the planner to explore ahead of the specified pose
    * @param search_bounds the pose beyoind which we want to limit the planner
-   * @param allow_goal_overshoot to set the value of this param
-   * @param is_start_behind_goal this is required because we want to allow searching on the side of the goal where the start pose is
+   * @param start_point the start point
+   * @param allow_goal_overshoot enable/disable this feature
    */
-  void setSearchBounds(const geometry_msgs::PoseStamped &search_bounds, bool allow_goal_overshoot, bool is_start_behind_goal);
+  void setSearchBounds(const geometry_msgs::Pose &search_bounds, const geometry_msgs::Point& start_point, bool allow_goal_overshoot);
 
 protected:
   MotionModel _motion_model;

@@ -24,6 +24,8 @@
 
 
 #include <geometry_msgs/Pose.h>
+#include "geometry_msgs/Point.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "smac_planner/utils.hpp"
 
@@ -121,12 +123,12 @@ void AStarAlgorithm<NodeT>::setCollisionChecker(GridCollisionChecker * collision
 
 
 template <typename NodeT>
-void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& search_bounds, bool allow_goal_overshoot, bool is_start_behind_goal)
+void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::Pose& search_bounds, const geometry_msgs::Point& start_point, bool allow_goal_overshoot)
 {
-  _search_info.search_bounds = search_bounds;
+  _search_info.setSearchBound(search_bounds);
+  _search_info.setStart(start_point);
   _search_info.allow_goal_overshoot = allow_goal_overshoot;
-  _search_info.is_start_behind_goal =  is_start_behind_goal;
-  _expander->setSearchBounds(search_bounds, allow_goal_overshoot, is_start_behind_goal);
+  _expander->setSearchBounds(search_bounds, start_point, allow_goal_overshoot);
 }
 
 
@@ -321,6 +323,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
   NeighborIterator neighbor_iterator;
   int analytic_iterations = 0;
   int closest_distance = std::numeric_limits<int>::max();
+  const bool is_start_behind_goal = _search_info.isStartBehindSearchBounds();
 
   // Given an index, return a node ptr reference if its collision-free and valid
   const unsigned int max_index = getSizeX() * getSizeY() * getSizeDim3();
@@ -334,7 +337,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (!_search_info.allow_goal_overshoot){
         auto iter = _graph.find(index);
         if (iter != _graph.end()) {
-               if (isBehindPose(&(iter->second), _search_info.search_bounds.pose) != _search_info.is_start_behind_goal){
+               if (isBehindPose(&(iter->second), _search_info.getSearchBound()) != is_start_behind_goal){
                 return false;
                }
             }
@@ -405,7 +408,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       neighbor = *neighbor_iterator;
 
       if (!_search_info.allow_goal_overshoot) {
-        if ((isBehindPose(neighbor, _search_info.search_bounds.pose)) != _search_info.is_start_behind_goal) {
+        if ((isBehindPose(neighbor, _search_info.getSearchBound())) != is_start_behind_goal) {
           continue;
         }
       }

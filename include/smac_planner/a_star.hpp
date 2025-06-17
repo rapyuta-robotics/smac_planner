@@ -116,7 +116,14 @@ public:
    * @param collision_checker Collision checker to use for checking state validity
    */
   void setCollisionChecker(GridCollisionChecker * collision_checker);
-  void setSearchBounds(const geometry_msgs::PoseStamped& search_bounds, bool allow_goal_overshoot, bool is_start_behind_goal);
+
+    /**
+   * @brief Used to limit the planner to explore ahead of the specified pose
+   * @param search_bounds the pose beyoind which we want to limit the planner
+   * @param start_point the start point
+   * @param allow_goal_overshoot enable/disable this feature
+   */
+  void setSearchBounds(const geometry_msgs::Pose& search_bounds, const geometry_msgs::Point& start_point, bool allow_goal_overshoot);
 
   /**
    * @brief Set the goal for planning, as a node index

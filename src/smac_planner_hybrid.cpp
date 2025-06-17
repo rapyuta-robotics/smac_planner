@@ -191,9 +191,7 @@ uint32_t SmacPlannerHybrid::makePlan(
       _costmap_ros->getUseRadius(),
       Utils::findCircumscribedCost(_costmap_ros.get()));
   _a_star->setCollisionChecker(_collision_checker.get());
-  _a_star->setSearchBounds(goal, _search_info.allow_goal_overshoot, Utils::isBehindPose(start.pose.position, goal.pose));
-
-
+  _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
 
   // Set starting point, in A* bin search coordinates
   float mx, my;

@@ -52,6 +52,7 @@ add_library(${library_name} SHARED
         src/costmap_downsampler.cpp
         src/node_2d.cpp
         src/node_basic.cpp
+        src/types.cpp
 )
 
 target_link_libraries(${library_name}

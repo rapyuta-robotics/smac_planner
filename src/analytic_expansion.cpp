@@ -15,11 +15,12 @@
 #include <ompl/base/ScopedState.h>
 #include <ompl/base/spaces/DubinsStateSpace.h>
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
-
 #include <algorithm>
 #include <vector>
 #include <memory>
-
+#include "geometry_msgs/Point.h"
+#include "geometry_msgs/PoseStamped.h"
+#include <smac_planner/utils.hpp>
 #include "smac_planner/analytic_expansion.hpp"
 
 namespace smac_planner
@@ -48,11 +49,11 @@ void AnalyticExpansion<NodeT>::setCollisionChecker(
 
 template<typename NodeT>
 void AnalyticExpansion<NodeT>::setSearchBounds(
-  const geometry_msgs::PoseStamped &search_bounds, bool allow_goal_overshoot, bool is_start_behind_goal)
+  const geometry_msgs::Pose &search_bounds, const geometry_msgs::Point& start_point, bool allow_goal_overshoot)
 {
-  _search_info.search_bounds = search_bounds;
+  _search_info.setSearchBound(search_bounds);
+  _search_info.setStart(start_point);
   _search_info.allow_goal_overshoot = allow_goal_overshoot;
-  _search_info.is_start_behind_goal = is_start_behind_goal;
 }
 
 template<typename NodeT>
@@ -217,6 +218,7 @@ typename AnalyticExpansion<NodeT>::AnalyticExpansionNodes AnalyticExpansion<Node
   bool failure = false;
   std::vector<float> node_costs;
   node_costs.reserve(num_intervals);
+  const bool is_start_behind_goal = _search_info.isStartBehindSearchBounds();
 
   // Check intermediary poses (non-goal, non-start)
   for (float i = 1; i < num_intervals; i++) {
@@ -225,8 +227,8 @@ typename AnalyticExpansion<NodeT>::AnalyticExpansionNodes AnalyticExpansion<Node
 
     if (!_search_info.allow_goal_overshoot){
       geometry_msgs::Pose node_in_world_frame = Utils::getWorldCoords(reals[0], reals[1], _collision_checker->getCostmap());
-      const bool is_node_behind_goal = Utils::isBehindPose(node_in_world_frame.position, _search_info.search_bounds.pose);
-      if (is_node_behind_goal != _search_info.is_start_behind_goal){ // not equal means not on the same side
+      const bool is_node_behind_goal = Utils::isBehindPose(node_in_world_frame.position, _search_info.getSearchBound());
+      if (is_node_behind_goal != is_start_behind_goal){ // not equal means not on the same side
           failure = true;
           break;
       }
