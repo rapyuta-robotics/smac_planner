@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 
+#include "geometry_msgs/Point.h"
 #include "nlohmann/json.hpp"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Pose.h"
@@ -60,8 +61,8 @@ public:
   * @return Bool true means point is below pose, false means point is above pose
   */
   static inline bool isBehindPose(
-    const geometry_msgs::Pose & pose,
-    const geometry_msgs::PoseStamped & reference_pose){
+    const geometry_msgs::Point & point,
+    const geometry_msgs::Pose & reference_pose){
 
       tf2::Quaternion q(
         reference_pose.pose.orientation.x,

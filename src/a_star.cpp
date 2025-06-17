@@ -23,7 +23,7 @@
 #include <vector>
 
 
-#include "geometry_msgs/Pose.h"
+#include <geometry_msgs/Pose.h>
 #include "mbf_msgs/GetPathResult.h"
 #include "smac_planner/utils.hpp"
 
@@ -191,7 +191,7 @@ bool AStarAlgorithm<Node2D>::checkNodeBelowPose(
 {
   const Node2D::Coordinates node_coords = node->getCoords(node->getIndex());
   const geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
-  return Utils::isBehindPose(node_in_world_frame, pose);
+  return Utils::isBehindPose(node_in_world_frame.position, pose.pose);
 }
 
 template<typename NodeT>
@@ -201,7 +201,7 @@ bool AStarAlgorithm<NodeT>::checkNodeBelowPose(
 {
   typename NodeT::Coordinates node_coords = node->pose;
   const geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
-  return Utils::isBehindPose(node_in_world_frame, pose);
+  return Utils::isBehindPose(node_in_world_frame.position, pose.pose);
 }
 
 template<typename NodeT>
