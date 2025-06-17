@@ -65,18 +65,18 @@ public:
     const geometry_msgs::Pose & reference_pose){
 
       tf2::Quaternion q(
-        reference_pose.pose.orientation.x,
-        reference_pose.pose.orientation.y,
-        reference_pose.pose.orientation.z,
-        reference_pose.pose.orientation.w);
+        reference_pose.orientation.x,
+        reference_pose.orientation.y,
+        reference_pose.orientation.z,
+        reference_pose.orientation.w);
       double roll, pitch, yaw;
       tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
 
       float dx = std::cos(yaw);
       float dy = std::sin(yaw);
 
-      float vx = pose.position.x - reference_pose.pose.position.x;
-      float vy = pose.position.y - reference_pose.pose.position.y;
+      float vx = point.x - reference_pose.position.x;
+      float vy = point.y - reference_pose.position.y;
 
       float dot = vx * dx + vy * dy;
       return (dot < 0);
