@@ -125,7 +125,7 @@ void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::PoseStamped& se
 {
   _search_info.search_bounds = search_bounds;
   _search_info.allow_goal_overshoot = allow_goal_overshoot;
-  _is_start_behind_goal = is_start_behind_goal;
+  _search_info.is_start_behind_goal =  is_start_behind_goal;
   _expander->setSearchBounds(search_bounds, allow_goal_overshoot, is_start_behind_goal);
 }
 
@@ -334,7 +334,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (!_search_info.allow_goal_overshoot){
         auto iter = _graph.find(index);
         if (iter != _graph.end()) {
-               if (isNodeBelowPose(&(iter->second), _search_info.search_bounds) != _is_start_behind_goal){
+               if (isNodeBelowPose(&(iter->second), _search_info.search_bounds) != _search_info.is_start_behind_goal){
                 return false;
                }
             }
@@ -405,7 +405,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       neighbor = *neighbor_iterator;
 
       if (!_search_info.allow_goal_overshoot) {
-        if ((isNodeBelowPose(neighbor, _search_info.search_bounds)) != _is_start_behind_goal) {
+        if ((isNodeBelowPose(neighbor, _search_info.search_bounds)) != _search_info.is_start_behind_goal) {
           continue;
         }
       }

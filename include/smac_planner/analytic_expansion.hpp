@@ -36,7 +36,6 @@ public:
   typedef NodeT * NodePtr;
   typedef typename NodeT::Coordinates Coordinates;
   typedef std::function<bool (const unsigned int &, NodeT * &)> NodeGetter;
-  bool _is_start_behind_goal;
 
   /**
    * @struct smac_planner::AnalyticExpansion::AnalyticExpansionNodes

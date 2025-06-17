@@ -49,6 +49,7 @@ struct SearchInfo
   bool allow_goal_overshoot{true};
   bool downsample_obstacle_heuristic{true};
   bool use_quadratic_cost_penalty{false};
+  bool is_start_behind_goal;
   geometry_msgs::PoseStamped search_bounds;
 };
 

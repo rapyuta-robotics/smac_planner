@@ -51,7 +51,6 @@ public:
   typedef typename NodeT::CoordinateVector CoordinateVector;
   typedef typename NodeVector::iterator NeighborIterator;
   typedef std::function<bool (const unsigned int &, NodeT * &)> NodeGetter;
-  bool _is_start_behind_goal;
 
   /**
    * @struct smac_planner::NodeComparator

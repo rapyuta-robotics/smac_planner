@@ -52,7 +52,7 @@ void AnalyticExpansion<NodeT>::setSearchBounds(
 {
   _search_info.search_bounds = search_bounds;
   _search_info.allow_goal_overshoot = allow_goal_overshoot;
-  _is_start_behind_goal = is_start_behind_goal;
+  _search_info.is_start_behind_goal = is_start_behind_goal;
 }
 
 template<typename NodeT>
@@ -226,7 +226,7 @@ typename AnalyticExpansion<NodeT>::AnalyticExpansionNodes AnalyticExpansion<Node
     if (!_search_info.allow_goal_overshoot){
       geometry_msgs::Pose node_in_world_frame = Utils::getWorldCoords(reals[0], reals[1], _collision_checker->getCostmap());
       bool is_node_behind_goal = Utils::isBehindPose(node_in_world_frame.position, _search_info.search_bounds.pose);
-      if (is_node_behind_goal != _is_start_behind_goal){ // not equal means not on the same side
+      if (is_node_behind_goal != _search_info.is_start_behind_goal){ // not equal means not on the same side
           failure = true;
           break;
       }
