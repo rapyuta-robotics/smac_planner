@@ -20,7 +20,7 @@
 #include <list>
 #include <memory>
 
-#include "geometry_msgs/Point.h"
+#include <geometry_msgs/Point.h>
 #include "smac_planner/node_2d.hpp"
 #include "smac_planner/node_hybrid.hpp"
 #include "smac_planner/node_lattice.hpp"

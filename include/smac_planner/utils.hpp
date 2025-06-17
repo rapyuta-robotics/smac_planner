@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "geometry_msgs/Point.h"
+#include <geometry_msgs/Point.h>
 #include "nlohmann/json.hpp"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Pose.h"

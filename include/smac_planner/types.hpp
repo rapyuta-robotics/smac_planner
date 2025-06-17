@@ -19,7 +19,7 @@
 #include <vector>
 #include <utility>
 #include <string>
-#include "geometry_msgs/Point.h"
+#include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
 
 namespace smac_planner

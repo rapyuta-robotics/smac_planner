@@ -18,8 +18,7 @@
 #include <algorithm>
 #include <vector>
 #include <memory>
-#include "geometry_msgs/Point.h"
-#include "geometry_msgs/PoseStamped.h"
+#include <geometry_msgs/Point.h>
 #include <smac_planner/utils.hpp>
 #include "smac_planner/analytic_expansion.hpp"
 
