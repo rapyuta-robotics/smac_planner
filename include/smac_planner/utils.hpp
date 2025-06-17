@@ -81,6 +81,27 @@ public:
       return (dot < 0);
     }
 
+
+  static geometry_msgs::Pose getPoseDistanceBehindPose(const geometry_msgs::Pose& pose, const float& distance){
+    geometry_msgs::Pose output_pose;
+    output_pose.orientation = pose.orientation;
+
+    // Extract quaternion components
+    const double x = pose.orientation.x;
+    const double y = pose.orientation.y;
+    const double z = pose.orientation.z;
+    const double w = pose.orientation.w;
+
+    const double yaw = std::atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z));
+
+    // Compute the new position
+    output_pose.position.x = pose.position.x + distance * std::cos(yaw);
+    output_pose.position.y = pose.position.y + distance * std::sin(yaw);
+    output_pose.position.z = pose.position.z;
+
+    return output_pose;
+  }
+
   /**
   * @brief Create quaternion from radians
   * @param theta continuous bin coordinates angle

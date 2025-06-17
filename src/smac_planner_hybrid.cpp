@@ -18,7 +18,10 @@
 #include <vector>
 #include <limits>
 
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
+#include "ros/console.h"
 #include "smac_planner/utils.hpp"
 
 #include "smac_planner/smac_planner_hybrid.hpp"
@@ -95,6 +98,8 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   _search_info.downsample_obstacle_heuristic = _config.downsample_obstacle_heuristic;
   _search_info.use_quadratic_cost_penalty = _config.use_quadratic_cost_penalty;
   _search_info.allow_goal_overshoot = _config.allow_goal_overshoot;
+  _search_info.goal_align_distance = _config.goal_align_distance;
+  _allow_goal_overshoot = _search_info.allow_goal_overshoot;
 
 
   if (_config.max_on_approach_iterations <= 0) {
@@ -165,6 +170,124 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
 }
 
 uint32_t SmacPlannerHybrid::makePlan(
+  const geometry_msgs::PoseStamped & start,
+  const geometry_msgs::PoseStamped & goal,
+  double tolerance,
+  std::vector<geometry_msgs::PoseStamped> & plan,
+  double &cost,
+  std::string &message)
+{
+_planning_canceled = false;
+
+  if (!_allow_goal_overshoot){
+    _search_info.setSearchBound(goal.pose);
+    _search_info.setStart(start.pose.position);
+    if (_search_info.isStartBehindSearchBounds()){
+      _goal_align_poses.reset();
+      if (_search_info.goal_align_distance > 0.0){
+        ROS_INFO("Align before the goal pose ...");
+        geometry_msgs::PoseStamped goal_align_pose;
+        goal_align_pose.pose = Utils::getPoseDistanceBehindPose(goal.pose, -_search_info.goal_align_distance);
+        _goal_align_poses = std::vector<geometry_msgs::PoseStamped>{goal_align_pose};
+      }
+    }
+    else{
+      _goal_align_poses.reset();
+      if (_search_info.goal_align_distance > 0){
+      ROS_INFO("Align after the goal pose ...");
+      geometry_msgs::PoseStamped goal_align_pose;
+      goal_align_pose.pose = Utils::getPoseDistanceBehindPose(goal.pose, _search_info.goal_align_distance);
+      _goal_align_poses = std::vector<geometry_msgs::PoseStamped>{goal_align_pose};
+      }
+    }
+  } else{
+    _goal_align_poses.reset();
+    if (_search_info.goal_align_distance > 0.0){
+      ROS_INFO("Trying to align to two possible poses,vwill select best path based on length...");
+      geometry_msgs::PoseStamped goal_align_pose_front;
+      goal_align_pose_front.pose = Utils::getPoseDistanceBehindPose(goal.pose, -_search_info.goal_align_distance);
+      geometry_msgs::PoseStamped goal_align_pose_back;
+      goal_align_pose_back.pose = Utils::getPoseDistanceBehindPose(goal.pose, _search_info.goal_align_distance);
+      _goal_align_poses = std::vector<geometry_msgs::PoseStamped>{goal_align_pose_front, goal_align_pose_back}; // robot may align to any of the goal poses, because there is no bounds restriction now
+    }
+  }
+
+  // If no goal align poses, proceed with normal planning
+  if (!_goal_align_poses.has_value()) {
+    return makeDirectPlan(start, goal, tolerance, plan, cost, message);
+  }
+
+  // If we have goal align poses
+  const auto& align_poses = _goal_align_poses.value();
+
+  // For single align pose
+  if (align_poses.size() == 1) {
+    std::vector<geometry_msgs::PoseStamped> first_leg, second_leg;
+    double cost1, cost2;
+
+    // Plan from start to align pose
+    uint32_t result1 = makeDirectPlan(start, align_poses[0], tolerance, first_leg, cost1, message);
+    if (result1 != mbf_msgs::GetPathResult::SUCCESS) {
+      return result1;
+    }
+
+    // Plan from align pose to goal
+    uint32_t result2 = makeDirectPlan(align_poses[0], goal, tolerance, second_leg, cost2, message);
+    if (result2 != mbf_msgs::GetPathResult::SUCCESS) {
+      return result2;
+    }
+
+    // Combine paths (skip duplicate align pose)
+    plan = first_leg;
+    plan.insert(plan.end(), second_leg.begin() + 1, second_leg.end());
+    cost = cost1 + cost2;
+    return mbf_msgs::GetPathResult::SUCCESS;
+  }
+
+  // For two align poses (choose the shortest path)
+  if (align_poses.size() >= 2) {
+    std::vector<geometry_msgs::PoseStamped> path1, path2, path1_first, path1_second, path2_first, path2_second;
+    double cost1_first, cost1_second, cost2_first, cost2_second;
+
+    // Plan first option (start -> align_poses[0] -> goal)
+    uint32_t result1_first = makeDirectPlan(start, align_poses[0], tolerance, path1_first, cost1_first, message);
+    uint32_t result1_second = makeDirectPlan(align_poses[0], goal, tolerance, path1_second, cost1_second, message);
+
+    // Plan second option (start -> align_poses[1] -> goal)
+    uint32_t result2_first = makeDirectPlan(start, align_poses[1], tolerance, path2_first, cost2_first, message);
+    uint32_t result2_second = makeDirectPlan(align_poses[1], goal, tolerance, path2_second, cost2_second, message);
+
+    // Check which combination is valid and shorter
+    bool option1_valid = (result1_first == mbf_msgs::GetPathResult::SUCCESS) &&
+                        (result1_second == mbf_msgs::GetPathResult::SUCCESS);
+    bool option2_valid = (result2_first == mbf_msgs::GetPathResult::SUCCESS) &&
+                        (result2_second == mbf_msgs::GetPathResult::SUCCESS);
+
+    if (!option1_valid && !option2_valid) {
+      message = "Neither align pose path combination was valid";
+      return mbf_msgs::GetPathResult::NO_PATH_FOUND;
+    }
+
+    if (option1_valid && (!option2_valid || (cost1_first + cost1_second <= cost2_first + cost2_second))) {
+      // Use first option
+      plan = path1_first;
+      plan.insert(plan.end(), path1_second.begin() + 1, path1_second.end());
+      cost = cost1_first + cost1_second;
+    } else {
+      // Use second option
+      plan = path2_first;
+      plan.insert(plan.end(), path2_second.begin() + 1, path2_second.end());
+      cost = cost2_first + cost2_second;
+    }
+
+    return mbf_msgs::GetPathResult::SUCCESS;
+  }
+
+  // Default case (shouldn't reach here)
+  return makeDirectPlan(start, goal, tolerance, plan, cost, message);
+  }
+
+uint32_t SmacPlannerHybrid::makeDirectPlan(
     const geometry_msgs::PoseStamped & start,
     const geometry_msgs::PoseStamped & goal,
     double tolerance,
