@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(smac_planner)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(catkin REQUIRED COMPONENTS
         roscpp
         dynamic_reconfigure
@@ -50,6 +52,7 @@ add_library(${library_name} SHARED
         src/costmap_downsampler.cpp
         src/node_2d.cpp
         src/node_basic.cpp
+        src/types.cpp
 )
 
 target_link_libraries(${library_name}

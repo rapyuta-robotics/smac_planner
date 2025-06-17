@@ -18,9 +18,8 @@
 #include <vector>
 #include <limits>
 
-#include "Eigen/Core"
-
 #include "mbf_msgs/GetPathResult.h"
+#include "smac_planner/utils.hpp"
 
 #include "smac_planner/smac_planner_hybrid.hpp"
 
@@ -95,6 +94,8 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   _search_info.allow_primitive_interpolation = _config.allow_primitive_interpolation;
   _search_info.downsample_obstacle_heuristic = _config.downsample_obstacle_heuristic;
   _search_info.use_quadratic_cost_penalty = _config.use_quadratic_cost_penalty;
+  _search_info.allow_goal_overshoot = _config.allow_goal_overshoot;
+
 
   if (_config.max_on_approach_iterations <= 0) {
     ROS_WARN("On approach iteration selected as <= 0, "
@@ -190,6 +191,7 @@ uint32_t SmacPlannerHybrid::makePlan(
       _costmap_ros->getUseRadius(),
       Utils::findCircumscribedCost(_costmap_ros.get()));
   _a_star->setCollisionChecker(_collision_checker.get());
+  _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
 
   // Set starting point, in A* bin search coordinates
   float mx, my;

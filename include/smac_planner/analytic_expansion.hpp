@@ -20,6 +20,7 @@
 #include <list>
 #include <memory>
 
+#include <geometry_msgs/Point.h>
 #include "smac_planner/node_2d.hpp"
 #include "smac_planner/node_hybrid.hpp"
 #include "smac_planner/node_lattice.hpp"
@@ -119,6 +120,14 @@ public:
    * @param expanded_nodes Expanded node to clean up from search
    */
   void cleanNode(const NodePtr & nodes);
+
+  /**
+   * @brief Used to limit the planner to explore ahead of the specified pose
+   * @param search_bounds the pose beyoind which we want to limit the planner
+   * @param start_point the start point
+   * @param allow_goal_overshoot enable/disable this feature
+   */
+  void setSearchBounds(const geometry_msgs::Pose &search_bounds, const geometry_msgs::Point& start_point, bool allow_goal_overshoot);
 
 protected:
   MotionModel _motion_model;

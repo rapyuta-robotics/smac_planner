@@ -20,8 +20,8 @@
 #include <memory>
 #include <string>
 
+#include <geometry_msgs/Point.h>
 #include "nlohmann/json.hpp"
-#include "Eigen/Core"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Pose.h"
 #include "tf2/utils.h"
@@ -52,6 +52,34 @@ public:
         static_cast<float>(costmap->getOriginY()) + (my + 0.5) * costmap->getResolution();
     return msg;
   }
+
+  /**
+  * @brief Check if the position of given x,y point is below or above the pose
+  * @param point the point whose position we want to check with respect to the reference_pose
+  * @param reference_pose the pose with respect to which we want to check the position of the x,y point
+  * @return Bool true means point is below pose, false means point is above pose
+  */
+  static inline bool isBehindPose(
+    const geometry_msgs::Point & point,
+    const geometry_msgs::Pose & reference_pose){
+
+      tf2::Quaternion q(
+        reference_pose.orientation.x,
+        reference_pose.orientation.y,
+        reference_pose.orientation.z,
+        reference_pose.orientation.w);
+      double roll, pitch, yaw;
+      tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+      float dx = std::cos(yaw);
+      float dy = std::sin(yaw);
+
+      float vx = point.x - reference_pose.position.x;
+      float vy = point.y - reference_pose.position.y;
+
+      float dot = vx * dx + vy * dy;
+      return (dot < 0);
+    }
 
   /**
   * @brief Create quaternion from radians

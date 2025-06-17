@@ -18,8 +18,8 @@
 #include <vector>
 #include <utility>
 #include <string>
-#include <memory>
-
+#include <geometry_msgs/PoseStamped.h>
+#include <optional>
 
 namespace smac_planner
 {
@@ -47,8 +47,18 @@ struct SearchInfo
   bool cache_obstacle_heuristic{false};
   bool allow_reverse_expansion{false};
   bool allow_primitive_interpolation{false};
+  bool allow_goal_overshoot{true};
   bool downsample_obstacle_heuristic{true};
   bool use_quadratic_cost_penalty{false};
+  void setStart(const geometry_msgs::Point& start);
+  geometry_msgs::Pose getSearchBound();
+  void setSearchBound(const geometry_msgs::Pose& search_bound);
+  bool isStartBehindSearchBounds();
+
+private:
+  geometry_msgs::Point _start_pose;
+  geometry_msgs::Pose _search_bound;
+  std::optional<bool> is_start_behind_goal;
 };
 
 /**
