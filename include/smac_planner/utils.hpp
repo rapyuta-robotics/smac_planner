@@ -55,8 +55,7 @@ public:
 
   /**
   * @brief Check if the position of given x,y point is below or above the pose
-  * @param x float of X coordinate
-  * @param y float of Y coordinate
+  * @param point the point whose position we want to check with respect to the reference_pose
   * @param reference_pose the pose with respect to which we want to check the position of the x,y point
   * @return Bool true means point is below pose, false means point is above pose
   */

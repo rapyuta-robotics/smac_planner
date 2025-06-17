@@ -94,7 +94,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   _search_info.allow_primitive_interpolation = _config.allow_primitive_interpolation;
   _search_info.downsample_obstacle_heuristic = _config.downsample_obstacle_heuristic;
   _search_info.use_quadratic_cost_penalty = _config.use_quadratic_cost_penalty;
-  _allow_goal_overshoot = _config.allow_goal_overshoot;
+  _search_info.allow_goal_overshoot = _config.allow_goal_overshoot;
 
 
   if (_config.max_on_approach_iterations <= 0) {
@@ -191,8 +191,7 @@ uint32_t SmacPlannerHybrid::makePlan(
       _costmap_ros->getUseRadius(),
       Utils::findCircumscribedCost(_costmap_ros.get()));
   _a_star->setCollisionChecker(_collision_checker.get());
-  bool is_start_behind_goal = Utils::isBehindPose(start.pose.position, goal.pose);
-  _a_star->setSearchBounds(goal, _allow_goal_overshoot, is_start_behind_goal);
+  _a_star->setSearchBounds(goal, _search_info.allow_goal_overshoot, Utils::isBehindPose(start.pose.position, goal.pose));
 
 
 

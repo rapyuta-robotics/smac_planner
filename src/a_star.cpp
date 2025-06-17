@@ -185,23 +185,23 @@ void AStarAlgorithm<Node2D>::populateExpansionsLog(
 }
 
 template<>
-bool AStarAlgorithm<Node2D>::isNodeBelowPose(
+bool AStarAlgorithm<Node2D>::isBehindPose(
   const NodePtr & node,
-  const geometry_msgs::PoseStamped & pose)
+  const geometry_msgs::Pose & pose)
 {
   const Node2D::Coordinates node_coords = node->getCoords(node->getIndex());
   const geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
-  return Utils::isBehindPose(node_in_world_frame.position, pose.pose);
+  return Utils::isBehindPose(node_in_world_frame.position, pose);
 }
 
 template<typename NodeT>
-bool AStarAlgorithm<NodeT>::isNodeBelowPose(
+bool AStarAlgorithm<NodeT>::isBehindPose(
   const NodePtr & node,
-  const geometry_msgs::PoseStamped & pose)
+  const geometry_msgs::Pose & pose)
 {
   typename NodeT::Coordinates node_coords = node->pose;
   const geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
-  return Utils::isBehindPose(node_in_world_frame.position, pose.pose);
+  return Utils::isBehindPose(node_in_world_frame.position, pose);
 }
 
 template<typename NodeT>
@@ -334,7 +334,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (!_search_info.allow_goal_overshoot){
         auto iter = _graph.find(index);
         if (iter != _graph.end()) {
-               if (isNodeBelowPose(&(iter->second), _search_info.search_bounds) != _search_info.is_start_behind_goal){
+               if (isBehindPose(&(iter->second), _search_info.search_bounds.pose) != _search_info.is_start_behind_goal){
                 return false;
                }
             }
@@ -405,7 +405,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       neighbor = *neighbor_iterator;
 
       if (!_search_info.allow_goal_overshoot) {
-        if ((isNodeBelowPose(neighbor, _search_info.search_bounds)) != _search_info.is_start_behind_goal) {
+        if ((isBehindPose(neighbor, _search_info.search_bounds.pose)) != _search_info.is_start_behind_goal) {
           continue;
         }
       }

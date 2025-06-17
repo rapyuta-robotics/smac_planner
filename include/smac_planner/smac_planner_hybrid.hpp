@@ -106,7 +106,6 @@ protected:
   double _angle_bin_size;
   unsigned int _angle_quantizations;
   SearchInfo _search_info;
-  bool _allow_goal_overshoot = true;
   bool _planning_canceled;
   MotionModel _motion_model;
   ros::Publisher _raw_plan_publisher;

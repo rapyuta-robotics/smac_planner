@@ -251,7 +251,7 @@ protected:
    * @param node the node which we want to check
    * @param pose the pose relative to which we want to check the position of the node
    */
-  bool isNodeBelowPose(const NodePtr& node, const geometry_msgs::PoseStamped& pose);
+  bool isBehindPose(const NodePtr& node, const geometry_msgs::Pose& pose);
 
     /**
    * @brief Clear Start
