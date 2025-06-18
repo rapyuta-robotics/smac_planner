@@ -19,7 +19,6 @@
 #include <vector>
 #include <string>
 
-#include "geometry_msgs/Pose.h"
 #include "smac_planner/a_star.hpp"
 #include "smac_planner/smoother.hpp"
 #include "smac_planner/costmap_downsampler.hpp"
@@ -122,8 +121,6 @@ protected:
   ros::Publisher _planned_footprints_publisher;
   ros::Publisher _expansions_publisher;
   std::mutex _mutex;
-  std::optional<std::vector<geometry_msgs::PoseStamped>> _goal_align_poses;
-  bool _allow_goal_overshoot;
 };
 
 }  // namespace smac_planner

@@ -99,8 +99,6 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   _search_info.use_quadratic_cost_penalty = _config.use_quadratic_cost_penalty;
   _search_info.allow_goal_overshoot = _config.allow_goal_overshoot;
   _search_info.goal_align_distance = _config.goal_align_distance;
-  _allow_goal_overshoot = _search_info.allow_goal_overshoot;
-
 
   if (_config.max_on_approach_iterations <= 0) {
     ROS_WARN("On approach iteration selected as <= 0, "
@@ -177,62 +175,57 @@ uint32_t SmacPlannerHybrid::makePlan(
   double &cost,
   std::string &message)
 {
-_planning_canceled = false;
-
-  if (!_allow_goal_overshoot){
+  _planning_canceled = false;
+  std::vector<geometry_msgs::PoseStamped> goal_align_poses;
+  if (!_config.allow_goal_overshoot){
     _search_info.setSearchBound(goal.pose);
     _search_info.setStart(start.pose.position);
     if (_search_info.isStartBehindSearchBounds()){
-      _goal_align_poses.reset();
       if (_search_info.goal_align_distance > 0.0){
-        ROS_INFO("Align before the goal pose ...");
+        ROS_INFO("Robot will align %f meters before the goal pose ...", _config.goal_align_distance);
         geometry_msgs::PoseStamped goal_align_pose;
         goal_align_pose.pose = Utils::getPoseDistanceBehindPose(goal.pose, -_search_info.goal_align_distance);
-        _goal_align_poses = std::vector<geometry_msgs::PoseStamped>{goal_align_pose};
+        goal_align_poses.push_back(goal_align_pose);
       }
     }
     else{
-      _goal_align_poses.reset();
       if (_search_info.goal_align_distance > 0){
-      ROS_INFO("Align after the goal pose ...");
+      ROS_INFO("Robot will align %f meters after the goal pose ...", _config.goal_align_distance);
       geometry_msgs::PoseStamped goal_align_pose;
       goal_align_pose.pose = Utils::getPoseDistanceBehindPose(goal.pose, _search_info.goal_align_distance);
-      _goal_align_poses = std::vector<geometry_msgs::PoseStamped>{goal_align_pose};
+      goal_align_poses.push_back(goal_align_pose);
       }
     }
   } else{
-    _goal_align_poses.reset();
     if (_search_info.goal_align_distance > 0.0){
-      ROS_INFO("Trying to align to two possible poses,vwill select best path based on length...");
+      ROS_INFO("Robot may align either %f meters before or after the goal pose...", _config.goal_align_distance);
       geometry_msgs::PoseStamped goal_align_pose_front;
       goal_align_pose_front.pose = Utils::getPoseDistanceBehindPose(goal.pose, -_search_info.goal_align_distance);
       geometry_msgs::PoseStamped goal_align_pose_back;
       goal_align_pose_back.pose = Utils::getPoseDistanceBehindPose(goal.pose, _search_info.goal_align_distance);
-      _goal_align_poses = std::vector<geometry_msgs::PoseStamped>{goal_align_pose_front, goal_align_pose_back}; // robot may align to any of the goal poses, because there is no bounds restriction now
+      goal_align_poses = {goal_align_pose_front, goal_align_pose_back}; // robot may align to any of the goal poses, because there is no bounds restriction now
     }
   }
 
   // If no goal align poses, proceed with normal planning
-  if (!_goal_align_poses.has_value()) {
+  if (goal_align_poses.empty()) {
     return makeDirectPlan(start, goal, tolerance, plan, cost, message);
   }
 
-  // If we have goal align poses
-  const auto& align_poses = _goal_align_poses.value();
 
   // For single align pose
-  if (align_poses.size() == 1) {
+  if (goal_align_poses.size() == 1) {
     std::vector<geometry_msgs::PoseStamped> first_leg, second_leg;
     double cost1, cost2;
 
     // Plan from start to align pose
-    uint32_t result1 = makeDirectPlan(start, align_poses[0], tolerance, first_leg, cost1, message);
+    uint32_t result1 = makeDirectPlan(start, goal_align_poses[0], tolerance, first_leg, cost1, message);
     if (result1 != mbf_msgs::GetPathResult::SUCCESS) {
       return result1;
     }
 
     // Plan from align pose to goal
-    uint32_t result2 = makeDirectPlan(align_poses[0], goal, tolerance, second_leg, cost2, message);
+    uint32_t result2 = makeDirectPlan(goal_align_poses[0], goal, tolerance, second_leg, cost2, message);
     if (result2 != mbf_msgs::GetPathResult::SUCCESS) {
       return result2;
     }
@@ -245,17 +238,17 @@ _planning_canceled = false;
   }
 
   // For two align poses (choose the shortest path)
-  if (align_poses.size() >= 2) {
-    std::vector<geometry_msgs::PoseStamped> path1, path2, path1_first, path1_second, path2_first, path2_second;
+  if (goal_align_poses.size() >= 2) {
+    std::vector<geometry_msgs::PoseStamped> path1_first, path1_second, path2_first, path2_second;
     double cost1_first, cost1_second, cost2_first, cost2_second;
 
     // Plan first option (start -> align_poses[0] -> goal)
-    uint32_t result1_first = makeDirectPlan(start, align_poses[0], tolerance, path1_first, cost1_first, message);
-    uint32_t result1_second = makeDirectPlan(align_poses[0], goal, tolerance, path1_second, cost1_second, message);
+    uint32_t result1_first = makeDirectPlan(start, goal_align_poses[0], tolerance, path1_first, cost1_first, message);
+    uint32_t result1_second = makeDirectPlan(goal_align_poses[0], goal, tolerance, path1_second, cost1_second, message);
 
     // Plan second option (start -> align_poses[1] -> goal)
-    uint32_t result2_first = makeDirectPlan(start, align_poses[1], tolerance, path2_first, cost2_first, message);
-    uint32_t result2_second = makeDirectPlan(align_poses[1], goal, tolerance, path2_second, cost2_second, message);
+    uint32_t result2_first = makeDirectPlan(start, goal_align_poses[1], tolerance, path2_first, cost2_first, message);
+    uint32_t result2_second = makeDirectPlan(goal_align_poses[1], goal, tolerance, path2_second, cost2_second, message);
 
     // Check which combination is valid and shorter
     bool option1_valid = (result1_first == mbf_msgs::GetPathResult::SUCCESS) &&
