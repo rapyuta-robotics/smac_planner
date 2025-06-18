@@ -211,7 +211,6 @@ uint32_t SmacPlannerHybrid::makePlan(
     return makeDirectPlan(start, goal, tolerance, plan, cost, message);
   }
 
-
   // For single align pose
   if (goal_align_poses.size() == 1) {
     std::vector<geometry_msgs::PoseStamped> first_leg, second_leg;
@@ -236,7 +235,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     return mbf_msgs::GetPathResult::SUCCESS;
   }
 
-  // For two align poses (choose the shortest path)
+  // For two align poses (choose the path with fewer poses)
   if (goal_align_poses.size() >= 2) {
     std::vector<geometry_msgs::PoseStamped> path1_first, path1_second, path2_first, path2_second;
     double cost1_first, cost1_second, cost2_first, cost2_second;
@@ -249,7 +248,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     uint32_t result2_first = makeDirectPlan(start, goal_align_poses[1], tolerance, path2_first, cost2_first, message);
     uint32_t result2_second = makeDirectPlan(goal_align_poses[1], goal, tolerance, path2_second, cost2_second, message);
 
-    // Check which combination is valid and shorter
+    // Check which combination is valid
     bool option1_valid = (result1_first == mbf_msgs::GetPathResult::SUCCESS) &&
                         (result1_second == mbf_msgs::GetPathResult::SUCCESS);
     bool option2_valid = (result2_first == mbf_msgs::GetPathResult::SUCCESS) &&
@@ -260,8 +259,12 @@ uint32_t SmacPlannerHybrid::makePlan(
       return mbf_msgs::GetPathResult::NO_PATH_FOUND;
     }
 
-    if (option1_valid && (!option2_valid || (cost1_first + cost1_second <= cost2_first + cost2_second))) {
-      // Use first option
+    // Calculate total number of poses for each option
+    size_t option1_poses = path1_first.size() + path1_second.size() - 1; // -1 to account for duplicate align pose
+    size_t option2_poses = path2_first.size() + path2_second.size() - 1; // -1 to account for duplicate align pose
+
+    if (option1_valid && (!option2_valid || option1_poses <= option2_poses)) {
+      // Use first option if it's valid and either the only valid option or has fewer poses
       plan = path1_first;
       plan.insert(plan.end(), path1_second.begin() + 1, path1_second.end());
       cost = cost1_first + cost1_second;
@@ -277,7 +280,8 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   // Default case (shouldn't reach here)
   return makeDirectPlan(start, goal, tolerance, plan, cost, message);
-  }
+}
+
 
 uint32_t SmacPlannerHybrid::makeDirectPlan(
     const geometry_msgs::PoseStamped & start,
