@@ -189,6 +189,11 @@ uint32_t SmacPlannerHybrid::makePlan(
 {
   std::vector<geometry_msgs::PoseStamped> goal_align_poses;
 
+    // If no goal align poses, proceed with normal planning
+    if (_search_info.goal_align_distance <= 0.0) {
+      return makeDirectPlan(start, goal, tolerance, plan, cost, message);
+    }
+
   if (_search_info.goal_align_distance > 0.0) {
     geometry_msgs::PoseStamped align_pose_front, align_pose_back;
     align_pose_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
@@ -209,11 +214,6 @@ uint32_t SmacPlannerHybrid::makePlan(
       ROS_INFO_NAMED("smac_planner_hybrid", "Robot may align either %f meters before or after the goal pose...", _config.goal_align_distance);
       goal_align_poses = {align_pose_front, align_pose_back};
     }
-  }
-
-  // If no goal align poses, proceed with normal planning
-  if (_search_info.goal_align_distance <= 0.0) {
-    return makeDirectPlan(start, goal, tolerance, plan, cost, message);
   }
 
   // For single align pose
