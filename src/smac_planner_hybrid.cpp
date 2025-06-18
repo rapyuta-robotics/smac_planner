@@ -171,9 +171,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
     const double tolerance)
   {
   PlanResult result;
-  std::string message;
-
-  result.result_code = makeDirectPlan(start, end, tolerance, result.path, result.cost, message);
+  result.result_code = makeDirectPlan(start, end, tolerance, result.path, result.cost, result.message);
   result.length = rr::nav::common::utility::length(result.path);
 
   return result;

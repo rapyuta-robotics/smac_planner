@@ -117,6 +117,7 @@ protected:
     uint32_t result_code;
     double cost;
     std::vector<geometry_msgs::PoseStamped> path;
+    std::string message;
     size_t length;
   };
 
