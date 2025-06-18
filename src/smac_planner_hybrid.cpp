@@ -176,28 +176,34 @@ uint32_t SmacPlannerHybrid::makePlan(
 {
   _planning_canceled = false;
   std::vector<geometry_msgs::PoseStamped> goal_align_poses;
-  if (!_config.allow_goal_overshoot && _search_info.goal_align_distance > 0){
+  if (!_config.allow_goal_overshoot){
     _search_info.setSearchBound(goal.pose);
     _search_info.setStart(start.pose.position);
     if (_search_info.isStartBehindSearchBounds()){
+      if (_search_info.goal_align_distance > 0.0){
         ROS_INFO("Robot will align %f meters before the goal pose ...", _config.goal_align_distance);
         geometry_msgs::PoseStamped goal_align_pose;
         goal_align_pose.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, -_search_info.goal_align_distance);
         goal_align_poses.push_back(goal_align_pose);
+      }
     }
     else{
+      if (_search_info.goal_align_distance > 0){
       ROS_INFO("Robot will align %f meters after the goal pose ...", _config.goal_align_distance);
       geometry_msgs::PoseStamped goal_align_pose;
       goal_align_pose.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
       goal_align_poses.push_back(goal_align_pose);
+      }
     }
   } else{
+    if (_search_info.goal_align_distance > 0.0){
       ROS_INFO("Robot may align either %f meters before or after the goal pose...", _config.goal_align_distance);
       geometry_msgs::PoseStamped goal_align_pose_front;
       goal_align_pose_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, -_search_info.goal_align_distance);
       geometry_msgs::PoseStamped goal_align_pose_back;
       goal_align_pose_back.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
       goal_align_poses = {goal_align_pose_front, goal_align_pose_back}; // robot may align to any of the goal poses, because there is no bounds restriction now
+    }
   }
 
   // If no goal align poses, proceed with normal planning
