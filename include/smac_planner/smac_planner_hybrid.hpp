@@ -59,8 +59,9 @@ public:
     std::string name,
     costmap_2d::Costmap2DROS* costmap_ros) override;
 
+
   /**
-   * @brief Creating a plan from start to goal poses
+   * @brief Calls makeDirect plan to get segments of the path from start to goal and returns the full path with additional logic for in between waypoints.
    * @param start Start pose
    * @param goal Goal pose
    * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
@@ -78,6 +79,18 @@ public:
     double & cost,
     std::string & message)  override;
 
+
+  /**
+   * @brief Creating a direct path from start to goal pose.
+   * @param start Start pose
+   * @param goal Goal pose
+   * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
+   *        in x and y before failing
+   * @param plan The plan... filled by the planner
+   * @param cost The cost for the the plan
+   * @param message Optional more detailed outcome as a string
+   * @return Result code as described on GetPath action result
+   */
   uint32_t makeDirectPlan(
     const geometry_msgs::PoseStamped & start,
     const geometry_msgs::PoseStamped & goal,
@@ -99,6 +112,26 @@ protected:
    * @param config Planner configuration
    */
   void reconfigureCB(SmacPlannerHybridConfig& config, uint32_t level);
+
+  struct PlanResult {
+    uint32_t result_code;
+    double cost;
+    std::vector<geometry_msgs::PoseStamped> path;
+    size_t length;
+  };
+
+  /**
+   * @brief Simplify sending goal to Hybrid Astar and returns a PlanResult structure
+   * @param start Start pose
+   * @param end Goal pose
+   * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
+   *        in x and y before failing
+   * @return PlanResult which contains the result code, cost, path and length of path.
+   */
+  PlanResult planBetweenPoses(
+    const geometry_msgs::PoseStamped& start,
+    const geometry_msgs::PoseStamped& end,
+    const double tolerance);
 
   std::unique_ptr<dynamic_reconfigure::Server<SmacPlannerHybridConfig>> dsrv_;
 

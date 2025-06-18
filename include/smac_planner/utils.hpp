@@ -82,9 +82,14 @@ public:
     }
 
 
-  static geometry_msgs::Pose getPoseAtDistanceAlongHeading(const geometry_msgs::Pose& pose, const float& distance){
-    geometry_msgs::Pose output_pose;
-    output_pose.orientation = pose.orientation;
+  /**
+  * @brief Returns a pose that is "distance" meters away along the same heading as the specified pose.
+  * @param pose the pose with respect to which we want to get the new pose
+  * @param distance in meters
+  * @return geometry_msgs::Pose
+  */
+  static inline geometry_msgs::Pose getPoseAtDistanceAlongHeading(const geometry_msgs::Pose& pose, const float& distance){
+    geometry_msgs::Pose output_pose = pose;
 
     // Extract quaternion components
     const double x = pose.orientation.x;
@@ -97,10 +102,10 @@ public:
     // Compute the new position
     output_pose.position.x = pose.position.x + distance * std::cos(yaw);
     output_pose.position.y = pose.position.y + distance * std::sin(yaw);
-    output_pose.position.z = pose.position.z;
 
     return output_pose;
   }
+
 
   /**
   * @brief Create quaternion from radians

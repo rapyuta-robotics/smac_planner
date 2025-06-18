@@ -23,6 +23,7 @@
 #include "ros/console.h"
 #include "smac_planner/utils.hpp"
 
+#include "rr_nav_common/nav_utility.hpp"
 #include "smac_planner/smac_planner_hybrid.hpp"
 
 // #define BENCHMARK_TESTING
@@ -41,8 +42,7 @@ SmacPlannerHybrid::SmacPlannerHybrid()
 
 SmacPlannerHybrid::~SmacPlannerHybrid()
 {
-  ROS_INFO("Destroying plugin %s of type SmacPlannerHybrid",
-    _name.c_str());
+  ROS_INFO_NAMED("smac_planner_hybrid", "Destroying plugin %s of type SmacPlannerHybrid", _name.c_str());
 }
 
 void SmacPlannerHybrid::initialize(
@@ -53,7 +53,7 @@ void SmacPlannerHybrid::initialize(
   _costmap_ros = std::shared_ptr<costmap_2d::Costmap2DROS>(costmap_ros);
   _global_frame = costmap_ros->getGlobalFrameID();
 
-  ROS_INFO("Initializing %s of type SmacPlannerHybrid", name.c_str());
+  ROS_INFO_NAMED("smac_planner_hybrid", "Initializing %s of type SmacPlannerHybrid", name.c_str());
 
   ros::NodeHandle parent_nh("~");
   ros::NodeHandle private_nh(parent_nh, name);
@@ -134,8 +134,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
 
   // Make sure it's an odd number
   if (static_cast<int>(_lookup_table_dim) % 2 == 0) {
-    ROS_INFO("Even sized heuristic lookup table size set %f, increasing size by 1 to make odd",
-      _lookup_table_dim);
+    ROS_INFO_NAMED("smac_planner_hybrid", "Even sized heuristic lookup table size set %f, increasing size by 1 to make odd", _lookup_table_dim);
     _lookup_table_dim += 1.0;
   }
 
@@ -158,13 +157,27 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
       _global_frame, topic_name, _costmap, _config.downsampling_factor);
   }
 
-  ROS_INFO("Configured plugin %s of type SmacPlannerHybrid with "
+  ROS_INFO_NAMED("smac_planner_hybrid", "Configured plugin %s of type SmacPlannerHybrid with "
     "maximum iterations %i, max on approach iterations %i, and %s. Tolerance %.2f. "
     "Using motion model: %s.",
     _name.c_str(), _config.max_iterations, _config.max_on_approach_iterations,
     _config.allow_unknown ? "allowing unknown traversal" : "not allowing unknown traversal",
     _config.tolerance, toString(_motion_model).c_str());
 }
+
+  SmacPlannerHybrid::PlanResult SmacPlannerHybrid::planBetweenPoses(
+    const geometry_msgs::PoseStamped& start,
+    const geometry_msgs::PoseStamped& end,
+    const double tolerance)
+  {
+  PlanResult result;
+  std::string message; // Not used in the struct since we don't need it for comparison
+
+  result.result_code = makeDirectPlan(start, end, tolerance, result.path, result.cost, message);
+  result.length = rr::nav::common::utility::length(result.path);
+
+  return result;
+  }
 
 uint32_t SmacPlannerHybrid::makePlan(
   const geometry_msgs::PoseStamped & start,
@@ -174,98 +187,89 @@ uint32_t SmacPlannerHybrid::makePlan(
   double &cost,
   std::string &message)
 {
-  _planning_canceled = false;
   std::vector<geometry_msgs::PoseStamped> goal_align_poses;
 
   if (_search_info.goal_align_distance > 0.0) {
     geometry_msgs::PoseStamped align_pose_front, align_pose_back;
-    align_pose_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, -_search_info.goal_align_distance);
-    align_pose_back.pose  = Utils::getPoseAtDistanceAlongHeading(goal.pose,  _search_info.goal_align_distance);
+    align_pose_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
+    align_pose_back.pose  = Utils::getPoseAtDistanceAlongHeading(goal.pose,  -_search_info.goal_align_distance);
 
     if (!_config.allow_goal_overshoot) {
       _search_info.setSearchBound(goal.pose);
       _search_info.setStart(start.pose.position);
 
       if (_search_info.isStartBehindSearchBounds()) {
-        ROS_INFO("Robot will align %f meters before the goal pose ...", _config.goal_align_distance);
-        goal_align_poses.push_back(align_pose_front);
-      } else {
-        ROS_INFO("Robot will align %f meters after the goal pose ...", _config.goal_align_distance);
+        ROS_INFO_NAMED("smac_planner_hybrid", "Robot will align %f meters before the goal pose ...", _config.goal_align_distance);
         goal_align_poses.push_back(align_pose_back);
+      } else {
+        ROS_INFO_NAMED("smac_planner_hybrid", "Robot will align %f meters after the goal pose ...", _config.goal_align_distance);
+        goal_align_poses.push_back(align_pose_front);
       }
     } else {
-      ROS_INFO("Robot may align either %f meters before or after the goal pose...", _config.goal_align_distance);
+      ROS_INFO_NAMED("smac_planner_hybrid", "Robot may align either %f meters before or after the goal pose...", _config.goal_align_distance);
       goal_align_poses = {align_pose_front, align_pose_back};
     }
   }
 
   // If no goal align poses, proceed with normal planning
-  if (goal_align_poses.empty()) {
+  if (_search_info.goal_align_distance <= 0.0) {
     return makeDirectPlan(start, goal, tolerance, plan, cost, message);
   }
 
   // For single align pose
   if (goal_align_poses.size() == 1) {
-    std::vector<geometry_msgs::PoseStamped> first_leg, second_leg;
-    double cost1, cost2;
-
-    // Plan from start to align pose
-    uint32_t result1 = makeDirectPlan(start, goal_align_poses[0], tolerance, first_leg, cost1, message);
-    if (result1 != mbf_msgs::GetPathResult::SUCCESS) {
-      return result1;
+    PlanResult start_to_goal_align_pose = planBetweenPoses(start, goal_align_poses[0], tolerance);
+    if (start_to_goal_align_pose.result_code != mbf_msgs::GetPathResult::SUCCESS) {
+      message = "Failed to plan to align pose";
+      return start_to_goal_align_pose.result_code;
     }
 
-    // Plan from align pose to goal
-    uint32_t result2 = makeDirectPlan(goal_align_poses[0], goal, tolerance, second_leg, cost2, message);
-    if (result2 != mbf_msgs::GetPathResult::SUCCESS) {
-      return result2;
+    PlanResult goal_align_pose_to_goal = planBetweenPoses(goal_align_poses[0], goal, tolerance);
+    if (goal_align_pose_to_goal.result_code != mbf_msgs::GetPathResult::SUCCESS) {
+      message = "Failed to plan from align pose to goal";
+      return goal_align_pose_to_goal.result_code;
     }
 
     // Combine paths (skip duplicate align pose)
-    plan = first_leg;
-    plan.insert(plan.end(), second_leg.begin() + 1, second_leg.end());
-    cost = cost1 + cost2;
+    plan = start_to_goal_align_pose.path;
+    plan.insert(plan.end(), goal_align_pose_to_goal.path.begin() + 1, goal_align_pose_to_goal.path.end());
+    cost = start_to_goal_align_pose.cost + start_to_goal_align_pose.cost;
     return mbf_msgs::GetPathResult::SUCCESS;
   }
 
   // For two align poses (choose the path with fewer poses)
   if (goal_align_poses.size() >= 2) {
-    std::vector<geometry_msgs::PoseStamped> path1_first, path1_second, path2_first, path2_second;
-    double cost1_first, cost1_second, cost2_first, cost2_second;
+    PlanResult option1_first = planBetweenPoses(start, goal_align_poses[0], tolerance);
+    PlanResult option1_second = planBetweenPoses(goal_align_poses[0], goal, tolerance);
 
-    // Plan first option (start -> align_poses[0] -> goal)
-    uint32_t result1_first = makeDirectPlan(start, goal_align_poses[0], tolerance, path1_first, cost1_first, message);
-    uint32_t result1_second = makeDirectPlan(goal_align_poses[0], goal, tolerance, path1_second, cost1_second, message);
-
-    // Plan second option (start -> align_poses[1] -> goal)
-    uint32_t result2_first = makeDirectPlan(start, goal_align_poses[1], tolerance, path2_first, cost2_first, message);
-    uint32_t result2_second = makeDirectPlan(goal_align_poses[1], goal, tolerance, path2_second, cost2_second, message);
+    PlanResult option2_first = planBetweenPoses(start, goal_align_poses[1], tolerance);
+    PlanResult option2_second = planBetweenPoses(goal_align_poses[1], goal, tolerance);
 
     // Check which combination is valid
-    bool option1_valid = (result1_first == mbf_msgs::GetPathResult::SUCCESS) &&
-                        (result1_second == mbf_msgs::GetPathResult::SUCCESS);
-    bool option2_valid = (result2_first == mbf_msgs::GetPathResult::SUCCESS) &&
-                        (result2_second == mbf_msgs::GetPathResult::SUCCESS);
+    const bool option1_valid = (option1_first.result_code == mbf_msgs::GetPathResult::SUCCESS) &&
+                              (option1_second.result_code == mbf_msgs::GetPathResult::SUCCESS);
+    const bool option2_valid = (option2_first.result_code == mbf_msgs::GetPathResult::SUCCESS) &&
+                              (option2_second.result_code == mbf_msgs::GetPathResult::SUCCESS);
 
     if (!option1_valid && !option2_valid) {
       message = "Neither align pose path combination was valid";
       return mbf_msgs::GetPathResult::NO_PATH_FOUND;
     }
 
-    // Calculate total number of poses for each option
-    size_t option1_poses = path1_first.size() + path1_second.size() - 1; // -1 to account for duplicate align pose
-    size_t option2_poses = path2_first.size() + path2_second.size() - 1; // -1 to account for duplicate align pose
+    // Calculate total length for each option
+    const size_t option1_length = option1_first.length + option1_second.length;
+    const size_t option2_length = option2_first.length + option2_second.length;
 
-    if (option1_valid && (!option2_valid || option1_poses <= option2_poses)) {
+    if (option1_valid && (!option2_valid || option1_length <= option2_length)) {
       // Use first option if it's valid and either the only valid option or has fewer poses
-      plan = path1_first;
-      plan.insert(plan.end(), path1_second.begin() + 1, path1_second.end());
-      cost = cost1_first + cost1_second;
+      plan = option1_first.path;
+      plan.insert(plan.end(), option1_second.path.begin() + 1, option1_second.path.end());
+      cost = option1_first.cost + option1_second.cost;
     } else {
       // Use second option
-      plan = path2_first;
-      plan.insert(plan.end(), path2_second.begin() + 1, path2_second.end());
-      cost = cost2_first + cost2_second;
+      plan = option2_first.path;
+      plan.insert(plan.end(), option2_second.path.begin() + 1, option2_second.path.end());
+      cost = option2_first.cost + option2_second.cost;
     }
 
     return mbf_msgs::GetPathResult::SUCCESS;
