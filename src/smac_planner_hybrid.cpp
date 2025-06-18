@@ -18,7 +18,6 @@
 #include <vector>
 #include <limits>
 
-#include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "ros/console.h"
