@@ -82,7 +82,7 @@ public:
     }
 
 
-  static geometry_msgs::Pose getPoseDistanceBehindPose(const geometry_msgs::Pose& pose, const float& distance){
+  static geometry_msgs::Pose getPoseAtDistanceAlongHeading(const geometry_msgs::Pose& pose, const float& distance){
     geometry_msgs::Pose output_pose;
     output_pose.orientation = pose.orientation;
 
