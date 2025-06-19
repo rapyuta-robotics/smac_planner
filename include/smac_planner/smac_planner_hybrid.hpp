@@ -64,36 +64,74 @@ public:
     struct PlanResult {
       uint32_t result_code = mbf_msgs::GetPathResult::SUCCESS;
       double cost = 0;
-      std::vector<geometry_msgs::PoseStamped> path{};
       std::string message = "";
-      double length = 0;
+
+      // constructor
+      PlanResult() = default;
+      PlanResult(uint32_t result_code, double cost, const std::string& message)
+        : result_code(result_code), cost(cost), message(message) {}
+
+      // Getter for path
+      const std::vector<geometry_msgs::PoseStamped>& Path() const {
+        return _path;
+      }
+
+      // Setter for path
+      void setPath(const std::vector<geometry_msgs::PoseStamped>& new_path) {
+        _path = std::move(new_path);
+        _length = Utils::length(_path);
+      }
+
+      // Getter for length
+      double Length() const {
+        return _length;
+      }
 
       bool isValid() const
       {
         return result_code == mbf_msgs::GetPathResult::SUCCESS;
       }
 
-      PlanResult operator+(const PlanResult& other_result) const{
-        if (!isValid() || !other_result.isValid()){
-          return PlanResult{mbf_msgs::GetPathResult::FAILURE, 0.0, {}, "One of the segments is invalid, cannot add paths", 0};
+      PlanResult operator+(const PlanResult& other_result) const {
+        if (!isValid() || !other_result.isValid()) {
+          return PlanResult{
+            mbf_msgs::GetPathResult::FAILURE,
+            0.0,
+            "One of the segments is invalid, cannot add paths"
+          };
         }
 
         PlanResult combined = *this;
         combined.cost += other_result.cost;
-        combined.length += other_result.length;
-        // if last pose of first segment and first pose of second segment are same then skip first pose of second segment
-        combined.path.insert(
-          combined.path.end(),
-          (!combined.path.empty() && !other_result.path.empty() && combined.path.back() == other_result.path.front())
-              ? other_result.path.begin() + 1
-              : other_result.path.begin(),
-          other_result.path.end()
-        );
-      return combined;
+
+        const auto& other_path = other_result.Path();
+        std::vector<geometry_msgs::PoseStamped> new_combined_path = Path();
+
+        if (!new_combined_path.empty() && !other_path.empty() &&
+            new_combined_path.back() == other_path.front()) {
+          new_combined_path.insert(
+            new_combined_path.end(),
+            other_path.begin() + 1,
+            other_path.end()
+          );
+        } else {
+          new_combined_path.insert(
+            new_combined_path.end(),
+            other_path.begin(),
+            other_path.end()
+          );
+        }
+
+        combined.setPath(std::move(new_combined_path));
+        return combined;
       }
+
+      private:
+        double _length;
+        std::vector<geometry_msgs::PoseStamped> _path{};
     };
 
-  /**
+    /**
    * @brief Creating a path from start to goal pose based on params.
    * @param start Start pose
    * @param goal Goal pose

@@ -209,7 +209,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     // If goal_align_distance is zero, proceed with normal planning
     if (_search_info.goal_align_distance == 0.0) {
       getPath(start, goal, tolerance, plan_result);
-      plan = plan_result.path;
+      plan = plan_result.getPath();
       return plan_result.result_code;
     }
 
@@ -236,7 +236,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   // For single align pose
   if (goal_align_poses.size() == 1) {
     PlanResult result = planWithWaypoints(start, goal_align_poses, goal, tolerance);
-    plan = result.path;
+    plan = result.Path();
     cost = result.cost;
     message = result.message;
     return result.result_code;
@@ -252,14 +252,14 @@ uint32_t SmacPlannerHybrid::makePlan(
       return mbf_msgs::GetPathResult::NO_PATH_FOUND;
     }
 
-    if (result_option_1.isValid() && (!result_option_2.isValid() || result_option_1.length <= result_option_2.length)) {
+    if (result_option_1.isValid() && (!result_option_2.isValid() || result_option_1.Length() <= result_option_2.Length())) {
       // Use first option if it's valid and either the only valid option or has smaller path length
-      plan = result_option_1.path;
+      plan = result_option_1.Path();
       cost = result_option_1.cost;
       message = result_option_1.message;
     } else {
       // Use second option
-      plan = result_option_2.path;
+      plan = result_option_2.Path();
       cost = result_option_2.cost;
       message = result_option_2.message;
     }
@@ -490,8 +490,7 @@ void SmacPlannerHybrid::getPath(
   std::cout << "It took " << (c - b).toSec() * 1000 <<
     " milliseconds to smooth path." << std::endl;
 #endif
-  plan_result.path = std::move(output_path.poses);
-  plan_result.length = Utils::length(plan_result.path);
+  plan_result.setPath(std::move(output_path.poses));
   plan_result.result_code = mbf_msgs::GetPathResult::SUCCESS;
   return;
 }
