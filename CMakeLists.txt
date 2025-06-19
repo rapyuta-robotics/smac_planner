@@ -17,7 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
         pluginlib
         angles
         eigen_conversions
-        rr_nav_common
 )
 
 find_package(ompl REQUIRED)

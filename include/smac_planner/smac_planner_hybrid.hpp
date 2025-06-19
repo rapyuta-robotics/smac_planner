@@ -19,10 +19,12 @@
 #include <vector>
 #include <string>
 
+#include "ros/console.h"
 #include "smac_planner/a_star.hpp"
 #include "smac_planner/smoother.hpp"
 #include "smac_planner/costmap_downsampler.hpp"
 #include "smac_planner/SmacPlannerHybridConfig.h"
+#include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "mbf_costmap_core/costmap_planner.h"
 #include "nav_msgs/Path.h"
@@ -59,16 +61,37 @@ public:
     std::string name,
     costmap_2d::Costmap2DROS* costmap_ros) override;
 
+    struct PlanResult {
+      uint32_t result_code = mbf_msgs::GetPathResult::SUCCESS;
+      double cost = 0;
+      std::vector<geometry_msgs::PoseStamped> path{};
+      std::string message = "";
+      double length = 0;
+
+      bool isValid() const
+      {
+        return result_code == mbf_msgs::GetPathResult::SUCCESS;
+      }
+
+
+      PlanResult operator+(const PlanResult& other_result) const
+      {
+        if (!isValid() || !other_result.isValid())
+        {
+          return PlanResult{mbf_msgs::GetPathResult::FAILURE, 0.0, {}, "One of the segments is invalid, cannot add paths", 0};
+        }
+
+        PlanResult combined = *this;
+        combined.cost += other_result.cost;
+        combined.length += other_result.length;
+        combined.path.insert(combined.path.end(), other_result.path.begin() + 1, other_result.path.end());
+        return combined;
+      }
+    };
 
   /**
-   * @brief Calls makeDirect plan to get segments of the path from start to goal and returns the full path with additional logic for in between waypoints.
-   * @param start Start pose
-   * @param goal Goal pose
-   * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
-   *        in x and y before failing
-   * @param plan The plan... filled by the planner
-   * @param cost The cost for the the plan
-   * @param message Optional more detailed outcome as a string
+   * @brief Calls getPath to get segments of the path from start to goal and returns the full path with additional logic for in between waypoints.
+   * @param plan vector of PoseStamped
    * @return Result code as described on GetPath action result
    */
   uint32_t makePlan(
@@ -91,13 +114,11 @@ public:
    * @param message Optional more detailed outcome as a string
    * @return Result code as described on GetPath action result
    */
-  uint32_t makeDirectPlan(
+  uint32_t getPath(
     const geometry_msgs::PoseStamped & start,
     const geometry_msgs::PoseStamped & goal,
     double tolerance,
-    std::vector<geometry_msgs::PoseStamped> & plan,
-    double & cost,
-    std::string & message);
+    PlanResult& plan_result);
 
   /**
    * @brief Requests the planner to cancel, e.g. if it takes too much time.
@@ -113,24 +134,17 @@ protected:
    */
   void reconfigureCB(SmacPlannerHybridConfig& config, uint32_t level);
 
-  struct PlanResult {
-    uint32_t result_code;
-    double cost;
-    std::vector<geometry_msgs::PoseStamped> path;
-    std::string message;
-    size_t length;
-  };
-
   /**
-   * @brief Simplify sending goal to Hybrid Astar and returns a PlanResult structure
+   * @brief Compute Hybrid A* path between given poses
    * @param start Start pose
    * @param end Goal pose
    * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
    *        in x and y before failing
    * @return PlanResult which contains the result code, cost, path and length of path.
    */
-  PlanResult planBetweenPoses(
+  PlanResult planWithWaypoints(
     const geometry_msgs::PoseStamped& start,
+    const std::vector<geometry_msgs::PoseStamped>& waypoints,
     const geometry_msgs::PoseStamped& end,
     const double tolerance);
 

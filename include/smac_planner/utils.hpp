@@ -108,6 +108,22 @@ public:
 
 
   /**
+  * Computes the length of given path, where the path is a vector of geometry_msgs::PoseStamped and the length is
+  * computed as the sum of the distances between consecutive poses.
+  * @param path
+  * @return length of the path
+  */
+  static inline double length(const std::vector<geometry_msgs::PoseStamped>& path) {
+    double path_size = 0.0;
+    for (int i = 0; i < static_cast<int>(path.size()) - 1; ++i) {
+      path_size += hypot(path[i].pose.position.x - path[i + 1].pose.position.x,
+                        path[i].pose.position.y - path[i + 1].pose.position.y);
+    }
+    return path_size;
+  }
+
+
+  /**
   * @brief Create quaternion from radians
   * @param theta continuous bin coordinates angle
   * @return quaternion orientation in map frame
