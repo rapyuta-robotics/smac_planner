@@ -209,7 +209,9 @@ uint32_t SmacPlannerHybrid::makePlan(
 
     // If goal_align_distance is zero, proceed with normal planning
     if (_search_info.goal_align_distance == 0.0) {
-      return getPath(start, goal, tolerance, plan_result);
+      getPath(start, goal, tolerance, plan_result);
+      plan = plan_result.path;
+      return plan_result.result_code;
     }
 
   geometry_msgs::PoseStamped align_pose_front, align_pose_back;
@@ -302,7 +304,8 @@ uint32_t SmacPlannerHybrid::getPath(
   if (!costmap->worldToMapContinuous(start.pose.position.x, start.pose.position.y, mx, my)) {
     plan_result.message = "Start Coordinates of(" + std::to_string(start.pose.position.x) + ", " +
             std::to_string(start.pose.position.y) + ") was outside bounds";
-    return mbf_msgs::GetPathResult::OUT_OF_MAP;
+    plan_result.result_code = mbf_msgs::GetPathResult::OUT_OF_MAP;
+    return plan_result.result_code;
   }
 
   double orientation_bin = std::round(tf2::getYaw(start.pose.orientation) / _angle_bin_size);
@@ -317,7 +320,8 @@ uint32_t SmacPlannerHybrid::getPath(
 
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Start pose is blocked";
-    return mbf_msgs::GetPathResult::BLOCKED_START;
+    plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
+    return plan_result.result_code;
   }
 
   _a_star->setStart(mx, my, orientation_bin_id);
@@ -326,7 +330,8 @@ uint32_t SmacPlannerHybrid::getPath(
   if (!costmap->worldToMapContinuous(goal.pose.position.x, goal.pose.position.y, mx, my)) {
     plan_result.message = "Goal Coordinates of(" + std::to_string(goal.pose.position.x) + ", " +
             std::to_string(goal.pose.position.y) + ") was outside bounds";
-    return mbf_msgs::GetPathResult::OUT_OF_MAP;
+    plan_result.result_code = mbf_msgs::GetPathResult::OUT_OF_MAP;
+    return plan_result.result_code;
   }
 
   orientation_bin = round(tf2::getYaw(goal.pose.orientation) / _angle_bin_size);
@@ -341,7 +346,8 @@ uint32_t SmacPlannerHybrid::getPath(
 
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Goal pose is blocked";
-    return mbf_msgs::GetPathResult::BLOCKED_GOAL;
+    plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_GOAL;
+    return plan_result.result_code;
   }
 
   _a_star->setGoal(mx, my, orientation_bin_id);
@@ -395,10 +401,12 @@ uint32_t SmacPlannerHybrid::getPath(
             "smac_planner",
             "Start and goal are the same according to costmap resolution and angle bin quantization; but goal tolerance is not met");
         plan_result.message = "Start and goal are the same";
-        return mbf_msgs::GetPathResult::INTERNAL_ERROR;
+        plan_result.result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
+        return plan_result.result_code;
       }
       plan_result.message = "Start pose is blocked";
-      return mbf_msgs::GetPathResult::BLOCKED_START;
+      plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
+      return plan_result.result_code;
     }
 
     if (result == mbf_msgs::GetPathResult::CANCELED) {
@@ -484,7 +492,8 @@ uint32_t SmacPlannerHybrid::getPath(
 #endif
   plan_result.path = std::move(output_path.poses);
   plan_result.length = Utils::length(plan_result.path);
-  return mbf_msgs::GetPathResult::SUCCESS;
+  plan_result.result_code = mbf_msgs::GetPathResult::SUCCESS;
+  return plan_result.result_code;
 }
 
 bool SmacPlannerHybrid::cancel() {
