@@ -189,9 +189,9 @@ protected:
    *        in x and y before failing
    * @return PlanResult which contains the result code, cost, path and length of path.
    */
-  PlanResult planWithWaypoints(
+  PlanResult planWithWaypoint(
     const geometry_msgs::PoseStamped& start,
-    const std::vector<geometry_msgs::PoseStamped>& waypoints,
+    geometry_msgs::PoseStamped& waypoint,
     const geometry_msgs::PoseStamped& goal,
     const double& tolerance);
 

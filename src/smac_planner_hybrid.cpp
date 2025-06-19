@@ -18,6 +18,7 @@
 #include <vector>
 #include <limits>
 
+#include "geometry_msgs/Point.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "ros/console.h"
@@ -164,36 +165,46 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
     _config.tolerance, toString(_motion_model).c_str());
 }
 
-  SmacPlannerHybrid::PlanResult SmacPlannerHybrid::planWithWaypoints(
-    const geometry_msgs::PoseStamped& start,
-    const std::vector<geometry_msgs::PoseStamped>& waypoints,
-    const geometry_msgs::PoseStamped& goal_pose,
-    const double& tolerance)
-  {
-    PlanResult result;
-    geometry_msgs::PoseStamped current_start = start;
-    std::vector<geometry_msgs::PoseStamped> targets = waypoints;
-    targets.push_back(goal_pose);  // Add final goal as last segment
+SmacPlannerHybrid::PlanResult SmacPlannerHybrid::planWithWaypoint(
+  const geometry_msgs::PoseStamped& start,
+  geometry_msgs::PoseStamped& waypoint,
+  const geometry_msgs::PoseStamped& goal_pose,
+  const double& tolerance)
+{
+  PlanResult result;
+  std::vector<geometry_msgs::PoseStamped> targets = {waypoint, goal_pose};
 
-    for (const auto& target : targets)
-    {
+  // if the robot is between the waypoint and the goal then we set the waypoint as the search bound
+  if (Utils::isBetweenPoints(start.pose, waypoint.pose, goal_pose.pose)) {
+     _a_star->setSearchBounds(goal_pose.pose, start.pose.position, _search_info.allow_goal_overshoot);
+  }
+  // else the goal is the search bounds
+  else{
+    _a_star->setSearchBounds(waypoint.pose, start.pose.position, _search_info.allow_goal_overshoot);
+  }
+
+  geometry_msgs::PoseStamped current_start = start;
+  for (size_t i = 0; i < targets.size(); ++i) {
+      const auto& target = targets[i];
+
+      // search bounds for last segment must be the goal
+      if (i == targets.size() - 1) {
+          _a_star->setSearchBounds(goal_pose.pose, waypoint.pose.position, _search_info.allow_goal_overshoot);
+      }
+
       PlanResult segment_result;
       getPath(current_start, target, tolerance, segment_result);
 
-      if (!segment_result.isValid())
-      {
-        segment_result.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
-        return segment_result;
+      if (!segment_result.isValid()) {
+          segment_result.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
+          return segment_result;
       }
-      else
-      {
-        result = result + segment_result;
-      }
-      current_start = target;  // Next segment starts where this one ends
-    }
-    return result;
-  }
 
+      result = result + segment_result;
+      current_start = target;
+  }
+  return result;
+}
 
 uint32_t SmacPlannerHybrid::makePlan(
   const geometry_msgs::PoseStamped & start,
@@ -236,7 +247,7 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   // For single align pose
   if (goal_align_poses.size() == 1) {
-    PlanResult result = planWithWaypoints(start, goal_align_poses, goal, tolerance);
+    PlanResult result = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
     plan = result.Path();
     cost = result.cost;
     message = result.message;
@@ -245,8 +256,8 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   // For two align poses (choose the path with fewer poses)
   if (goal_align_poses.size() >= 2) {
-    PlanResult result_option_1 = planWithWaypoints(start, {goal_align_poses[0]}, goal, tolerance);
-    PlanResult result_option_2 = planWithWaypoints(start, {goal_align_poses[1]}, goal, tolerance);
+    PlanResult result_option_1 = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
+    PlanResult result_option_2 = planWithWaypoint(start, goal_align_poses[1], goal, tolerance);
 
     if (!result_option_1.isValid() && !result_option_2.isValid()) {
       message = "Could not plan to either of the goal align poses";
