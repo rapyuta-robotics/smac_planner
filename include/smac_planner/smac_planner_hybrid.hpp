@@ -74,10 +74,8 @@ public:
       }
 
 
-      PlanResult operator+(const PlanResult& other_result) const
-      {
-        if (!isValid() || !other_result.isValid())
-        {
+      PlanResult operator+(const PlanResult& other_result) const{
+        if (!isValid() || !other_result.isValid()){
           return PlanResult{mbf_msgs::GetPathResult::FAILURE, 0.0, {}, "One of the segments is invalid, cannot add paths", 0};
         }
 
@@ -90,8 +88,14 @@ public:
     };
 
   /**
-   * @brief Calls getPath to get segments of the path from start to goal and returns the full path with additional logic for in between waypoints.
-   * @param plan vector of PoseStamped
+   * @brief Creating a path from start to goal pose based on params.
+   * @param start Start pose
+   * @param goal Goal pose
+   * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
+   *        in x and y before failing
+   * @param plan The plan... filled by the planner
+   * @param cost The cost for the the plan
+   * @param message Optional more detailed outcome as a string
    * @return Result code as described on GetPath action result
    */
   uint32_t makePlan(
@@ -104,14 +108,12 @@ public:
 
 
   /**
-   * @brief Creating a direct path from start to goal pose.
+   * @brief get path between start and goal pose
    * @param start Start pose
    * @param goal Goal pose
    * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
    *        in x and y before failing
-   * @param plan The plan... filled by the planner
-   * @param cost The cost for the the plan
-   * @param message Optional more detailed outcome as a string
+   * @param plan_result struct of type PlanResult
    * @return Result code as described on GetPath action result
    */
   uint32_t getPath(
@@ -135,9 +137,10 @@ protected:
   void reconfigureCB(SmacPlannerHybridConfig& config, uint32_t level);
 
   /**
-   * @brief Compute Hybrid A* path between given poses
+   * @brief Compute Hybrid A* path between given waypoints
    * @param start Start pose
-   * @param end Goal pose
+   * @param waypoints the vector of waypoints we want to include in the path
+   * @param end End poses
    * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
    *        in x and y before failing
    * @return PlanResult which contains the result code, cost, path and length of path.
@@ -146,7 +149,7 @@ protected:
     const geometry_msgs::PoseStamped& start,
     const std::vector<geometry_msgs::PoseStamped>& waypoints,
     const geometry_msgs::PoseStamped& end,
-    const double tolerance);
+    const double& tolerance);
 
   std::unique_ptr<dynamic_reconfigure::Server<SmacPlannerHybridConfig>> dsrv_;
 

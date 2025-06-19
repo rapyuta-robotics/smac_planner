@@ -168,7 +168,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
     const geometry_msgs::PoseStamped& start,
     const std::vector<geometry_msgs::PoseStamped>& waypoints,
     const geometry_msgs::PoseStamped& end,
-    const double tolerance)
+    const double& tolerance)
   {
     PlanResult result;
     result.result_code = mbf_msgs::GetPathResult::SUCCESS;
