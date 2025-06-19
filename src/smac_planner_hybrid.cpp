@@ -209,7 +209,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     // If goal_align_distance is zero, proceed with normal planning
     if (_search_info.goal_align_distance == 0.0) {
       getPath(start, goal, tolerance, plan_result);
-      plan = plan_result.getPath();
+      plan = plan_result.Path();
       return plan_result.result_code;
     }
 
@@ -490,7 +490,7 @@ void SmacPlannerHybrid::getPath(
   std::cout << "It took " << (c - b).toSec() * 1000 <<
     " milliseconds to smooth path." << std::endl;
 #endif
-  plan_result.setPath(std::move(output_path.poses));
+  plan_result.setPath(output_path.poses);
   plan_result.result_code = mbf_msgs::GetPathResult::SUCCESS;
   return;
 }
