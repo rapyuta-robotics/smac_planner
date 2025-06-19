@@ -119,7 +119,7 @@ public:
   uint32_t getPath(
     const geometry_msgs::PoseStamped & start,
     const geometry_msgs::PoseStamped & goal,
-    double tolerance,
+    const double& tolerance,
     PlanResult& plan_result);
 
   /**

@@ -275,7 +275,7 @@ uint32_t SmacPlannerHybrid::makePlan(
 uint32_t SmacPlannerHybrid::getPath(
     const geometry_msgs::PoseStamped & start,
     const geometry_msgs::PoseStamped & goal,
-    double tolerance,
+    const double& tolerance,
     PlanResult& plan_result)
 {
   _planning_canceled = false;
