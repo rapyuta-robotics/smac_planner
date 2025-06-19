@@ -83,6 +83,26 @@ public:
 
 
   /**
+  * @brief checks if the pose is between pose_1 and pose_2
+  * @param pose the pose which we want to check
+  * @param pose_1 other pose
+  * @param pose_2 other pose
+  */
+  static inline bool isBetweenPoints(
+    const geometry_msgs::Pose& pose,
+    const geometry_msgs::Pose& pose_1,
+    const geometry_msgs::Pose& pose_2)
+  {
+    // Check if the point is behind pose_1
+    bool behind_waypoint = Utils::isBehindPose(pose.position, pose_1);
+    // Check if the point is behind pose_2
+    bool behind_goal = Utils::isBehindPose(pose.position, pose_2);
+    //if behind one and not behind another then it is in between them
+    return behind_goal != behind_waypoint;
+  }
+
+
+  /**
   * @brief Returns a pose that is "distance" meters away along the same heading as the specified pose.
   * @param pose the pose with respect to which we want to get the new pose
   * @param distance in meters

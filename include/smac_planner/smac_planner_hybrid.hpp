@@ -181,9 +181,9 @@ protected:
   void reconfigureCB(SmacPlannerHybridConfig& config, uint32_t level);
 
   /**
-   * @brief Compute Hybrid A* path between given waypoints
+   * @brief Compute Hybrid A* path between considering the waypoint
    * @param start Start pose
-   * @param waypoints the vector of waypoints we want to include in the path
+   * @param waypoint the waypoint we want to include in the path
    * @param goal goal pose
    * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
    *        in x and y before failing
