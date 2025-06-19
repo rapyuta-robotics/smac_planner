@@ -217,9 +217,10 @@ uint32_t SmacPlannerHybrid::makePlan(
   align_pose_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
   align_pose_back.pose  = Utils::getPoseAtDistanceAlongHeading(goal.pose,  -_search_info.goal_align_distance);
 
-  if (!_search_info.allow_goal_overshoot) {
+  if (!_config.allow_goal_overshoot) {
     _search_info.setSearchBound(goal.pose);
     _search_info.setStart(start.pose.position);
+    _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
 
     if (_search_info.isStartBehindSearchBounds()) {
       ROS_INFO_NAMED("smac_planner_hybrid", "Robot will align %f meters back of the goal pose", _search_info.goal_align_distance);
@@ -297,7 +298,6 @@ void SmacPlannerHybrid::getPath(
       _costmap_ros->getUseRadius(),
       Utils::findCircumscribedCost(_costmap_ros.get()));
   _a_star->setCollisionChecker(_collision_checker.get());
-  _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
 
   // Set starting point, in A* bin search coordinates
   float mx, my;
