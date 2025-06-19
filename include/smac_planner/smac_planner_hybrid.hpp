@@ -73,7 +73,6 @@ public:
         return result_code == mbf_msgs::GetPathResult::SUCCESS;
       }
 
-
       PlanResult operator+(const PlanResult& other_result) const{
         if (!isValid() || !other_result.isValid()){
           return PlanResult{mbf_msgs::GetPathResult::FAILURE, 0.0, {}, "One of the segments is invalid, cannot add paths", 0};
@@ -82,8 +81,15 @@ public:
         PlanResult combined = *this;
         combined.cost += other_result.cost;
         combined.length += other_result.length;
-        combined.path.insert(combined.path.end(), other_result.path.begin() + 1, other_result.path.end());
-        return combined;
+        // if last pose of first segment and first pose of second segment are same then skip first pose of second segment
+        combined.path.insert(
+          combined.path.end(),
+          (!combined.path.empty() && !other_result.path.empty() && combined.path.back() == other_result.path.front())
+              ? other_result.path.begin() + 1
+              : other_result.path.begin(),
+          other_result.path.end()
+        );
+      return combined;
       }
     };
 
@@ -116,7 +122,7 @@ public:
    * @param plan_result struct of type PlanResult
    * @return Result code as described on GetPath action result
    */
-  uint32_t getPath(
+  void getPath(
     const geometry_msgs::PoseStamped & start,
     const geometry_msgs::PoseStamped & goal,
     const double& tolerance,
@@ -140,7 +146,7 @@ protected:
    * @brief Compute Hybrid A* path between given waypoints
    * @param start Start pose
    * @param waypoints the vector of waypoints we want to include in the path
-   * @param end End poses
+   * @param goal goal pose
    * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
    *        in x and y before failing
    * @return PlanResult which contains the result code, cost, path and length of path.
@@ -148,7 +154,7 @@ protected:
   PlanResult planWithWaypoints(
     const geometry_msgs::PoseStamped& start,
     const std::vector<geometry_msgs::PoseStamped>& waypoints,
-    const geometry_msgs::PoseStamped& end,
+    const geometry_msgs::PoseStamped& goal,
     const double& tolerance);
 
   std::unique_ptr<dynamic_reconfigure::Server<SmacPlannerHybridConfig>> dsrv_;

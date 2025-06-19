@@ -167,19 +167,18 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   SmacPlannerHybrid::PlanResult SmacPlannerHybrid::planWithWaypoints(
     const geometry_msgs::PoseStamped& start,
     const std::vector<geometry_msgs::PoseStamped>& waypoints,
-    const geometry_msgs::PoseStamped& end,
+    const geometry_msgs::PoseStamped& goal_pose,
     const double& tolerance)
   {
     PlanResult result;
-    result.result_code = mbf_msgs::GetPathResult::SUCCESS;
     geometry_msgs::PoseStamped current_start = start;
     std::vector<geometry_msgs::PoseStamped> targets = waypoints;
-    targets.push_back(end);  // Add final goal as last segment
+    targets.push_back(goal_pose);  // Add final goal as last segment
 
     for (const auto& target : targets)
     {
       PlanResult segment_result;
-      segment_result.result_code = getPath(current_start, target, tolerance, segment_result);
+      getPath(current_start, target, tolerance, segment_result);
 
       if (!segment_result.isValid())
       {
@@ -268,11 +267,12 @@ uint32_t SmacPlannerHybrid::makePlan(
   }
 
   // Default case (shouldn't reach here)
-  return getPath(start, goal, tolerance, plan_result);
+  getPath(start, goal, tolerance, plan_result);
+  return  plan_result.result_code;
 }
 
 
-uint32_t SmacPlannerHybrid::getPath(
+void SmacPlannerHybrid::getPath(
     const geometry_msgs::PoseStamped & start,
     const geometry_msgs::PoseStamped & goal,
     const double& tolerance,
@@ -305,7 +305,7 @@ uint32_t SmacPlannerHybrid::getPath(
     plan_result.message = "Start Coordinates of(" + std::to_string(start.pose.position.x) + ", " +
             std::to_string(start.pose.position.y) + ") was outside bounds";
     plan_result.result_code = mbf_msgs::GetPathResult::OUT_OF_MAP;
-    return plan_result.result_code;
+    return;
   }
 
   double orientation_bin = std::round(tf2::getYaw(start.pose.orientation) / _angle_bin_size);
@@ -321,7 +321,7 @@ uint32_t SmacPlannerHybrid::getPath(
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Start pose is blocked";
     plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
-    return plan_result.result_code;
+    return;
   }
 
   _a_star->setStart(mx, my, orientation_bin_id);
@@ -331,7 +331,7 @@ uint32_t SmacPlannerHybrid::getPath(
     plan_result.message = "Goal Coordinates of(" + std::to_string(goal.pose.position.x) + ", " +
             std::to_string(goal.pose.position.y) + ") was outside bounds";
     plan_result.result_code = mbf_msgs::GetPathResult::OUT_OF_MAP;
-    return plan_result.result_code;
+    return;
   }
 
   orientation_bin = round(tf2::getYaw(goal.pose.orientation) / _angle_bin_size);
@@ -347,7 +347,7 @@ uint32_t SmacPlannerHybrid::getPath(
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Goal pose is blocked";
     plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_GOAL;
-    return plan_result.result_code;
+    return;
   }
 
   _a_star->setGoal(mx, my, orientation_bin_id);
@@ -402,11 +402,11 @@ uint32_t SmacPlannerHybrid::getPath(
             "Start and goal are the same according to costmap resolution and angle bin quantization; but goal tolerance is not met");
         plan_result.message = "Start and goal are the same";
         plan_result.result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
-        return plan_result.result_code;
+        return;
       }
       plan_result.message = "Start pose is blocked";
       plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
-      return plan_result.result_code;
+      return;
     }
 
     if (result == mbf_msgs::GetPathResult::CANCELED) {
@@ -420,7 +420,7 @@ uint32_t SmacPlannerHybrid::getPath(
     } else {
       plan_result.message = "No valid path found";
     }
-    return result;
+    return;
   }
 
   // Convert to world coordinates
@@ -493,7 +493,7 @@ uint32_t SmacPlannerHybrid::getPath(
   plan_result.path = std::move(output_path.poses);
   plan_result.length = Utils::length(plan_result.path);
   plan_result.result_code = mbf_msgs::GetPathResult::SUCCESS;
-  return plan_result.result_code;
+  return;
 }
 
 bool SmacPlannerHybrid::cancel() {
