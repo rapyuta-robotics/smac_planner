@@ -254,7 +254,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     return result.result_code;
   }
 
-  // For two align poses (choose the path with fewer poses)
+  // For two align poses (choose the path with smaller path length)
   if (goal_align_poses.size() >= 2) {
     PlanResult result_option_1 = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
     PlanResult result_option_2 = planWithWaypoint(start, goal_align_poses[1], goal, tolerance);
