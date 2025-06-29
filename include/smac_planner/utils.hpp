@@ -94,9 +94,9 @@ public:
     const geometry_msgs::Pose& pose_2)
   {
     // Check if the point is behind pose_1
-    bool behind_waypoint = Utils::isBehindPose(pose.position, pose_1);
+    const bool behind_waypoint = Utils::isBehindPose(pose.position, pose_1);
     // Check if the point is behind pose_2
-    bool behind_goal = Utils::isBehindPose(pose.position, pose_2);
+    const bool behind_goal = Utils::isBehindPose(pose.position, pose_2);
     //if behind one and not behind another then it is in between them
     return behind_goal != behind_waypoint;
   }

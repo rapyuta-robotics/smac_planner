@@ -72,18 +72,18 @@ public:
         : result_code(result_code), cost(cost), message(message) {}
 
       // Getter for path
-      const std::vector<geometry_msgs::PoseStamped>& Path() const {
+      const std::vector<geometry_msgs::PoseStamped>& path() const {
         return _path;
       }
 
       // Setter for path
       void setPath(const std::vector<geometry_msgs::PoseStamped>& new_path) {
-        _path = std::move(new_path);
+        _path = new_path;
         _length = Utils::length(_path);
       }
 
       // Getter for length
-      double Length() const {
+      double length() const {
         return _length;
       }
 
@@ -104,8 +104,8 @@ public:
         PlanResult combined = *this;
         combined.cost += other_result.cost;
 
-        const auto& other_path = other_result.Path();
-        std::vector<geometry_msgs::PoseStamped> new_combined_path = Path();
+        const auto& other_path = other_result.path();
+        std::vector<geometry_msgs::PoseStamped> new_combined_path = path();
 
         if (!new_combined_path.empty() && !other_path.empty() &&
             new_combined_path.back() == other_path.front()) {
@@ -127,7 +127,7 @@ public:
       }
 
       private:
-        double _length;
+        double _length = 0;
         std::vector<geometry_msgs::PoseStamped> _path{};
     };
 
@@ -191,7 +191,7 @@ protected:
    */
   PlanResult planWithWaypoint(
     const geometry_msgs::PoseStamped& start,
-    geometry_msgs::PoseStamped& waypoint,
+    const geometry_msgs::PoseStamped& waypoint,
     const geometry_msgs::PoseStamped& goal,
     const double& tolerance);
 

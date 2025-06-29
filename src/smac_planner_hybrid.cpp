@@ -166,44 +166,39 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
 
 SmacPlannerHybrid::PlanResult SmacPlannerHybrid::planWithWaypoint(
   const geometry_msgs::PoseStamped& start,
-  geometry_msgs::PoseStamped& waypoint,
+  const geometry_msgs::PoseStamped& waypoint,
   const geometry_msgs::PoseStamped& goal_pose,
   const double& tolerance)
 {
-  PlanResult result;
-  std::vector<geometry_msgs::PoseStamped> targets = {waypoint, goal_pose};
 
-  // if the robot is between the waypoint and the goal then we set the waypoint as the search bound
-  if (Utils::isBetweenPoints(start.pose, waypoint.pose, goal_pose.pose)) {
-     _a_star->setSearchBounds(goal_pose.pose, start.pose.position, _search_info.allow_goal_overshoot);
-  }
-  // else the goal is the search bounds
-  else{
-    _a_star->setSearchBounds(waypoint.pose, start.pose.position, _search_info.allow_goal_overshoot);
+  // waypoint to robot pose
+  PlanResult segment2;
+  getPath(waypoint, goal_pose, tolerance, segment2);
+
+  if (!segment2.isValid()) {
+      segment2.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
+      return segment2;
   }
 
-  geometry_msgs::PoseStamped current_start = start;
-  for (size_t i = 0; i < targets.size(); ++i) {
-      const auto& target = targets[i];
-
-      // search bounds for last segment must be the goal
-      if (i == targets.size() - 1) {
-          _a_star->setSearchBounds(goal_pose.pose, waypoint.pose.position, _search_info.allow_goal_overshoot);
-      }
-
-      PlanResult segment_result;
-      getPath(current_start, target, tolerance, segment_result);
-
-      if (!segment_result.isValid()) {
-          segment_result.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
-          return segment_result;
-      }
-
-      result = result + segment_result;
-      current_start = target;
+  // if the robot is not between the goal and the waypoint, then we set the search bounds to the waypoint.
+  const bool is_robot_between_goal_and_waypoint = Utils::isBetweenPoints(start.pose, waypoint.pose, goal_pose.pose);
+  if (!is_robot_between_goal_and_waypoint){
+    _a_star->setSearchBounds(waypoint.pose, start.pose.position,  _search_info.allow_goal_overshoot);
   }
+
+  // robot_pose to waypoint
+  PlanResult segment1;
+  getPath(start, waypoint, tolerance, segment1);
+
+  if (!segment1.isValid()) {
+      segment1.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
+      return segment1;
+  }
+
+  const PlanResult result = segment1 + segment2;
   return result;
 }
+
 
 uint32_t SmacPlannerHybrid::makePlan(
   const geometry_msgs::PoseStamped & start,
@@ -218,15 +213,22 @@ uint32_t SmacPlannerHybrid::makePlan(
 
     // If goal_align_distance is zero, proceed with normal planning
     if (_search_info.goal_align_distance == 0.0) {
+      if (!_search_info.allow_goal_overshoot) {
+        _search_info.setSearchBound(goal.pose);
+        _search_info.setStart(start.pose.position);
+        _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
+      }
       getPath(start, goal, tolerance, plan_result);
-      plan = plan_result.Path();
+      plan = plan_result.path();
       return plan_result.result_code;
     }
 
+  // if goal_align_distance > 0 then calculate two possible goal align poses
   geometry_msgs::PoseStamped align_pose_front, align_pose_back;
   align_pose_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
   align_pose_back.pose  = Utils::getPoseAtDistanceAlongHeading(goal.pose,  -_search_info.goal_align_distance);
 
+  // if !allow_goal_overshoot then we select pose on osame side of goal as the robot
   if (!_search_info.allow_goal_overshoot) {
     _search_info.setSearchBound(goal.pose);
     _search_info.setStart(start.pose.position);
@@ -239,6 +241,7 @@ uint32_t SmacPlannerHybrid::makePlan(
       ROS_INFO_NAMED("smac_planner_hybrid", "Robot will align %f meters front of the goal pose", _search_info.goal_align_distance);
       goal_align_poses.push_back(align_pose_front);
     }
+  // else both
   } else {
     ROS_INFO_NAMED("smac_planner_hybrid", "Robot may align either %f meters before or after the goal pose", _search_info.goal_align_distance);
     goal_align_poses = {align_pose_front, align_pose_back};
@@ -247,7 +250,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   // For single align pose
   if (goal_align_poses.size() == 1) {
     PlanResult result = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
-    plan = result.Path();
+    plan = result.path();
     cost = result.cost;
     message = result.message;
     return result.result_code;
@@ -263,14 +266,14 @@ uint32_t SmacPlannerHybrid::makePlan(
       return mbf_msgs::GetPathResult::NO_PATH_FOUND;
     }
 
-    if (result_option_1.isValid() && (!result_option_2.isValid() || result_option_1.Length() <= result_option_2.Length())) {
+    if (result_option_1.isValid() && (!result_option_2.isValid() || result_option_1.length() <= result_option_2.length())) {
       // Use first option if it's valid and either the only valid option or has smaller path length
-      plan = result_option_1.Path();
+      plan = result_option_1.path();
       cost = result_option_1.cost;
       message = result_option_1.message;
     } else {
       // Use second option
-      plan = result_option_2.Path();
+      plan = result_option_2.path();
       cost = result_option_2.cost;
       message = result_option_2.message;
     }
@@ -278,7 +281,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   }
 
   // Default case (shouldn't reach here)
-  getPath(start, goal, tolerance, plan_result);
+  plan_result.result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
   return  plan_result.result_code;
 }
 
