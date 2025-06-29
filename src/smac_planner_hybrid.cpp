@@ -21,6 +21,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "ros/console.h"
+#include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
 
 #include "smac_planner/smac_planner_hybrid.hpp"
@@ -164,7 +165,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
     _config.tolerance, toString(_motion_model).c_str());
 }
 
-SmacPlannerHybrid::PlanResult SmacPlannerHybrid::planWithWaypoint(
+PlanResult SmacPlannerHybrid::planWithWaypoint(
   const geometry_msgs::PoseStamped& start,
   const geometry_msgs::PoseStamped& waypoint,
   const geometry_msgs::PoseStamped& goal_pose,
@@ -209,6 +210,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   std::string &message)
 {
   std::vector<geometry_msgs::PoseStamped> goal_align_poses;
+
   PlanResult plan_result;
 
     // If goal_align_distance is zero, proceed with normal planning

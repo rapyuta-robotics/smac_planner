@@ -30,4 +30,56 @@ bool SearchInfo::isStartBehindSearchBounds(){
   }
 }
 
+PlanResult::PlanResult(uint32_t result_code, double cost, const std::string& message)
+    : result_code(result_code), cost(cost), message(message) {}
+
+// Getter for path
+const std::vector<geometry_msgs::PoseStamped>& PlanResult::path() const {
+  return _path;
+}
+
+// Setter for path
+void PlanResult::setPath(const std::vector<geometry_msgs::PoseStamped>& new_path) {
+  _path = new_path;
+  _length = Utils::length(_path);
+}
+
+// Getter for length
+double PlanResult::length() const {
+  return _length;
+}
+
+bool PlanResult::isValid() const {
+  return result_code == mbf_msgs::GetPathResult::SUCCESS;
+}
+
+PlanResult PlanResult::operator+(const PlanResult& other_result) const {
+  if (!isValid() || !other_result.isValid()) {
+    return PlanResult(
+      mbf_msgs::GetPathResult::FAILURE,
+      0.0,
+      "One of the segments is invalid, cannot add paths");
+  }
+
+  PlanResult combined = *this;
+  combined.cost += other_result.cost;
+
+  const auto& other_path = other_result.path();
+  std::vector<geometry_msgs::PoseStamped> new_combined_path = path();
+
+  if (!new_combined_path.empty() && !other_path.empty() &&
+      new_combined_path.back() == other_path.front()) {
+        new_combined_path.insert(
+          new_combined_path.end(),
+          other_path.begin() + 1,
+          other_path.end());
+  } else {
+    new_combined_path.insert(
+      new_combined_path.end(),
+      other_path.begin(),
+      other_path.end());
+    }
+  combined.setPath(std::move(new_combined_path));
+  return combined;
+  }
 }  // namespace smac_planner

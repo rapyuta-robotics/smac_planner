@@ -20,7 +20,7 @@
 #include <string>
 #include <geometry_msgs/PoseStamped.h>
 #include <optional>
-
+#include <mbf_msgs/GetPathResult.h>
 namespace smac_planner
 {
 
@@ -60,6 +60,25 @@ private:
   geometry_msgs::Point _start_pose;
   geometry_msgs::Pose _search_bound;
   std::optional<bool> is_start_behind_goal;
+};
+
+struct PlanResult {
+  uint32_t result_code = mbf_msgs::GetPathResult::SUCCESS;
+  double cost = 0;
+  std::string message = "";
+
+  PlanResult() = default;
+  PlanResult(uint32_t result_code, double cost, const std::string& message);
+
+  const std::vector<geometry_msgs::PoseStamped>& path() const;
+  void setPath(const std::vector<geometry_msgs::PoseStamped>& new_path);
+  double length() const;
+  bool isValid() const;
+  PlanResult operator+(const PlanResult& other_result) const;
+
+private:
+  double _length = 0;
+  std::vector<geometry_msgs::PoseStamped> _path{};
 };
 
 /**
