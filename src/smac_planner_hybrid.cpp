@@ -220,16 +220,16 @@ uint32_t SmacPlannerHybrid::makePlan(
   PlanResult plan_result;
 
     // If goal_align_distance less than or equal to tolerance, proceed with normal planning
-    if (_search_info.goal_align_distance <= tolerance) {
-      if (!_search_info.allow_goal_overshoot) {
-        _search_info.setSearchBound(goal.pose);
-        _search_info.setStart(start.pose.position);
-        _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
-      }
-      getPath(start, goal, tolerance, plan_result);
-      plan = plan_result.path();
-      return plan_result.result_code;
+  if (_search_info.goal_align_distance <= tolerance) {
+    if (!_search_info.allow_goal_overshoot) {
+      _search_info.setSearchBound(goal.pose);
+      _search_info.setStart(start.pose.position);
+      _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
     }
+    getPath(start, goal, tolerance, plan_result);
+    plan = plan_result.path();
+    return plan_result.result_code;
+  }
 
   // if goal_align_distance > 0 then calculate two possible goal align poses
   geometry_msgs::PoseStamped align_pose_front, align_pose_back;
@@ -238,10 +238,6 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   // if !allow_goal_overshoot then we select pose on the same side of goal as the robot
   if (!_search_info.allow_goal_overshoot) {
-    _search_info.setSearchBound(goal.pose);
-    _search_info.setStart(start.pose.position);
-    _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
-
     if (_search_info.isStartBehindSearchBounds()) {
       ROS_INFO_NAMED("smac_planner_hybrid", "Robot will align %f meters back of the goal pose", _search_info.goal_align_distance);
       goal_align_poses.push_back(align_pose_back);
