@@ -171,11 +171,15 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   const geometry_msgs::PoseStamped& goal_pose,
   const double& tolerance)
 {
+  if (!_search_info.allow_goal_overshoot){
+  _search_info.setSearchBound(goal_pose.pose);
+  _search_info.setStart(waypoint.pose.position);
+  _a_star->setSearchBounds(goal_pose.pose, start.pose.position,  _search_info.allow_goal_overshoot);
+  }
 
-  // waypoint to robot pose
+  // waypoint to goal pose
   PlanResult segment2;
   getPath(waypoint, goal_pose, tolerance, segment2);
-
   if (!segment2.isValid()) {
       segment2.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
       return segment2;
@@ -184,6 +188,8 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   // if the robot is not between the goal and the waypoint, then we set the search bounds to the waypoint.
   const bool is_robot_between_goal_and_waypoint = Utils::isBetweenPoints(start.pose, waypoint.pose, goal_pose.pose);
   if (!is_robot_between_goal_and_waypoint){
+    _search_info.setSearchBound(waypoint.pose);
+    _search_info.setStart(start.pose.position);
     _a_star->setSearchBounds(waypoint.pose, start.pose.position,  _search_info.allow_goal_overshoot);
   }
 
@@ -230,7 +236,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   align_pose_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
   align_pose_back.pose  = Utils::getPoseAtDistanceAlongHeading(goal.pose,  -_search_info.goal_align_distance);
 
-  // if !allow_goal_overshoot then we select pose on osame side of goal as the robot
+  // if !allow_goal_overshoot then we select pose on the same side of goal as the robot
   if (!_search_info.allow_goal_overshoot) {
     _search_info.setSearchBound(goal.pose);
     _search_info.setStart(start.pose.position);
