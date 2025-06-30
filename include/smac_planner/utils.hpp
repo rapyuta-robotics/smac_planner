@@ -81,6 +81,68 @@ public:
       return (dot < 0);
     }
 
+
+  /**
+  * @brief checks if the pose is between pose_1 and pose_2
+  * @param pose the pose which we want to check
+  * @param pose_1 other pose
+  * @param pose_2 other pose
+  */
+  static inline bool isBetweenPoints(
+    const geometry_msgs::Pose& pose,
+    const geometry_msgs::Pose& pose_1,
+    const geometry_msgs::Pose& pose_2)
+  {
+    // Check if the point is behind pose_1
+    const bool behind_waypoint = Utils::isBehindPose(pose.position, pose_1);
+    // Check if the point is behind pose_2
+    const bool behind_goal = Utils::isBehindPose(pose.position, pose_2);
+    //if behind one and not behind another then it is in between them
+    return behind_goal != behind_waypoint;
+  }
+
+
+  /**
+  * @brief Returns a pose that is "distance" meters away along the same heading as the specified pose.
+  * @param pose the pose with respect to which we want to get the new pose
+  * @param distance in meters
+  * @return geometry_msgs::Pose
+  */
+  static inline geometry_msgs::Pose getPoseAtDistanceAlongHeading(const geometry_msgs::Pose& pose, const float& distance){
+    geometry_msgs::Pose output_pose = pose;
+
+    // Extract quaternion components
+    const double x = pose.orientation.x;
+    const double y = pose.orientation.y;
+    const double z = pose.orientation.z;
+    const double w = pose.orientation.w;
+
+    const double yaw = std::atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z));
+
+    // Compute the new position
+    output_pose.position.x = pose.position.x + distance * std::cos(yaw);
+    output_pose.position.y = pose.position.y + distance * std::sin(yaw);
+
+    return output_pose;
+  }
+
+
+  /**
+  * Computes the length of given path, where the path is a vector of geometry_msgs::PoseStamped and the length is
+  * computed as the sum of the distances between consecutive poses.
+  * @param path
+  * @return length of the path
+  */
+  static inline double length(const std::vector<geometry_msgs::PoseStamped>& path) {
+    double path_size = 0.0;
+    for (int i = 0; i < static_cast<int>(path.size()) - 1; ++i) {
+      path_size += hypot(path[i].pose.position.x - path[i + 1].pose.position.x,
+                        path[i].pose.position.y - path[i + 1].pose.position.y);
+    }
+    return path_size;
+  }
+
+
   /**
   * @brief Create quaternion from radians
   * @param theta continuous bin coordinates angle

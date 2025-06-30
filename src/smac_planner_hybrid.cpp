@@ -18,7 +18,10 @@
 #include <vector>
 #include <limits>
 
+#include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
+#include "ros/console.h"
+#include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
 
 #include "smac_planner/smac_planner_hybrid.hpp"
@@ -39,8 +42,7 @@ SmacPlannerHybrid::SmacPlannerHybrid()
 
 SmacPlannerHybrid::~SmacPlannerHybrid()
 {
-  ROS_INFO("Destroying plugin %s of type SmacPlannerHybrid",
-    _name.c_str());
+  ROS_INFO_NAMED("smac_planner_hybrid", "Destroying plugin %s of type SmacPlannerHybrid", _name.c_str());
 }
 
 void SmacPlannerHybrid::initialize(
@@ -51,7 +53,7 @@ void SmacPlannerHybrid::initialize(
   _costmap_ros = std::shared_ptr<costmap_2d::Costmap2DROS>(costmap_ros);
   _global_frame = costmap_ros->getGlobalFrameID();
 
-  ROS_INFO("Initializing %s of type SmacPlannerHybrid", name.c_str());
+  ROS_INFO_NAMED("smac_planner_hybrid", "Initializing %s of type SmacPlannerHybrid", name.c_str());
 
   ros::NodeHandle parent_nh("~");
   ros::NodeHandle private_nh(parent_nh, name);
@@ -95,7 +97,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   _search_info.downsample_obstacle_heuristic = _config.downsample_obstacle_heuristic;
   _search_info.use_quadratic_cost_penalty = _config.use_quadratic_cost_penalty;
   _search_info.allow_goal_overshoot = _config.allow_goal_overshoot;
-
+  _search_info.goal_align_distance = _config.goal_align_distance;
 
   if (_config.max_on_approach_iterations <= 0) {
     ROS_WARN("On approach iteration selected as <= 0, "
@@ -132,8 +134,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
 
   // Make sure it's an odd number
   if (static_cast<int>(_lookup_table_dim) % 2 == 0) {
-    ROS_INFO("Even sized heuristic lookup table size set %f, increasing size by 1 to make odd",
-      _lookup_table_dim);
+    ROS_INFO_NAMED("smac_planner_hybrid", "Even sized heuristic lookup table size set %f, increasing size by 1 to make odd", _lookup_table_dim);
     _lookup_table_dim += 1.0;
   }
 
@@ -156,7 +157,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
       _global_frame, topic_name, _costmap, _config.downsampling_factor);
   }
 
-  ROS_INFO("Configured plugin %s of type SmacPlannerHybrid with "
+  ROS_INFO_NAMED("smac_planner_hybrid", "Configured plugin %s of type SmacPlannerHybrid with "
     "maximum iterations %i, max on approach iterations %i, and %s. Tolerance %.2f. "
     "Using motion model: %s.",
     _name.c_str(), _config.max_iterations, _config.max_on_approach_iterations,
@@ -164,13 +165,136 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
     _config.tolerance, toString(_motion_model).c_str());
 }
 
+PlanResult SmacPlannerHybrid::planWithWaypoint(
+  const geometry_msgs::PoseStamped& start,
+  const geometry_msgs::PoseStamped& waypoint,
+  const geometry_msgs::PoseStamped& goal_pose,
+  const double& tolerance)
+{
+  if (!_search_info.allow_goal_overshoot){
+  _search_info.setSearchBound(goal_pose.pose);
+  _search_info.setStart(waypoint.pose.position);
+  _a_star->setSearchBounds(goal_pose.pose, start.pose.position,  _search_info.allow_goal_overshoot);
+  }
+
+  // waypoint to goal pose
+  PlanResult segment2;
+  getPath(waypoint, goal_pose, tolerance, segment2);
+  if (!segment2.isValid()) {
+      segment2.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
+      return segment2;
+  }
+
+  // if the robot is not between the goal and the waypoint, then we set the search bounds to the waypoint.
+  const bool is_robot_between_goal_and_waypoint = Utils::isBetweenPoints(start.pose, waypoint.pose, goal_pose.pose);
+  if (!is_robot_between_goal_and_waypoint){
+    _search_info.setSearchBound(waypoint.pose);
+    _search_info.setStart(start.pose.position);
+    _a_star->setSearchBounds(waypoint.pose, start.pose.position,  _search_info.allow_goal_overshoot);
+  }
+
+  // robot_pose to waypoint
+  PlanResult segment1;
+  getPath(start, waypoint, tolerance, segment1);
+
+  if (!segment1.isValid()) {
+      segment1.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
+      return segment1;
+  }
+
+  const PlanResult result = segment1 + segment2;
+  return result;
+}
+
+
 uint32_t SmacPlannerHybrid::makePlan(
+  const geometry_msgs::PoseStamped & start,
+  const geometry_msgs::PoseStamped & goal,
+  double tolerance,
+  std::vector<geometry_msgs::PoseStamped> & plan,
+  double &cost,
+  std::string &message)
+{
+  std::vector<geometry_msgs::PoseStamped> goal_align_poses;
+
+  PlanResult plan_result;
+
+  // If goal_align_distance less than or equal to tolerance, proceed with normal planning
+  if (_search_info.goal_align_distance <= tolerance) {
+    if (!_search_info.allow_goal_overshoot) {
+      _search_info.setSearchBound(goal.pose);
+      _search_info.setStart(start.pose.position);
+      _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
+    }
+    getPath(start, goal, tolerance, plan_result);
+    plan = plan_result.path();
+    return plan_result.result_code;
+  }
+
+  // if goal_align_distance > 0 then calculate two possible goal align poses
+  geometry_msgs::PoseStamped align_pose_front, align_pose_back;
+  align_pose_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
+  align_pose_back.pose  = Utils::getPoseAtDistanceAlongHeading(goal.pose,  -_search_info.goal_align_distance);
+
+  // if !allow_goal_overshoot then we select pose on the same side of goal as the robot
+  if (!_search_info.allow_goal_overshoot) {
+    if (_search_info.isStartBehindSearchBounds()) {
+      ROS_INFO_NAMED("smac_planner_hybrid", "Robot will align %f meters back of the goal pose", _search_info.goal_align_distance);
+      goal_align_poses.push_back(align_pose_back);
+    } else {
+      ROS_INFO_NAMED("smac_planner_hybrid", "Robot will align %f meters front of the goal pose", _search_info.goal_align_distance);
+      goal_align_poses.push_back(align_pose_front);
+    }
+  // else both
+  } else {
+    ROS_INFO_NAMED("smac_planner_hybrid", "Robot may align either %f meters before or after the goal pose", _search_info.goal_align_distance);
+    goal_align_poses = {align_pose_front, align_pose_back};
+  }
+
+  // For single align pose
+  if (goal_align_poses.size() == 1) {
+    PlanResult result = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
+    plan = result.path();
+    cost = result.cost;
+    message = result.message;
+    return result.result_code;
+  }
+
+  // For two align poses (choose the path with smaller path length)
+  if (goal_align_poses.size() >= 2) {
+    PlanResult result_option_1 = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
+    PlanResult result_option_2 = planWithWaypoint(start, goal_align_poses[1], goal, tolerance);
+
+    if (!result_option_1.isValid() && !result_option_2.isValid()) {
+      message = "Could not plan to either of the goal align poses";
+      return mbf_msgs::GetPathResult::NO_PATH_FOUND;
+    }
+
+    if (result_option_1.isValid() && (!result_option_2.isValid() || result_option_1.length() <= result_option_2.length())) {
+      // Use first option if it's valid and either the only valid option or has smaller path length
+      plan = result_option_1.path();
+      cost = result_option_1.cost;
+      message = result_option_1.message;
+    } else {
+      // Use second option
+      plan = result_option_2.path();
+      cost = result_option_2.cost;
+      message = result_option_2.message;
+    }
+    return mbf_msgs::GetPathResult::SUCCESS;
+  }
+
+  // Default case (shouldn't reach here)
+  plan_result.result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
+  return  plan_result.result_code;
+}
+
+
+void SmacPlannerHybrid::getPath(
     const geometry_msgs::PoseStamped & start,
     const geometry_msgs::PoseStamped & goal,
-    double tolerance,
-    std::vector<geometry_msgs::PoseStamped> & plan,
-    double &cost,
-    std::string &message)
+    const double& tolerance,
+    PlanResult& plan_result)
 {
   _planning_canceled = false;
 
@@ -191,14 +315,14 @@ uint32_t SmacPlannerHybrid::makePlan(
       _costmap_ros->getUseRadius(),
       Utils::findCircumscribedCost(_costmap_ros.get()));
   _a_star->setCollisionChecker(_collision_checker.get());
-  _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
 
   // Set starting point, in A* bin search coordinates
   float mx, my;
   if (!costmap->worldToMapContinuous(start.pose.position.x, start.pose.position.y, mx, my)) {
-    message = "Start Coordinates of(" + std::to_string(start.pose.position.x) + ", " +
+    plan_result.message = "Start Coordinates of(" + std::to_string(start.pose.position.x) + ", " +
             std::to_string(start.pose.position.y) + ") was outside bounds";
-    return mbf_msgs::GetPathResult::OUT_OF_MAP;
+    plan_result.result_code = mbf_msgs::GetPathResult::OUT_OF_MAP;
+    return;
   }
 
   double orientation_bin = std::round(tf2::getYaw(start.pose.orientation) / _angle_bin_size);
@@ -212,17 +336,19 @@ uint32_t SmacPlannerHybrid::makePlan(
   unsigned int orientation_bin_id = static_cast<unsigned int>(orientation_bin);
 
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
-    message = "Start pose is blocked";
-    return mbf_msgs::GetPathResult::BLOCKED_START;
+    plan_result.message = "Start pose is blocked";
+    plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
+    return;
   }
 
   _a_star->setStart(mx, my, orientation_bin_id);
 
   // Set goal point, in A* bin search coordinates
   if (!costmap->worldToMapContinuous(goal.pose.position.x, goal.pose.position.y, mx, my)) {
-    message = "Goal Coordinates of(" + std::to_string(goal.pose.position.x) + ", " +
+    plan_result.message = "Goal Coordinates of(" + std::to_string(goal.pose.position.x) + ", " +
             std::to_string(goal.pose.position.y) + ") was outside bounds";
-    return mbf_msgs::GetPathResult::OUT_OF_MAP;
+    plan_result.result_code = mbf_msgs::GetPathResult::OUT_OF_MAP;
+    return;
   }
 
   orientation_bin = round(tf2::getYaw(goal.pose.orientation) / _angle_bin_size);
@@ -236,8 +362,9 @@ uint32_t SmacPlannerHybrid::makePlan(
   orientation_bin_id = static_cast<unsigned int>(orientation_bin);
 
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
-    message = "Goal pose is blocked";
-    return mbf_msgs::GetPathResult::BLOCKED_GOAL;
+    plan_result.message = "Goal pose is blocked";
+    plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_GOAL;
+    return;
   }
 
   _a_star->setGoal(mx, my, orientation_bin_id);
@@ -290,25 +417,27 @@ uint32_t SmacPlannerHybrid::makePlan(
         ROS_ERROR_NAMED(
             "smac_planner",
             "Start and goal are the same according to costmap resolution and angle bin quantization; but goal tolerance is not met");
-        message = "Start and goal are the same";
-        return mbf_msgs::GetPathResult::INTERNAL_ERROR;
+        plan_result.message = "Start and goal are the same";
+        plan_result.result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
+        return;
       }
-      message = "Start pose is blocked";
-      return mbf_msgs::GetPathResult::BLOCKED_START;
+      plan_result.message = "Start pose is blocked";
+      plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
+      return;
     }
 
     if (result == mbf_msgs::GetPathResult::CANCELED) {
-      message = "Planner was cancelled";
+      plan_result.message = "Planner was cancelled";
     }
     else if (result == mbf_msgs::GetPathResult::PAT_EXCEEDED) {
-      message = "Exceeded maximum planning time";
+      plan_result.message = "Exceeded maximum planning time";
     }
     else if (num_iterations >= _a_star->getMaxIterations()) {
-      message = "Exceeded maximum iterations";
+      plan_result.message = "Exceeded maximum iterations";
     } else {
-      message = "No valid path found";
+      plan_result.message = "No valid path found";
     }
-    return result;
+    return;
   }
 
   // Convert to world coordinates
@@ -378,9 +507,9 @@ uint32_t SmacPlannerHybrid::makePlan(
   std::cout << "It took " << (c - b).toSec() * 1000 <<
     " milliseconds to smooth path." << std::endl;
 #endif
-
-  plan = std::move(output_path.poses);
-  return mbf_msgs::GetPathResult::SUCCESS;
+  plan_result.setPath(output_path.poses);
+  plan_result.result_code = mbf_msgs::GetPathResult::SUCCESS;
+  return;
 }
 
 bool SmacPlannerHybrid::cancel() {

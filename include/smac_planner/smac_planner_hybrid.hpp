@@ -19,10 +19,12 @@
 #include <vector>
 #include <string>
 
+#include "ros/console.h"
 #include "smac_planner/a_star.hpp"
 #include "smac_planner/smoother.hpp"
 #include "smac_planner/costmap_downsampler.hpp"
 #include "smac_planner/SmacPlannerHybridConfig.h"
+#include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "mbf_costmap_core/costmap_planner.h"
 #include "nav_msgs/Path.h"
@@ -59,8 +61,9 @@ public:
     std::string name,
     costmap_2d::Costmap2DROS* costmap_ros) override;
 
-  /**
-   * @brief Creating a plan from start to goal poses
+
+    /**
+   * @brief Creating a path from start to goal pose based on params.
    * @param start Start pose
    * @param goal Goal pose
    * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
@@ -78,6 +81,22 @@ public:
     double & cost,
     std::string & message)  override;
 
+
+  /**
+   * @brief get path between start and goal pose
+   * @param start Start pose
+   * @param goal Goal pose
+   * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
+   *        in x and y before failing
+   * @param plan_result struct of type PlanResult
+   * @return Result code as described on GetPath action result
+   */
+  void getPath(
+    const geometry_msgs::PoseStamped & start,
+    const geometry_msgs::PoseStamped & goal,
+    const double& tolerance,
+    PlanResult& plan_result);
+
   /**
    * @brief Requests the planner to cancel, e.g. if it takes too much time.
    * @return Always True, as this plugin implements cancelling.
@@ -91,6 +110,21 @@ protected:
    * @param config Planner configuration
    */
   void reconfigureCB(SmacPlannerHybridConfig& config, uint32_t level);
+
+  /**
+   * @brief Compute Hybrid A* path between considering the waypoint
+   * @param start Start pose
+   * @param waypoint the waypoint we want to include in the path
+   * @param goal goal pose
+   * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
+   *        in x and y before failing
+   * @return PlanResult which contains the result code, cost, path and length of path.
+   */
+  PlanResult planWithWaypoint(
+    const geometry_msgs::PoseStamped& start,
+    const geometry_msgs::PoseStamped& waypoint,
+    const geometry_msgs::PoseStamped& goal,
+    const double& tolerance);
 
   std::unique_ptr<dynamic_reconfigure::Server<SmacPlannerHybridConfig>> dsrv_;
 
