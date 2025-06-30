@@ -219,8 +219,8 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   PlanResult plan_result;
 
-    // If goal_align_distance is zero, proceed with normal planning
-    if (_search_info.goal_align_distance == 0.0) {
+    // If goal_align_distance less than or equal to tolerance, proceed with normal planning
+    if (_search_info.goal_align_distance <= tolerance) {
       if (!_search_info.allow_goal_overshoot) {
         _search_info.setSearchBound(goal.pose);
         _search_info.setStart(start.pose.position);
