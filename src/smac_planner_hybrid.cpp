@@ -219,7 +219,6 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   PlanResult plan_result;
 
-
   // If goal_align_distance less than or equal to tolerance, proceed with normal planning
   if (_search_info.goal_align_distance <= tolerance) {
     if (!_search_info.allow_goal_overshoot) {
