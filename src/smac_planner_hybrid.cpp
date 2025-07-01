@@ -174,7 +174,7 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   if (!_search_info.allow_goal_overshoot){
   _search_info.setSearchBound(goal_pose.pose);
   _search_info.setStart(waypoint.pose.position);
-  _a_star->setSearchBounds(goal_pose.pose, start.pose.position,  _search_info.allow_goal_overshoot);
+  _a_star->setSearchBounds(goal_pose.pose, waypoint.pose.position,  _search_info.allow_goal_overshoot);
   }
 
   // waypoint to goal pose
@@ -219,13 +219,14 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   PlanResult plan_result;
 
+  if (!_search_info.allow_goal_overshoot) {
+    _search_info.setSearchBound(goal.pose);
+    _search_info.setStart(start.pose.position);
+    _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
+  }
+
   // If goal_align_distance less than or equal to tolerance, proceed with normal planning
   if (_search_info.goal_align_distance <= tolerance) {
-    if (!_search_info.allow_goal_overshoot) {
-      _search_info.setSearchBound(goal.pose);
-      _search_info.setStart(start.pose.position);
-      _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
-    }
     getPath(start, goal, tolerance, plan_result);
     plan = plan_result.path();
     return plan_result.result_code;
