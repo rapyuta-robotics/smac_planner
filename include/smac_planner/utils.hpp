@@ -22,6 +22,7 @@
 #include <string>
 
 #include <geometry_msgs/Point.h>
+#include "angles/angles.h"
 #include "nlohmann/json.hpp"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Pose.h"
@@ -87,9 +88,8 @@ public:
   * @brief Check if the input poses are within specified tolerance
   * @return Bool true they are under tolerance, false means they are not in tolerance
   */
-  static inline bool arePoseWithinTolerance(geometry_msgs::Pose pose1, geometry_msgs::Pose pose2, double tolerance){
-
-    double yaw_offset = std::abs(tf2::getYaw(pose1.orientation) -  tf2::getYaw(pose2.orientation));
+  static inline bool isSamePose(geometry_msgs::Pose pose1, geometry_msgs::Pose pose2, double tolerance){
+    double yaw_offset = angles::shortest_angular_distance(tf2::getYaw(pose1.orientation), tf2::getYaw(pose2.orientation));
     double distance = std::hypot(pose1.position.x - pose2.position.x,
       pose1.position.y - pose2.position.y);
 
