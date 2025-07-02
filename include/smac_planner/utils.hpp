@@ -16,6 +16,7 @@
 #ifndef SMAC_PLANNER__UTILS_HPP_
 #define SMAC_PLANNER__UTILS_HPP_
 
+#include <cmath>
 #include <vector>
 #include <memory>
 #include <string>
@@ -80,6 +81,23 @@ public:
       float dot = vx * dx + vy * dy;
       return (dot < 0);
     }
+
+
+  /**
+  * @brief Check if the input poses are within specified tolerance
+  * @return Bool true they are under tolerance, false means they are not in tolerance
+  */
+  static inline bool arePoseWithinTolerance(geometry_msgs::Pose pose1, geometry_msgs::Pose pose2, double tolerance){
+
+    double yaw_offset = std::abs(tf2::getYaw(pose1.orientation) -  tf2::getYaw(pose2.orientation));
+    double distance = std::hypot(pose1.position.x - pose2.position.x,
+      pose1.position.y - pose2.position.y);
+
+    if (distance <= tolerance && yaw_offset <= tolerance){
+      return  true;
+    }
+    return false;
+  }
 
 
   /**
