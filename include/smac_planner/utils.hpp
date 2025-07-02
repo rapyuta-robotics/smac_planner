@@ -16,7 +16,6 @@
 #ifndef SMAC_PLANNER__UTILS_HPP_
 #define SMAC_PLANNER__UTILS_HPP_
 
-#include <cmath>
 #include <vector>
 #include <memory>
 #include <string>
@@ -89,14 +88,11 @@ public:
   * @return Bool true they are under tolerance, false means they are not in tolerance
   */
   static inline bool isSamePose(geometry_msgs::Pose pose1, geometry_msgs::Pose pose2, double tolerance){
-    double yaw_offset = angles::shortest_angular_distance(tf2::getYaw(pose1.orientation), tf2::getYaw(pose2.orientation));
-    double distance = std::hypot(pose1.position.x - pose2.position.x,
+    const double yaw_offset = angles::shortest_angular_distance(tf2::getYaw(pose1.orientation), tf2::getYaw(pose2.orientation));
+    const double distance = std::hypot(pose1.position.x - pose2.position.x,
       pose1.position.y - pose2.position.y);
-
-    if (distance <= tolerance && yaw_offset <= tolerance){
-      return  true;
-    }
-    return false;
+    
+    return distance <= tolerance && yaw_offset <= tolerance;
   }
 
 
