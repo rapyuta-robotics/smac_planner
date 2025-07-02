@@ -219,6 +219,13 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   PlanResult plan_result;
 
+  // check if the start is already under tolerance within the goal
+  if (Utils::isSamePose(start.pose, goal.pose, tolerance)){
+    ROS_INFO_NAMED("smac_planner_hybrid", "Start and goal same or goal under tolerance");
+    plan = {};
+    return mbf_msgs::GetPathResult::SUCCESS;
+  }
+
   if (!_search_info.allow_goal_overshoot) {
     _search_info.setSearchBound(goal.pose);
     _search_info.setStart(start.pose.position);
