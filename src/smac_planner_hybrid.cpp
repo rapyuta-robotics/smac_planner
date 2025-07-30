@@ -180,9 +180,9 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   // waypoint to goal pose
   PlanResult segment2;
   getPath(waypoint, goal_pose, tolerance, segment2);
-  if (!segment2.isValid()) {
-      segment2.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
-      return segment2;
+  if (!segment2.isValid())
+  {
+    return segment2;
   }
 
   // if the robot is not between the goal and the waypoint, then we set the search bounds to the waypoint.
@@ -197,9 +197,9 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   PlanResult segment1;
   getPath(start, waypoint, tolerance, segment1);
 
-  if (!segment1.isValid()) {
-      segment1.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
-      return segment1;
+  if (!segment1.isValid())
+  {
+    return segment1;
   }
 
   const PlanResult result = segment1 + segment2;
@@ -275,7 +275,8 @@ uint32_t SmacPlannerHybrid::makePlan(
 
     if (!result_option_1.isValid() && !result_option_2.isValid()) {
       message = "Could not plan to either of the goal align poses";
-      return mbf_msgs::GetPathResult::NO_PATH_FOUND;
+      // use result code from the first option as the error code
+      return result_option_1.result_code;
     }
 
     if (result_option_1.isValid() && (!result_option_2.isValid() || result_option_1.length() <= result_option_2.length())) {
