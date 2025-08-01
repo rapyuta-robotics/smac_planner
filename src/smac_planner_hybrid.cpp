@@ -20,7 +20,9 @@
 
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
+#include "nav_msgs/Path.h"
 #include "ros/console.h"
+#include "ros/time.h"
 #include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
 
@@ -302,6 +304,32 @@ uint32_t SmacPlannerHybrid::makePlan(
     }
   }
 
+  nav_msgs::Path output_path;
+  output_path.header.stamp = ros::Time::now();
+  output_path.header.frame_id = _global_frame;
+  output_path.poses = plan;
+
+  if (_final_plan_publisher.getNumSubscribers() > 0) {
+    _final_plan_publisher.publish(output_path);
+  }
+
+  // plot footprint path planned for debug
+  if (_planned_footprints_publisher.getNumSubscribers() > 0) {
+    visualization_msgs::Marker clear_all_marker;
+    clear_all_marker.ns = "planned_footprint";
+    clear_all_marker.action = visualization_msgs::Marker::DELETEALL;
+    visualization_msgs::MarkerArray marker_array;
+    marker_array.markers.push_back(clear_all_marker);
+    static int footprint_id = 0;
+    for (size_t i = 0; i < output_path.poses.size(); i++) {
+      const std::vector<geometry_msgs::Point> edge =
+          Utils::transformFootprintToEdges(output_path.poses[i].pose, _costmap_ros->getRobotFootprint());
+      footprint_id += 1;
+      marker_array.markers.push_back(Utils::createMarker(edge, footprint_id, _global_frame, ros::Time::now()));
+    }
+    _planned_footprints_publisher.publish(marker_array);
+  }
+
   return  result_code;
 }
 
@@ -477,23 +505,6 @@ void SmacPlannerHybrid::getPath(
       msg.poses.push_back(msg_pose);
     }
     _expansions_publisher.publish(msg);
-
-    // plot footprint path planned for debug
-    if (_planned_footprints_publisher.getNumSubscribers() > 0) {
-      visualization_msgs::Marker clear_all_marker;
-      clear_all_marker.ns = "planned_footprint";
-      clear_all_marker.action = visualization_msgs::Marker::DELETEALL;
-      visualization_msgs::MarkerArray marker_array;
-      marker_array.markers.push_back(clear_all_marker);
-      static int footprint_id = 0;
-      for (size_t i = 0; i < output_path.poses.size(); i++) {
-        const std::vector<geometry_msgs::Point> edge =
-            Utils::transformFootprintToEdges(output_path.poses[i].pose, _costmap_ros->getRobotFootprint());
-        footprint_id += 1;
-        marker_array.markers.push_back(Utils::createMarker(edge, footprint_id, _global_frame, ros::Time::now()));
-      }
-      _planned_footprints_publisher.publish(marker_array);
-    }
   }
 
   // Find how much time we have left to do smoothing
@@ -517,9 +528,9 @@ void SmacPlannerHybrid::getPath(
     _path_smoother.smooth(output_path, costmap, time_remaining);
   }
 
-  if (_final_plan_publisher.getNumSubscribers() > 0) {
-    _final_plan_publisher.publish(output_path);
-  }
+  // if (_final_plan_publisher.getNumSubscribers() > 0) {
+  //   _final_plan_publisher.publish(output_path);
+  // }
 
 #ifdef BENCHMARK_TESTING
   ros::Time c = ros::Time::now();
