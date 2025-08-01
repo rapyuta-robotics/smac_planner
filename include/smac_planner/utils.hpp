@@ -30,6 +30,7 @@
 #include "tf2/utils.h"
 #include "costmap_2d/costmap_2d_ros.h"
 #include "costmap_2d/inflation_layer.h"
+#include "visualization_msgs/Marker.h"
 #include "visualization_msgs/MarkerArray.h"
 #include "smac_planner/types.hpp"
 #include <ros/ros.h>
