@@ -530,10 +530,6 @@ void SmacPlannerHybrid::getPath(
     _path_smoother.smooth(output_path, costmap, time_remaining);
   }
 
-  // if (_final_plan_publisher.getNumSubscribers() > 0) {
-  //   _final_plan_publisher.publish(output_path);
-  // }
-
 #ifdef BENCHMARK_TESTING
   ros::Time c = ros::Time::now();
   std::cout << "It took " << (c - b).toSec() * 1000 <<
