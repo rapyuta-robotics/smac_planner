@@ -262,11 +262,6 @@ uint32_t SmacPlannerHybrid::makePlan(
     goal_align_poses = {align_pose_front, align_pose_back};
   }
 
-  if (_config.debug_visualizations){
-    for (geometry_msgs::PoseStamped pose: goal_align_poses){
-      Utils::publishArrowMarker(_waypoint_publisher, pose, "goal_align_waypoint");
-    }
-  }
 
   // For single align pose
   uint32_t result_code;
@@ -276,6 +271,9 @@ uint32_t SmacPlannerHybrid::makePlan(
     cost = result.cost;
     message = result.message;
     result_code = result.result_code;
+    if (_config.debug_visualizations){
+        Utils::publishArrowMarker(_waypoint_publisher, goal_align_poses[0], "goal_align_waypoint", 1);
+    }
   }
 
   // For two align poses (choose the path with smaller path length)
@@ -295,12 +293,19 @@ uint32_t SmacPlannerHybrid::makePlan(
       cost = result_option_1.cost;
       message = result_option_1.message;
       result_code = result_option_2.result_code;
+      if (_config.debug_visualizations){
+          Utils::publishArrowMarker(_waypoint_publisher, goal_align_poses[0], "goal_align_waypoint", 1);
+      }
+
     } else {
       // Use second option
       plan = result_option_2.path();
       cost = result_option_2.cost;
       message = result_option_2.message;
       result_code = result_option_2.result_code;
+      if (_config.debug_visualizations){
+          Utils::publishArrowMarker(_waypoint_publisher, goal_align_poses[1], "goal_align_waypoint", 1);
+      }
     }
   }
 
@@ -316,16 +321,13 @@ uint32_t SmacPlannerHybrid::makePlan(
   // plot footprint path planned for debug
   if (_planned_footprints_publisher.getNumSubscribers() > 0) {
     visualization_msgs::Marker clear_all_marker;
-    clear_all_marker.ns = "planned_footprint";
     clear_all_marker.action = visualization_msgs::Marker::DELETEALL;
     visualization_msgs::MarkerArray marker_array;
     marker_array.markers.push_back(clear_all_marker);
-    static int footprint_id = 0;
     for (size_t i = 0; i < output_path.poses.size(); i++) {
       const std::vector<geometry_msgs::Point> edge =
           Utils::transformFootprintToEdges(output_path.poses[i].pose, _costmap_ros->getRobotFootprint());
-      footprint_id += 1;
-      marker_array.markers.push_back(Utils::createMarker(edge, footprint_id, _global_frame, ros::Time::now()));
+      marker_array.markers.push_back(Utils::createMarker(edge, i, _global_frame, ros::Time::now()));
     }
     _planned_footprints_publisher.publish(marker_array);
   }

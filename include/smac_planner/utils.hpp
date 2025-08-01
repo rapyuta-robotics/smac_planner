@@ -92,14 +92,14 @@ public:
     * @param marker_namespace the namespace to group the marker
     * @return
     */
-    static inline void publishArrowMarker(ros::Publisher marker_publisher, geometry_msgs::PoseStamped pose, std::string marker_namespace){
+    static inline void publishArrowMarker(ros::Publisher marker_publisher, geometry_msgs::PoseStamped pose, std::string marker_namespace, int id){
       visualization_msgs::Marker marker;
       marker.header.frame_id = pose.header.frame_id == "" ? "map" : pose.header.frame_id;
       marker.header.stamp = pose.header.stamp;
       marker.ns = marker_namespace;
 
-      static int marker_id = 0; // initialize only once
-      marker.id = marker_id += 1; // keep increment at every call
+      // static int marker_id = 0; // initialize only once
+      marker.id = id; // keep increment at every call
       marker.type = visualization_msgs::Marker::ARROW;
       marker.action = visualization_msgs::Marker::ADD;
 
