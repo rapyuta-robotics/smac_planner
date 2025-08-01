@@ -98,8 +98,7 @@ public:
       marker.header.stamp = pose.header.stamp;
       marker.ns = marker_namespace;
 
-      // static int marker_id = 0; // initialize only once
-      marker.id = id; // keep increment at every call
+      marker.id = id;
       marker.type = visualization_msgs::Marker::ARROW;
       marker.action = visualization_msgs::Marker::ADD;
 
