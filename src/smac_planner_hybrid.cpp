@@ -276,7 +276,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   }
 
   // For two align poses (choose the path with smaller path length)
-  if (goal_align_poses.size() == 2) {
+  else if (goal_align_poses.size() == 2) {
     PlanResult result_option_1 = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
     PlanResult result_option_2 = planWithWaypoint(start, goal_align_poses[1], goal, tolerance);
 
@@ -301,6 +301,11 @@ uint32_t SmacPlannerHybrid::makePlan(
       result_code = result_option_2.result_code;
       waypoint_ptr = &goal_align_poses[1];
     }
+  }
+
+  else {
+    ROS_ERROR_NAMED("smac_planner", "the number of waypoints is %zu", goal_align_poses.size());
+    result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
   }
 
   nav_msgs::Path output_path;
