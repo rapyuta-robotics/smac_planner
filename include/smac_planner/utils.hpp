@@ -22,9 +22,11 @@
 
 #include <geometry_msgs/Point.h>
 #include "angles/angles.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "nlohmann/json.hpp"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Pose.h"
+#include "ros/publisher.h"
 #include "tf2/utils.h"
 #include "costmap_2d/costmap_2d_ros.h"
 #include "costmap_2d/inflation_layer.h"
@@ -82,6 +84,44 @@ public:
       return (dot < 0);
     }
 
+    /**
+    * @brief Publish an arrow marker at a given pose for debugging
+    * @param marker_publisher ros::Publisher object
+    * @param pose the pose where to publish the arrow marker
+    * @param marker_namespace the namespace to group the marker
+    * @return
+    */
+    static inline void publishArrowMarker(ros::Publisher marker_publisher, geometry_msgs::PoseStamped pose, std::string marker_namespace){
+      visualization_msgs::Marker marker;
+      marker.header.frame_id = pose.header.frame_id;
+      marker.header.stamp = pose.header.stamp;
+      marker.ns = marker_namespace;
+
+      static int marker_id = 0; // initialize only once
+      marker.id = marker_id += 1; // keep increment at every call
+      marker.type = visualization_msgs::Marker::ARROW;
+      marker.action = visualization_msgs::Marker::ADD;
+
+      // set position, orientation
+      marker.pose.position.x = pose.pose.position.x;
+      marker.pose.position.y = pose.pose.position.y;
+      marker.pose.position.z = pose.pose.position.z;
+      marker.pose.orientation.x = pose.pose.orientation.x;
+      marker.pose.orientation.y = pose.pose.orientation.y;
+      marker.pose.orientation.z = pose.pose.orientation.z;
+      marker.pose.orientation.w = pose.pose.orientation.w;
+
+      // set scale and color
+      marker.scale.x = 0.4;
+      marker.scale.y = 0.1;
+      marker.scale.z = 0.1;
+      marker.color.a = 1.0;
+      marker.color.r = 0.0;
+      marker.color.g = 1.0;
+      marker.color.b = 0.0;
+
+      marker_publisher.publish(marker);
+    }
 
   /**
   * @brief Check if the input poses are within specified tolerance
@@ -91,7 +131,7 @@ public:
     const double yaw_offset = angles::shortest_angular_distance(tf2::getYaw(pose1.orientation), tf2::getYaw(pose2.orientation));
     const double distance = std::hypot(pose1.position.x - pose2.position.x,
       pose1.position.y - pose2.position.y);
-    
+
     return distance <= tolerance && yaw_offset <= tolerance;
   }
 

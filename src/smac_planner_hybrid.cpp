@@ -68,6 +68,7 @@ void SmacPlannerHybrid::initialize(
   _raw_plan_publisher = private_nh.advertise<nav_msgs::Path>("unsmoothed_plan", 1);
   _final_plan_publisher = private_nh.advertise<nav_msgs::Path>("plan", 1);
   _expansions_publisher = private_nh.advertise<geometry_msgs::PoseArray>("expansions", 1);
+  _waypoint_publisher = private_nh.advertise<visualization_msgs::Marker>("waypoint_pose", 1);
   _planned_footprints_publisher = private_nh.advertise<visualization_msgs::MarkerArray>(
       "planned_footprints", 1);
 
@@ -257,6 +258,12 @@ uint32_t SmacPlannerHybrid::makePlan(
   } else {
     ROS_INFO_NAMED("smac_planner_hybrid", "Robot may align either %f meters before or after the goal pose", _search_info.goal_align_distance);
     goal_align_poses = {align_pose_front, align_pose_back};
+  }
+
+  if (_config.debug_visualizations){
+    for (geometry_msgs::PoseStamped pose: goal_align_poses){
+      Utils::publishArrowMarker(_waypoint_publisher, pose, "goal_align_waypoint");
+    }
   }
 
   // For single align pose
