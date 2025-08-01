@@ -22,7 +22,6 @@
 #include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/Path.h"
 #include "ros/console.h"
-#include "ros/time.h"
 #include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
 
