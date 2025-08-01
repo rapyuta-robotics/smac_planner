@@ -267,12 +267,13 @@ uint32_t SmacPlannerHybrid::makePlan(
   }
 
   // For single align pose
+  uint32_t result_code;
   if (goal_align_poses.size() == 1) {
     PlanResult result = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
     plan = result.path();
     cost = result.cost;
     message = result.message;
-    return result.result_code;
+    result_code = result.result_code;
   }
 
   // For two align poses (choose the path with smaller path length)
@@ -283,7 +284,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     if (!result_option_1.isValid() && !result_option_2.isValid()) {
       message = "Could not plan to either of the goal align poses";
       // use result code from the first option as the error code
-      return result_option_1.result_code;
+      result_code = result_option_1.result_code;
     }
 
     if (result_option_1.isValid() && (!result_option_2.isValid() || result_option_1.length() <= result_option_2.length())) {
@@ -291,18 +292,17 @@ uint32_t SmacPlannerHybrid::makePlan(
       plan = result_option_1.path();
       cost = result_option_1.cost;
       message = result_option_1.message;
+      result_code = result_option_2.result_code;
     } else {
       // Use second option
       plan = result_option_2.path();
       cost = result_option_2.cost;
       message = result_option_2.message;
+      result_code = result_option_2.result_code;
     }
-    return mbf_msgs::GetPathResult::SUCCESS;
   }
 
-  // Default case (shouldn't reach here)
-  plan_result.result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
-  return  plan_result.result_code;
+  return  result_code;
 }
 
 
