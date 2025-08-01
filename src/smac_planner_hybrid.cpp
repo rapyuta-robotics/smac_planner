@@ -264,19 +264,19 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   // For single align pose
   uint32_t result_code;
+  geometry_msgs::PoseStamped* waypoint_ptr;
+
   if (goal_align_poses.size() == 1) {
     PlanResult result = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
     plan = result.path();
     cost = result.cost;
     message = result.message;
     result_code = result.result_code;
-    if (_config.debug_visualizations){
-        Utils::publishArrowMarker(_waypoint_publisher, goal_align_poses[0], "goal_align_waypoint", 1);
-    }
+    waypoint_ptr = &goal_align_poses[0];
   }
 
   // For two align poses (choose the path with smaller path length)
-  if (goal_align_poses.size() >= 2) {
+  if (goal_align_poses.size() == 2) {
     PlanResult result_option_1 = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
     PlanResult result_option_2 = planWithWaypoint(start, goal_align_poses[1], goal, tolerance);
 
@@ -292,19 +292,14 @@ uint32_t SmacPlannerHybrid::makePlan(
       cost = result_option_1.cost;
       message = result_option_1.message;
       result_code = result_option_2.result_code;
-      if (_config.debug_visualizations){
-          Utils::publishArrowMarker(_waypoint_publisher, goal_align_poses[0], "goal_align_waypoint", 1);
-      }
-
+      waypoint_ptr = &goal_align_poses[0];
     } else {
       // Use second option
       plan = result_option_2.path();
       cost = result_option_2.cost;
       message = result_option_2.message;
       result_code = result_option_2.result_code;
-      if (_config.debug_visualizations){
-          Utils::publishArrowMarker(_waypoint_publisher, goal_align_poses[1], "goal_align_waypoint", 1);
-      }
+      waypoint_ptr = &goal_align_poses[1];
     }
   }
 
@@ -330,6 +325,9 @@ uint32_t SmacPlannerHybrid::makePlan(
     }
     _planned_footprints_publisher.publish(marker_array);
   }
+
+  Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
+
 
   return  result_code;
 }

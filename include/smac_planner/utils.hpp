@@ -22,15 +22,12 @@
 
 #include <geometry_msgs/Point.h>
 #include "angles/angles.h"
-#include "geometry_msgs/PoseStamped.h"
 #include "nlohmann/json.hpp"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Pose.h"
-#include "ros/publisher.h"
 #include "tf2/utils.h"
 #include "costmap_2d/costmap_2d_ros.h"
 #include "costmap_2d/inflation_layer.h"
-#include "visualization_msgs/Marker.h"
 #include "visualization_msgs/MarkerArray.h"
 #include "smac_planner/types.hpp"
 #include <ros/ros.h>
@@ -92,24 +89,19 @@ public:
     * @param marker_namespace the namespace to group the marker
     * @return
     */
-    static inline void publishArrowMarker(ros::Publisher marker_publisher, geometry_msgs::PoseStamped pose, std::string marker_namespace, int id){
-      visualization_msgs::Marker marker;
-      marker.header.frame_id = pose.header.frame_id == "" ? "map" : pose.header.frame_id;
-      marker.header.stamp = pose.header.stamp;
-      marker.ns = marker_namespace;
+    static inline void publishArrowMarker(const ros::Publisher &marker_publisher, const geometry_msgs::PoseStamped &pose, const std::string &marker_namespace, const int &id){
+      if (marker_publisher.getNumSubscribers() < 1) {
+        return;
+      }
 
+      visualization_msgs::Marker marker;
+      marker.header = pose.header;
+      marker.header.frame_id = marker.header.frame_id.empty() ? "map" : marker.header.frame_id;
+      marker.ns = marker_namespace;
       marker.id = id;
       marker.type = visualization_msgs::Marker::ARROW;
       marker.action = visualization_msgs::Marker::ADD;
-
-      // set position, orientation
-      marker.pose.position.x = pose.pose.position.x;
-      marker.pose.position.y = pose.pose.position.y;
-      marker.pose.position.z = pose.pose.position.z;
-      marker.pose.orientation.x = pose.pose.orientation.x;
-      marker.pose.orientation.y = pose.pose.orientation.y;
-      marker.pose.orientation.z = pose.pose.orientation.z;
-      marker.pose.orientation.w = pose.pose.orientation.w;
+      marker.pose = pose.pose;
 
       // set scale and color
       marker.scale.x = 0.4;
