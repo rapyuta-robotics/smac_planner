@@ -20,7 +20,6 @@
 #include <string>
 
 #include "ros/console.h"
-#include "ros/publisher.h"
 #include "smac_planner/a_star.hpp"
 #include "smac_planner/smoother.hpp"
 #include "smac_planner/costmap_downsampler.hpp"
