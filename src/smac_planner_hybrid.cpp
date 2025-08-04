@@ -331,7 +331,9 @@ uint32_t SmacPlannerHybrid::makePlan(
     _planned_footprints_publisher.publish(marker_array);
   }
 
-  Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
+  if (waypoint_ptr) {
+    Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
+  }
 
 
   return  result_code;
