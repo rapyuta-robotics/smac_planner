@@ -365,7 +365,7 @@ void SmacPlannerHybrid::collision(geometry_msgs::Pose robot_pose, ros::Publisher
   // Build occupancy grid
   nav_msgs::OccupancyGrid grid;
   grid.header.stamp = ros::Time::now();
-  grid.header.frame_id = "map";  // Usually "map" or "odom"
+  grid.header.frame_id = _global_frame;
   grid.info.resolution = _costmap->getResolution();
   grid.info.width = _costmap->getSizeInCellsX();
   grid.info.height = _costmap->getSizeInCellsY();
