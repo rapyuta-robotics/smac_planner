@@ -20,6 +20,7 @@
 
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
+#include "nav_msgs/Path.h"
 #include "ros/console.h"
 #include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
@@ -68,6 +69,7 @@ void SmacPlannerHybrid::initialize(
   _raw_plan_publisher = private_nh.advertise<nav_msgs::Path>("unsmoothed_plan", 1);
   _final_plan_publisher = private_nh.advertise<nav_msgs::Path>("plan", 1);
   _expansions_publisher = private_nh.advertise<geometry_msgs::PoseArray>("expansions", 1);
+  _waypoint_publisher = private_nh.advertise<visualization_msgs::Marker>("waypoint_pose", 1);
   _planned_footprints_publisher = private_nh.advertise<visualization_msgs::MarkerArray>(
       "planned_footprints", 1);
 
@@ -259,24 +261,29 @@ uint32_t SmacPlannerHybrid::makePlan(
     goal_align_poses = {align_pose_front, align_pose_back};
   }
 
+
   // For single align pose
+  uint32_t result_code;
+  geometry_msgs::PoseStamped* waypoint_ptr;
+
   if (goal_align_poses.size() == 1) {
     PlanResult result = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
     plan = result.path();
     cost = result.cost;
     message = result.message;
-    return result.result_code;
+    result_code = result.result_code;
+    waypoint_ptr = &goal_align_poses[0];
   }
 
   // For two align poses (choose the path with smaller path length)
-  if (goal_align_poses.size() >= 2) {
+  else if (goal_align_poses.size() == 2) {
     PlanResult result_option_1 = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
     PlanResult result_option_2 = planWithWaypoint(start, goal_align_poses[1], goal, tolerance);
 
     if (!result_option_1.isValid() && !result_option_2.isValid()) {
       message = "Could not plan to either of the goal align poses";
       // use result code from the first option as the error code
-      return result_option_1.result_code;
+      result_code = result_option_1.result_code;
     }
 
     if (result_option_1.isValid() && (!result_option_2.isValid() || result_option_1.length() <= result_option_2.length())) {
@@ -284,18 +291,52 @@ uint32_t SmacPlannerHybrid::makePlan(
       plan = result_option_1.path();
       cost = result_option_1.cost;
       message = result_option_1.message;
+      result_code = result_option_2.result_code;
+      waypoint_ptr = &goal_align_poses[0];
     } else {
       // Use second option
       plan = result_option_2.path();
       cost = result_option_2.cost;
       message = result_option_2.message;
+      result_code = result_option_2.result_code;
+      waypoint_ptr = &goal_align_poses[1];
     }
-    return mbf_msgs::GetPathResult::SUCCESS;
   }
 
-  // Default case (shouldn't reach here)
-  plan_result.result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
-  return  plan_result.result_code;
+  else {
+    ROS_ERROR_NAMED("smac_planner", "the number of waypoints is %zu", goal_align_poses.size());
+    result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
+  }
+
+  nav_msgs::Path output_path;
+  output_path.header.stamp = ros::Time::now();
+  output_path.header.frame_id = _global_frame;
+  output_path.poses = plan;
+
+  if (_final_plan_publisher.getNumSubscribers() > 0) {
+    _final_plan_publisher.publish(output_path);
+  }
+
+  // plot footprint path planned for debug
+  if (_planned_footprints_publisher.getNumSubscribers() > 0) {
+    visualization_msgs::Marker clear_all_marker;
+    clear_all_marker.action = visualization_msgs::Marker::DELETEALL;
+    visualization_msgs::MarkerArray marker_array;
+    marker_array.markers.push_back(clear_all_marker);
+    for (size_t i = 0; i < output_path.poses.size(); i++) {
+      const std::vector<geometry_msgs::Point> edge =
+          Utils::transformFootprintToEdges(output_path.poses[i].pose, _costmap_ros->getRobotFootprint());
+      marker_array.markers.push_back(Utils::createMarker(edge, i, _global_frame, ros::Time::now()));
+    }
+    _planned_footprints_publisher.publish(marker_array);
+  }
+
+  if (waypoint_ptr) {
+    Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
+  }
+
+
+  return  result_code;
 }
 
 
@@ -470,20 +511,6 @@ void SmacPlannerHybrid::getPath(
       msg.poses.push_back(msg_pose);
     }
     _expansions_publisher.publish(msg);
-
-    // plot footprint path planned for debug
-    if (_planned_footprints_publisher.getNumSubscribers() > 0) {
-      visualization_msgs::Marker clear_all_marker;
-      clear_all_marker.action = visualization_msgs::Marker::DELETEALL;
-      visualization_msgs::MarkerArray marker_array;
-      marker_array.markers.push_back(clear_all_marker);
-      for (size_t i = 0; i < output_path.poses.size(); i++) {
-        const std::vector<geometry_msgs::Point> edge =
-            Utils::transformFootprintToEdges(output_path.poses[i].pose, _costmap_ros->getRobotFootprint());
-        marker_array.markers.push_back(Utils::createMarker(edge, i, _global_frame, ros::Time::now()));
-      }
-      _planned_footprints_publisher.publish(marker_array);
-    }
   }
 
   // Find how much time we have left to do smoothing
@@ -505,10 +532,6 @@ void SmacPlannerHybrid::getPath(
     output_path.poses.front() = start;
     output_path.poses.back() = goal;
     _path_smoother.smooth(output_path, costmap, time_remaining);
-  }
-
-  if (_final_plan_publisher.getNumSubscribers() > 0) {
-    _final_plan_publisher.publish(output_path);
   }
 
 #ifdef BENCHMARK_TESTING

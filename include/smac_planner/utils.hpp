@@ -82,6 +82,38 @@ public:
       return (dot < 0);
     }
 
+    /**
+    * @brief Publish an arrow marker at a given pose for debugging
+    * @param marker_publisher ros::Publisher object
+    * @param pose the pose where to publish the arrow marker
+    * @param marker_namespace the namespace to group the marker
+    * @return
+    */
+    static inline void publishArrowMarker(const ros::Publisher &marker_publisher, const geometry_msgs::PoseStamped &pose, const std::string &marker_namespace, const int &id){
+      if (marker_publisher.getNumSubscribers() < 1) {
+        return;
+      }
+
+      visualization_msgs::Marker marker;
+      marker.header = pose.header;
+      marker.header.frame_id = marker.header.frame_id.empty() ? "map" : marker.header.frame_id;
+      marker.ns = marker_namespace;
+      marker.id = id;
+      marker.type = visualization_msgs::Marker::ARROW;
+      marker.action = visualization_msgs::Marker::ADD;
+      marker.pose = pose.pose;
+
+      // set scale and color
+      marker.scale.x = 0.4;
+      marker.scale.y = 0.035;
+      marker.scale.z = 0.1;
+      marker.color.a = 0.5;
+      marker.color.r = 0.0;
+      marker.color.g = 0.0;
+      marker.color.b = 1.0;
+
+      marker_publisher.publish(marker);
+    }
 
   /**
   * @brief Check if the input poses are within specified tolerance
@@ -91,7 +123,7 @@ public:
     const double yaw_offset = angles::shortest_angular_distance(tf2::getYaw(pose1.orientation), tf2::getYaw(pose2.orientation));
     const double distance = std::hypot(pose1.position.x - pose2.position.x,
       pose1.position.y - pose2.position.y);
-    
+
     return distance <= tolerance && yaw_offset <= tolerance;
   }
 
