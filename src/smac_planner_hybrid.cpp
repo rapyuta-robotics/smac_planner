@@ -22,8 +22,10 @@
 #include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/Path.h"
 #include "ros/console.h"
+#include "ros/publisher.h"
 #include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
+#include <base_local_planner/footprint_helper.h>
 
 #include "smac_planner/smac_planner_hybrid.hpp"
 
@@ -70,6 +72,7 @@ void SmacPlannerHybrid::initialize(
   _final_plan_publisher = private_nh.advertise<nav_msgs::Path>("plan", 1);
   _expansions_publisher = private_nh.advertise<geometry_msgs::PoseArray>("expansions", 1);
   _waypoint_publisher = private_nh.advertise<visualization_msgs::Marker>("waypoint_pose", 1);
+  _collision_pub = private_nh.advertise<nav_msgs::OccupancyGrid>("collision_map", 1);
   _planned_footprints_publisher = private_nh.advertise<visualization_msgs::MarkerArray>(
       "planned_footprints", 1);
 
@@ -339,6 +342,52 @@ uint32_t SmacPlannerHybrid::makePlan(
   return  result_code;
 }
 
+void SmacPlannerHybrid::collision(geometry_msgs::Pose robot_pose, ros::Publisher collision_map_publisher){
+  base_local_planner::FootprintHelper fph;
+  double yaw = tf2::getYaw(robot_pose.orientation);
+  std::vector<geometry_msgs::Point> footprint = _costmap_ros->getRobotFootprint();
+  auto cells = fph.getFootprintCells(
+      Eigen::Vector3f(robot_pose.position.x, robot_pose.position.y, yaw),
+      footprint, * _costmap, true);
+
+  std::vector<geometry_msgs::Point> colliding_points;
+  for (const auto& cell : cells)
+  {
+    unsigned char cost = _costmap->getCost(cell.x, cell.y);
+    if (cost == costmap_2d::LETHAL_OBSTACLE || (!_config.allow_unknown && cost == costmap_2d::NO_INFORMATION)) {
+      geometry_msgs::Point p;
+      _costmap->mapToWorld(cell.x, cell.y, p.x, p.y);
+      p.z = 0.0;
+      colliding_points.push_back(p);
+    }
+  }
+
+  // Build occupancy grid
+  nav_msgs::OccupancyGrid grid;
+  grid.header.stamp = ros::Time::now();
+  grid.header.frame_id = "map";  // Usually "map" or "odom"
+  grid.info.resolution = _costmap->getResolution();
+  grid.info.width = _costmap->getSizeInCellsX();
+  grid.info.height = _costmap->getSizeInCellsY();
+  grid.info.origin.position.x = _costmap->getOriginX();
+  grid.info.origin.position.y = _costmap->getOriginY();
+  grid.info.origin.orientation.w = 1.0;
+  grid.data.resize(grid.info.width * grid.info.height, 0);
+
+    // Mark colliding cells
+  for (const auto& pt : colliding_points)
+  {
+    unsigned int mx, my;
+    if (_costmap->worldToMap(pt.x, pt.y, mx, my)) {
+      size_t index = mx + my * grid.info.width;
+      if (index < grid.data.size()) {
+        grid.data[index] = 100;
+      }
+    }
+  }
+
+  collision_map_publisher.publish(grid);
+}
 
 void SmacPlannerHybrid::getPath(
     const geometry_msgs::PoseStamped & start,
@@ -388,6 +437,7 @@ void SmacPlannerHybrid::getPath(
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Start pose is blocked";
     plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
+    collision(start.pose, _collision_pub);
     return;
   }
 
@@ -414,6 +464,7 @@ void SmacPlannerHybrid::getPath(
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Goal pose is blocked";
     plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_GOAL;
+    collision(goal.pose, _collision_pub);
     return;
   }
 

@@ -20,6 +20,7 @@
 #include <string>
 
 #include "ros/console.h"
+#include "ros/publisher.h"
 #include "smac_planner/a_star.hpp"
 #include "smac_planner/smoother.hpp"
 #include "smac_planner/costmap_downsampler.hpp"
@@ -61,6 +62,7 @@ public:
     std::string name,
     costmap_2d::Costmap2DROS* costmap_ros) override;
 
+  void collision(geometry_msgs::Pose robot_pose, ros::Publisher collision_map_publisher);
 
     /**
    * @brief Creating a path from start to goal pose based on params.
@@ -147,6 +149,7 @@ protected:
   ros::Publisher _planned_footprints_publisher;
   ros::Publisher _expansions_publisher;
   ros::Publisher _waypoint_publisher;
+  ros::Publisher _collision_pub;
   std::mutex _mutex;
 };
 
