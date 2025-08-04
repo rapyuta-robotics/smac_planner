@@ -18,6 +18,7 @@
 #include <vector>
 #include <limits>
 
+#include "costmap_2d/costmap_2d_ros.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/Path.h"
@@ -374,7 +375,7 @@ void SmacPlannerHybrid::collision(geometry_msgs::Pose robot_pose, ros::Publisher
   grid.info.origin.orientation.w = 1.0;
   grid.data.resize(grid.info.width * grid.info.height, 0);
 
-    // Mark colliding cells
+  // Mark colliding cells
   for (const auto& pt : colliding_points)
   {
     unsigned int mx, my;
