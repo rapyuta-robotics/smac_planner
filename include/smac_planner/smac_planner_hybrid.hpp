@@ -115,7 +115,7 @@ protected:
    * @param robot_pose the pose at which we want to check and add
    * @param collision_map_publisher publisher object for occupancy grid
    */
-  void collision(geometry_msgs::Pose robot_pose, ros::Publisher collision_map_publisher);
+  void collision(const geometry_msgs::Pose& robot_pose, const ros::Publisher& collision_map_publisher);
 
   /**
    * @brief Compute Hybrid A* path between considering the waypoint

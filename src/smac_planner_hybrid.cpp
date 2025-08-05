@@ -27,7 +27,7 @@
 #include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
 #include <base_local_planner/footprint_helper.h>
-
+#include <tf2_eigen/tf2_eigen.h>
 #include "smac_planner/smac_planner_hybrid.hpp"
 
 // #define BENCHMARK_TESTING
@@ -339,20 +339,22 @@ uint32_t SmacPlannerHybrid::makePlan(
     Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
   }
 
-
   return  result_code;
 }
 
 
-void SmacPlannerHybrid::collision(geometry_msgs::Pose robot_pose, ros::Publisher collision_map_publisher) {
+void SmacPlannerHybrid::collision(const geometry_msgs::Pose& robot_pose, const ros::Publisher& collision_map_publisher) {
   base_local_planner::FootprintHelper fph;
-  double yaw = tf2::getYaw(robot_pose.orientation);
-  std::vector<geometry_msgs::Point> footprint = _costmap_ros->getRobotFootprint();
-  auto cells = fph.getFootprintCells(
+
+  const double yaw = tf2::getYaw(robot_pose.orientation);
+  const std::vector<geometry_msgs::Point> footprint = _costmap_ros->getRobotFootprint();
+  const auto cells = fph.getFootprintCells(
     Eigen::Vector3f(robot_pose.position.x, robot_pose.position.y, yaw),
     footprint, * _costmap, true);
 
-  if (cells.empty()) return;
+  if (cells.empty()) {
+    ROS_ERROR_NAMED("smac_planner", "footprint cells empty, cant create collision map");
+  }
 
   long min_x = _costmap->getSizeInCellsX();
   long max_x = 0;
@@ -372,13 +374,16 @@ void SmacPlannerHybrid::collision(geometry_msgs::Pose robot_pose, ros::Publisher
     }
   }
 
-  if (colliding_cells.empty()) return;
+  if (colliding_cells.empty()){
+    ROS_DEBUG_STREAM_NAMED("smac_planner","no collision cells found at robot pose" << robot_pose);
+    return;
+  }
 
   // Dimensions of the bounding box
-  int width = max_x - min_x + 1;
-  int height = max_y - min_y + 1;
+  const int width = max_x - min_x + 1;
+  const int height = max_y - min_y + 1;
 
-  // Create occupancy grid only as big as needed
+  // Create occupancy grid
   nav_msgs::OccupancyGrid grid;
   grid.header.stamp = ros::Time::now();
   grid.header.frame_id = _global_frame;
@@ -395,9 +400,9 @@ void SmacPlannerHybrid::collision(geometry_msgs::Pose robot_pose, ros::Publisher
   grid.data.resize(width * height, 0);
 
   for (const auto& cell : colliding_cells) {
-    int local_x = cell.first - min_x;
-    int local_y = cell.second - min_y;
-    size_t index = local_x + local_y * width;
+    const int local_x = cell.first - min_x;
+    const int local_y = cell.second - min_y;
+    const size_t index = local_x + local_y * width;
     grid.data[index] = 100;
   }
 

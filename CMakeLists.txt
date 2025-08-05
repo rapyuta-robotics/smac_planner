@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
         pluginlib
         angles
         eigen_conversions
+        tf2_eigen
 )
 
 find_package(ompl REQUIRED)
