@@ -343,52 +343,67 @@ uint32_t SmacPlannerHybrid::makePlan(
   return  result_code;
 }
 
-void SmacPlannerHybrid::collision(geometry_msgs::Pose robot_pose, ros::Publisher collision_map_publisher){
+
+void SmacPlannerHybrid::collision(geometry_msgs::Pose robot_pose, ros::Publisher collision_map_publisher) {
   base_local_planner::FootprintHelper fph;
   double yaw = tf2::getYaw(robot_pose.orientation);
   std::vector<geometry_msgs::Point> footprint = _costmap_ros->getRobotFootprint();
   auto cells = fph.getFootprintCells(
-      Eigen::Vector3f(robot_pose.position.x, robot_pose.position.y, yaw),
-      footprint, * _costmap, true);
+    Eigen::Vector3f(robot_pose.position.x, robot_pose.position.y, yaw),
+    footprint, * _costmap, true);
 
-  std::vector<geometry_msgs::Point> colliding_points;
-  for (const auto& cell : cells)
-  {
+  if (cells.empty()) return;
+
+  long min_x = _costmap->getSizeInCellsX();
+  long max_x = 0;
+  long min_y = _costmap->getSizeInCellsY();
+  long max_y = 0;
+
+  std::vector<std::pair<int, int>> colliding_cells;
+
+  for (const auto& cell : cells) {
     unsigned char cost = _costmap->getCost(cell.x, cell.y);
     if (cost == costmap_2d::LETHAL_OBSTACLE || (!_config.allow_unknown && cost == costmap_2d::NO_INFORMATION)) {
-      geometry_msgs::Point p;
-      _costmap->mapToWorld(cell.x, cell.y, p.x, p.y);
-      p.z = 0.0;
-      colliding_points.push_back(p);
+      colliding_cells.emplace_back(cell.x, cell.y);
+      min_x = std::min(min_x, cell.x);
+      max_x = std::max(max_x, cell.x);
+      min_y = std::min(min_y, cell.y);
+      max_y = std::max(max_y, cell.y);
     }
   }
 
-  // Build occupancy grid
+  if (colliding_cells.empty()) return;
+
+  // Dimensions of the bounding box
+  int width = max_x - min_x + 1;
+  int height = max_y - min_y + 1;
+
+  // Create occupancy grid only as big as needed
   nav_msgs::OccupancyGrid grid;
   grid.header.stamp = ros::Time::now();
   grid.header.frame_id = _global_frame;
   grid.info.resolution = _costmap->getResolution();
-  grid.info.width = _costmap->getSizeInCellsX();
-  grid.info.height = _costmap->getSizeInCellsY();
-  grid.info.origin.position.x = _costmap->getOriginX();
-  grid.info.origin.position.y = _costmap->getOriginY();
-  grid.info.origin.orientation.w = 1.0;
-  grid.data.resize(grid.info.width * grid.info.height, 0);
+  grid.info.width = width;
+  grid.info.height = height;
 
-  // Mark colliding cells
-  for (const auto& pt : colliding_points)
-  {
-    unsigned int mx, my;
-    if (_costmap->worldToMap(pt.x, pt.y, mx, my)) {
-      size_t index = mx + my * grid.info.width;
-      if (index < grid.data.size()) {
-        grid.data[index] = 100;
-      }
-    }
+  double origin_x, origin_y;
+  _costmap->mapToWorld(min_x, min_y, origin_x, origin_y);
+  grid.info.origin.position.x = origin_x-grid.info.resolution/2;
+  grid.info.origin.position.y = origin_y-grid.info.resolution/2;
+  grid.info.origin.orientation.w = 1.0;
+
+  grid.data.resize(width * height, 0);
+
+  for (const auto& cell : colliding_cells) {
+    int local_x = cell.first - min_x;
+    int local_y = cell.second - min_y;
+    size_t index = local_x + local_y * width;
+    grid.data[index] = 100;
   }
 
   collision_map_publisher.publish(grid);
 }
+
 
 void SmacPlannerHybrid::getPath(
     const geometry_msgs::PoseStamped & start,
