@@ -23,6 +23,7 @@
   <depend>ompl</depend>
   <depend>angles</depend>
   <depend>nlohmann_json</depend>
+  <depend>tf2_eigen</depend>
 
   <test_depend>catkin_lint</test_depend>
   <test_depend>catkin</test_depend>

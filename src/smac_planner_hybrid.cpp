@@ -18,13 +18,15 @@
 #include <vector>
 #include <limits>
 
+#include "costmap_2d/costmap_2d_ros.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/Path.h"
 #include "ros/console.h"
 #include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
-
+#include <base_local_planner/footprint_helper.h>
+#include <tf2_eigen/tf2_eigen.h>
 #include "smac_planner/smac_planner_hybrid.hpp"
 
 // #define BENCHMARK_TESTING
@@ -70,6 +72,7 @@ void SmacPlannerHybrid::initialize(
   _final_plan_publisher = private_nh.advertise<nav_msgs::Path>("plan", 1);
   _expansions_publisher = private_nh.advertise<geometry_msgs::PoseArray>("expansions", 1);
   _waypoint_publisher = private_nh.advertise<visualization_msgs::Marker>("waypoint_pose", 1);
+  _collision_pub = private_nh.advertise<nav_msgs::OccupancyGrid>("collision_map", 1);
   _planned_footprints_publisher = private_nh.advertise<visualization_msgs::MarkerArray>(
       "planned_footprints", 1);
 
@@ -335,8 +338,74 @@ uint32_t SmacPlannerHybrid::makePlan(
     Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
   }
 
-
   return  result_code;
+}
+
+
+void SmacPlannerHybrid::collision(const geometry_msgs::Pose& robot_pose, const ros::Publisher& collision_map_publisher) {
+  base_local_planner::FootprintHelper fph;
+
+  const double yaw = tf2::getYaw(robot_pose.orientation);
+  const std::vector<geometry_msgs::Point> footprint = _costmap_ros->getRobotFootprint();
+  const auto cells = fph.getFootprintCells(
+    Eigen::Vector3f(robot_pose.position.x, robot_pose.position.y, yaw),
+    footprint, * _costmap, true);
+
+  if (cells.empty()) {
+    ROS_ERROR_NAMED("smac_planner", "footprint cells empty, cant create collision map");
+  }
+
+  long min_x = _costmap->getSizeInCellsX();
+  long max_x = 0;
+  long min_y = _costmap->getSizeInCellsY();
+  long max_y = 0;
+
+  std::vector<std::pair<int, int>> colliding_cells;
+
+  for (const auto& cell : cells) {
+    unsigned char cost = _costmap->getCost(cell.x, cell.y);
+    if (cost == costmap_2d::LETHAL_OBSTACLE || (!_config.allow_unknown && cost == costmap_2d::NO_INFORMATION)) {
+      colliding_cells.emplace_back(cell.x, cell.y);
+      min_x = std::min(min_x, cell.x);
+      max_x = std::max(max_x, cell.x);
+      min_y = std::min(min_y, cell.y);
+      max_y = std::max(max_y, cell.y);
+    }
+  }
+
+  if (colliding_cells.empty()){
+    ROS_DEBUG_STREAM_NAMED("smac_planner","no collision cells found at robot pose" << robot_pose);
+    return;
+  }
+
+  // Dimensions of the bounding box
+  const int width = max_x - min_x + 1;
+  const int height = max_y - min_y + 1;
+
+  // Create occupancy grid
+  nav_msgs::OccupancyGrid grid;
+  grid.header.stamp = ros::Time::now();
+  grid.header.frame_id = _global_frame;
+  grid.info.resolution = _costmap->getResolution();
+  grid.info.width = width;
+  grid.info.height = height;
+
+  double origin_x, origin_y;
+  _costmap->mapToWorld(min_x, min_y, origin_x, origin_y);
+  grid.info.origin.position.x = origin_x-grid.info.resolution/2;
+  grid.info.origin.position.y = origin_y-grid.info.resolution/2;
+  grid.info.origin.orientation.w = 1.0;
+
+  grid.data.resize(width * height, 0);
+
+  for (const auto& cell : colliding_cells) {
+    const int local_x = cell.first - min_x;
+    const int local_y = cell.second - min_y;
+    const size_t index = local_x + local_y * width;
+    grid.data[index] = 100;
+  }
+
+  collision_map_publisher.publish(grid);
 }
 
 
@@ -388,6 +457,7 @@ void SmacPlannerHybrid::getPath(
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Start pose is blocked";
     plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
+    collision(start.pose, _collision_pub);
     return;
   }
 
@@ -414,6 +484,7 @@ void SmacPlannerHybrid::getPath(
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Goal pose is blocked";
     plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_GOAL;
+    collision(goal.pose, _collision_pub);
     return;
   }
 

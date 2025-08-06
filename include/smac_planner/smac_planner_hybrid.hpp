@@ -61,7 +61,6 @@ public:
     std::string name,
     costmap_2d::Costmap2DROS* costmap_ros) override;
 
-
     /**
    * @brief Creating a path from start to goal pose based on params.
    * @param start Start pose
@@ -112,6 +111,13 @@ protected:
   void reconfigureCB(SmacPlannerHybridConfig& config, uint32_t level);
 
   /**
+   * @brief create and publish occupancy grid highlighting collision cells with the robot footprint at the given pose
+   * @param robot_pose the pose at which we want to check and add
+   * @param collision_map_publisher publisher object for occupancy grid
+   */
+  void collision(const geometry_msgs::Pose& robot_pose, const ros::Publisher& collision_map_publisher);
+
+  /**
    * @brief Compute Hybrid A* path between considering the waypoint
    * @param start Start pose
    * @param waypoint the waypoint we want to include in the path
@@ -147,6 +153,7 @@ protected:
   ros::Publisher _planned_footprints_publisher;
   ros::Publisher _expansions_publisher;
   ros::Publisher _waypoint_publisher;
+  ros::Publisher _collision_pub;
   std::mutex _mutex;
 };
 
