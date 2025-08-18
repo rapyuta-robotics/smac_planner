@@ -187,6 +187,12 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   getPath(waypoint, goal_pose, tolerance, segment2);
   if (!segment2.isValid())
   {
+    // the segment is from waypoint to goal pose, so blocked start means blocked waypoint.
+    if (segment2.result_code == mbf_msgs::GetPathResult::BLOCKED_START) {
+      segment2.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
+      ROS_ERROR_NAMED("smac_planner_hybrid", "waypoint pose is blocked");
+      segment2.message = "Waypoint pose is blocked";
+    }
     return segment2;
   }
 
@@ -307,7 +313,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   }
 
   else {
-    ROS_ERROR_NAMED("smac_planner", "the number of waypoints is %zu", goal_align_poses.size());
+    ROS_ERROR_NAMED("smac_planner_hybrid", "the number of waypoints is %zu", goal_align_poses.size());
     result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
   }
 
@@ -352,7 +358,7 @@ void SmacPlannerHybrid::collision(const geometry_msgs::Pose& robot_pose, const r
     footprint, * _costmap, true);
 
   if (cells.empty()) {
-    ROS_ERROR_NAMED("smac_planner", "footprint cells empty, cant create collision map");
+    ROS_ERROR_NAMED("smac_planner_hybrid", "footprint cells empty, cant create collision map");
   }
 
   long min_x = _costmap->getSizeInCellsX();
@@ -374,7 +380,7 @@ void SmacPlannerHybrid::collision(const geometry_msgs::Pose& robot_pose, const r
   }
 
   if (colliding_cells.empty()){
-    ROS_DEBUG_STREAM_NAMED("smac_planner","no collision cells found at robot pose" << robot_pose);
+    ROS_DEBUG_STREAM_NAMED("smac_planner_hybrid","no collision cells found at robot pose" << robot_pose);
     return;
   }
 
@@ -536,7 +542,7 @@ void SmacPlannerHybrid::getPath(
       if (*_a_star->getStart() == *_a_star->getGoal())
       {
         ROS_ERROR_NAMED(
-            "smac_planner",
+            "smac_planner_hybrid",
             "Start and goal are the same according to costmap resolution and angle bin quantization; but goal tolerance is not met");
         plan_result.message = "Start and goal are the same";
         plan_result.result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
