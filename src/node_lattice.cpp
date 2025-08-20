@@ -34,6 +34,7 @@ namespace smac_planner
 {
 
 // defining static member for all instance to share
+nav_msgs::OccupancyGrid NodeLattice::footprint_collision_cells;
 LatticeMotionTable NodeLattice::motion_table;
 float NodeLattice::size_lookup = 25;
 LookupTable NodeLattice::dist_heuristic_lookup_table;

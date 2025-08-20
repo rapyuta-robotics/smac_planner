@@ -24,6 +24,7 @@ namespace smac_planner
 {
 
 // defining static member for all instance to share
+nav_msgs::OccupancyGrid Node2D::footprint_collision_cells;
 std::vector<int> Node2D::_neighbors_grid_offsets;
 float Node2D::cost_travel_multiplier = 2.0;
 

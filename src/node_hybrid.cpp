@@ -32,6 +32,7 @@ namespace smac_planner
 {
 
 // defining static member for all instance to share
+nav_msgs::OccupancyGrid NodeHybrid::footprint_collision_cells;
 LookupTable NodeHybrid::obstacle_heuristic_lookup_table;
 float NodeHybrid::travel_distance_cost = sqrtf(2.0f);
 HybridMotionTable NodeHybrid::motion_table;
