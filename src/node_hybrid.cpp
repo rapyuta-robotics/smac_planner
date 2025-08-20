@@ -41,15 +41,6 @@ costmap_2d::Costmap2DROS* NodeHybrid::costmap_ros = nullptr;
 
 ObstacleHeuristicQueue NodeHybrid::obstacle_heuristic_queue;
 
-void NodeHybrid::initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros) {
-  NodeHybrid::footprint_collision_cells.header.frame_id = NodeHybrid::costmap_ros->getGlobalFrameID();
-  NodeHybrid::footprint_collision_cells.info.resolution = NodeHybrid::costmap_ros->getCostmap()->getResolution();
-  NodeHybrid::footprint_collision_cells.info.width = NodeHybrid::costmap_ros->getCostmap()->getSizeInCellsY();
-  NodeHybrid::footprint_collision_cells.info.height = NodeHybrid::costmap_ros->getCostmap()->getSizeInCellsX();
-  NodeHybrid::footprint_collision_cells.info.origin.position.x = NodeHybrid::costmap_ros->getCostmap()->getOriginX();
-  NodeHybrid::footprint_collision_cells.info.origin.position.y = NodeHybrid::costmap_ros->getCostmap()->getOriginY();
-}
-
 // Each of these tables are the projected motion models through
 // time and space applied to the search on the current node in
 // continuous map-coordinates (e.g. not meters but partial map cells)
@@ -372,6 +363,15 @@ void NodeHybrid::reset()
   pose.theta = 0.0f;
 }
 
+void NodeHybrid::initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros) {
+  NodeHybrid::footprint_collision_cells.header.frame_id = NodeHybrid::costmap_ros->getGlobalFrameID();
+  NodeHybrid::footprint_collision_cells.info.resolution = NodeHybrid::costmap_ros->getCostmap()->getResolution();
+  NodeHybrid::footprint_collision_cells.info.width = NodeHybrid::costmap_ros->getCostmap()->getSizeInCellsY();
+  NodeHybrid::footprint_collision_cells.info.height = NodeHybrid::costmap_ros->getCostmap()->getSizeInCellsX();
+  NodeHybrid::footprint_collision_cells.info.origin.position.x = NodeHybrid::costmap_ros->getCostmap()->getOriginX();
+  NodeHybrid::footprint_collision_cells.info.origin.position.y = NodeHybrid::costmap_ros->getCostmap()->getOriginY();
+}
+
 bool NodeHybrid::isNodeValid(
   const bool & traverse_unknown,
   GridCollisionChecker * collision_checker)
@@ -379,7 +379,7 @@ bool NodeHybrid::isNodeValid(
   if (collision_checker->inCollision(
       this->pose.x, this->pose.y, this->pose.theta /*bin number*/, traverse_unknown))
   {
-    // footprint_collision_cells.info.
+    footprint_collision_cells.data.at(this->getIndex()) = 100;
     return false;
   }
 

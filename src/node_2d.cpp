@@ -65,6 +65,7 @@ bool Node2D::isNodeValid(
   GridCollisionChecker * collision_checker)
 {
   if (collision_checker->inCollision(this->getIndex(), traverse_unknown)) {
+    Node2D::footprint_collision_cells.data.at(this->getIndex()) = 100;
     return false;
   }
 

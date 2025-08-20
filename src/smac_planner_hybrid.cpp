@@ -21,8 +21,10 @@
 #include "costmap_2d/costmap_2d_ros.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
+#include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Path.h"
 #include "ros/console.h"
+#include "smac_planner/node_hybrid.hpp"
 #include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
 #include <base_local_planner/footprint_helper.h>
@@ -73,9 +75,9 @@ void SmacPlannerHybrid::initialize(
   _expansions_publisher = private_nh.advertise<geometry_msgs::PoseArray>("expansions", 1);
   _waypoint_publisher = private_nh.advertise<visualization_msgs::Marker>("waypoint_pose", 1);
   _collision_pub = private_nh.advertise<nav_msgs::OccupancyGrid>("collision_map", 1);
+  _footprint_collision_publisher = private_nh.advertise<nav_msgs::OccupancyGrid>("footprint_collision_map", 1);
   _planned_footprints_publisher = private_nh.advertise<visualization_msgs::MarkerArray>(
       "planned_footprints", 1);
-
   dsrv_ = std::make_unique<dynamic_reconfigure::Server<SmacPlannerHybridConfig>>(private_nh);
   dsrv_->setCallback(boost::bind(&SmacPlannerHybrid::reconfigureCB, this, _1, _2));
 }
@@ -344,6 +346,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
   }
 
+  _footprint_collision_publisher.publish(NodeHybrid::footprint_collision_cells);
   return  result_code;
 }
 
