@@ -110,6 +110,8 @@ void AStarAlgorithm<NodeT>::setCollisionChecker(GridCollisionChecker * collision
   unsigned int x_size = _costmap->getSizeInCellsX();
   unsigned int y_size = _costmap->getSizeInCellsY();
 
+  NodeT::initializeFootprintCollisionMap(collision_checker->getCostmapROS());
+
   clearGraph();
 
   if (getSizeX() != x_size || getSizeY() != y_size) {

@@ -27,6 +27,7 @@
 #include <limits>
 #include <string>
 
+#include "costmap_2d/costmap_2d_ros.h"
 #include "nlohmann/json.hpp"
 #include "ompl/base/StateSpace.h"
 #include "angles/angles.h"
@@ -361,6 +362,8 @@ public:
     NodeHybrid::resetObstacleHeuristic(costmap_ros, start_x, start_y, goal_x, goal_y);
   }
 
+  static void initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros);
+
   /**
    * @brief Compute the Obstacle heuristic
    * @param node_coords Coordinates to get heuristic at
@@ -388,7 +391,7 @@ public:
     const Coordinates & goal_coords,
     const float & obstacle_heuristic);
 
-  /**
+    /**
    * @brief Retrieve all valid neighbors of a node.
    * @param validity_checker Functor for state validity checking
    * @param collision_checker Collision checker to use
@@ -420,6 +423,7 @@ public:
   static LatticeMotionTable motion_table;
   // Dubin / Reeds-Shepp lookup and size for dereferencing
   static LookupTable dist_heuristic_lookup_table;
+  static nav_msgs::OccupancyGrid footprint_collision_cells;
   static float size_lookup;
 
 private:

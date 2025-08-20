@@ -20,6 +20,8 @@
 #include <limits>
 #include <utility>
 
+#include "costmap_2d/costmap_2d_ros.h"
+#include "nav_msgs/OccupancyGrid.h"
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
@@ -38,6 +40,15 @@ LookupTable NodeHybrid::dist_heuristic_lookup_table;
 costmap_2d::Costmap2DROS* NodeHybrid::costmap_ros = nullptr;
 
 ObstacleHeuristicQueue NodeHybrid::obstacle_heuristic_queue;
+
+void NodeHybrid::initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros) {
+  NodeHybrid::footprint_collision_cells.header.frame_id = NodeHybrid::costmap_ros->getGlobalFrameID();
+  NodeHybrid::footprint_collision_cells.info.resolution = NodeHybrid::costmap_ros->getCostmap()->getResolution();
+  NodeHybrid::footprint_collision_cells.info.width = NodeHybrid::costmap_ros->getCostmap()->getSizeInCellsY();
+  NodeHybrid::footprint_collision_cells.info.height = NodeHybrid::costmap_ros->getCostmap()->getSizeInCellsX();
+  NodeHybrid::footprint_collision_cells.info.origin.position.x = NodeHybrid::costmap_ros->getCostmap()->getOriginX();
+  NodeHybrid::footprint_collision_cells.info.origin.position.y = NodeHybrid::costmap_ros->getCostmap()->getOriginY();
+}
 
 // Each of these tables are the projected motion models through
 // time and space applied to the search on the current node in
@@ -368,6 +379,7 @@ bool NodeHybrid::isNodeValid(
   if (collision_checker->inCollision(
       this->pose.x, this->pose.y, this->pose.theta /*bin number*/, traverse_unknown))
   {
+    // footprint_collision_cells.info.
     return false;
   }
 

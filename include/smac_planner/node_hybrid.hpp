@@ -25,6 +25,7 @@
 #include <utility>
 #include <limits>
 
+#include "nav_msgs/OccupancyGrid.h"
 #include "ompl/base/StateSpace.h"
 
 #include "smac_planner/constants.hpp"
@@ -33,13 +34,12 @@
 #include "smac_planner/costmap_downsampler.hpp"
 #include "costmap_2d/costmap_2d_ros.h"
 #include "costmap_2d/inflation_layer.h"
-
+#include "nav_msgs/OccupancyGrid.h"
 namespace smac_planner
 {
 
 typedef std::vector<float> LookupTable;
 typedef std::pair<double, double> TrigValues;
-
 typedef std::pair<float, unsigned int> ObstacleHeuristicElement;
 struct ObstacleHeuristicComparator
 {
@@ -431,6 +431,8 @@ public:
     const unsigned int & start_x, const unsigned int & start_y,
     const unsigned int & goal_x, const unsigned int & goal_y);
 
+  static void initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros);
+
   /**
    * @brief Retrieve all valid neighbors of a node.
    * @param validity_checker Functor for state validity checking
@@ -460,6 +462,7 @@ public:
   // Wavefront lookup and queue for continuing to expand as needed
   static LookupTable obstacle_heuristic_lookup_table;
   static ObstacleHeuristicQueue obstacle_heuristic_queue;
+  static nav_msgs::OccupancyGrid footprint_collision_cells;
 
   static costmap_2d::Costmap2DROS* costmap_ros;
   // Dubin / Reeds-Shepp lookup and size for dereferencing

@@ -15,8 +15,10 @@
 
 #include "smac_planner/node_2d.hpp"
 
+#include <memory>
 #include <vector>
 #include <limits>
+#include "costmap_2d/costmap_2d_ros.h"
 
 namespace smac_planner
 {
@@ -47,6 +49,15 @@ void Node2D::reset()
   _accumulated_cost = std::numeric_limits<float>::max();
   _was_visited = false;
   _is_queued = false;
+}
+
+void Node2D::initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros) {
+  Node2D::footprint_collision_cells.header.frame_id = NodeHybrid::costmap_ros->getGlobalFrameID();
+  Node2D::footprint_collision_cells.info.resolution = NodeHybrid::costmap_ros->getCostmap()->getResolution();
+  Node2D::footprint_collision_cells.info.width = NodeHybrid::costmap_ros->getCostmap()->getSizeInCellsY();
+  Node2D::footprint_collision_cells.info.height = NodeHybrid::costmap_ros->getCostmap()->getSizeInCellsX();
+  Node2D::footprint_collision_cells.info.origin.position.x = NodeHybrid::costmap_ros->getCostmap()->getOriginX();
+  Node2D::footprint_collision_cells.info.origin.position.y = NodeHybrid::costmap_ros->getCostmap()->getOriginY();
 }
 
 bool Node2D::isNodeValid(

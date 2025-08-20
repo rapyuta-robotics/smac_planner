@@ -23,6 +23,7 @@
 #include <fstream>
 #include <cmath>
 
+#include "costmap_2d/costmap_2d_ros.h"
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
@@ -207,6 +208,16 @@ void NodeLattice::reset()
   _motion_primitive = nullptr;
   _backwards = false;
 }
+
+void NodeLattice::initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros) {
+  NodeLattice::footprint_collision_cells.header.frame_id = NodeHybrid::costmap_ros->getGlobalFrameID();
+  NodeLattice::footprint_collision_cells.info.resolution = NodeHybrid::costmap_ros->getCostmap()->getResolution();
+  NodeLattice::footprint_collision_cells.info.width = NodeHybrid::costmap_ros->getCostmap()->getSizeInCellsY();
+  NodeLattice::footprint_collision_cells.info.height = NodeHybrid::costmap_ros->getCostmap()->getSizeInCellsX();
+  NodeLattice::footprint_collision_cells.info.origin.position.x = NodeHybrid::costmap_ros->getCostmap()->getOriginX();
+  NodeLattice::footprint_collision_cells.info.origin.position.y = NodeHybrid::costmap_ros->getCostmap()->getOriginY();
+}
+
 
 bool NodeLattice::isNodeValid(
   const bool & traverse_unknown,

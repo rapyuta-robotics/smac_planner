@@ -24,6 +24,7 @@
 #include <utility>
 #include <functional>
 
+#include "costmap_2d/costmap_2d_ros.h"
 #include "smac_planner/types.hpp"
 #include "smac_planner/constants.hpp"
 #include "smac_planner/collision_checker.hpp"
@@ -229,6 +230,8 @@ public:
     const Coordinates & node_coords,
     const Coordinates & goal_coordinates);
 
+  static void initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_2d);
+
   /**
    * @brief Initialize the neighborhood to be used in A*
    * We support 4-connect (VON_NEUMANN) and 8-connect (MOORE)
@@ -268,6 +271,7 @@ public:
   Node2D * parent;
   static float cost_travel_multiplier;
   static std::vector<int> _neighbors_grid_offsets;
+  static nav_msgs::OccupancyGrid footprint_collision_cells;
 
 private:
   float _cell_cost;
