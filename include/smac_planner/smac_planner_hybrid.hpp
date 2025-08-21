@@ -154,6 +154,7 @@ protected:
   ros::Publisher _expansions_publisher;
   ros::Publisher _waypoint_publisher;
   ros::Publisher _collision_pub;
+  ros::Publisher _footprint_collision_pub;
   std::mutex _mutex;
 };
 

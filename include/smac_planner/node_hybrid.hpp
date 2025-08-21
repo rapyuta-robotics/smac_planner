@@ -25,6 +25,7 @@
 #include <utility>
 #include <limits>
 
+#include "nav_msgs/OccupancyGrid.h"
 #include "ompl/base/StateSpace.h"
 
 #include "smac_planner/constants.hpp"
@@ -143,6 +144,8 @@ public:
   typedef NodeHybrid * NodePtr;
   typedef std::unique_ptr<std::vector<NodeHybrid>> Graph;
   typedef std::vector<NodePtr> NodeVector;
+
+  static void initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros);
 
   /**
    * @class smac_planner::NodeHybrid::Coordinates
@@ -465,6 +468,7 @@ public:
   // Dubin / Reeds-Shepp lookup and size for dereferencing
   static LookupTable dist_heuristic_lookup_table;
   static float size_lookup;
+  static nav_msgs::OccupancyGrid footprint_collision_map;
 
 private:
   float _cell_cost;

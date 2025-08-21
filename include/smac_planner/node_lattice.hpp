@@ -27,6 +27,7 @@
 #include <limits>
 #include <string>
 
+#include "costmap_2d/costmap_2d_ros.h"
 #include "nlohmann/json.hpp"
 #include "ompl/base/StateSpace.h"
 #include "angles/angles.h"
@@ -326,6 +327,9 @@ public:
    * @param angle_quantization Size of theta bins of graph
    * @param search_info Search info to use
    */
+
+  static void initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros);
+
   static void initMotionModel(
     const MotionModel & motion_model,
     unsigned int & size_x,
@@ -421,6 +425,8 @@ public:
   // Dubin / Reeds-Shepp lookup and size for dereferencing
   static LookupTable dist_heuristic_lookup_table;
   static float size_lookup;
+  static costmap_2d::Costmap2DROS* costmap_ros;
+  static nav_msgs::OccupancyGrid footprint_collision_map;
 
 private:
   float _cell_cost;

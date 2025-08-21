@@ -94,6 +94,7 @@ void AStarAlgorithm<Node2D>::initialize(
   _terminal_checking_interval = terminal_checking_interval;
   _max_planning_time = max_planning_time;
 
+
   if (dim_3_size != 1) {
     throw std::runtime_error("Node type Node2D cannot be given non-1 dim 3 quantization.");
   }

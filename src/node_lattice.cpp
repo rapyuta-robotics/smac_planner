@@ -23,6 +23,7 @@
 #include <fstream>
 #include <cmath>
 
+#include "nav_msgs/OccupancyGrid.h"
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
@@ -36,7 +37,8 @@ namespace smac_planner
 LatticeMotionTable NodeLattice::motion_table;
 float NodeLattice::size_lookup = 25;
 LookupTable NodeLattice::dist_heuristic_lookup_table;
-
+nav_msgs::OccupancyGrid NodeLattice::footprint_collision_map;
+costmap_2d::Costmap2DROS* NodeLattice::costmap_ros = nullptr;
 // Each of these tables are the projected motion models through
 // time and space applied to the search on the current node in
 // continuous map-coordinates (e.g. not meters but partial map cells)
@@ -208,6 +210,28 @@ void NodeLattice::reset()
   _backwards = false;
 }
 
+static void initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros) {
+  NodeHybrid::footprint_collision_map.header.frame_id = costmap_ros->getGlobalFrameID();
+  NodeLattice::footprint_collision_map.header.stamp = ros::Time::now();
+  NodeLattice::footprint_collision_map.info.resolution = costmap_ros->getCostmap()->getResolution();
+
+  // Set the same dimensions as the costmap
+  NodeLattice::footprint_collision_map.info.width = costmap_ros->getCostmap()->getSizeInCellsX();
+  NodeLattice::footprint_collision_map.info.height = costmap_ros->getCostmap()->getSizeInCellsY();
+
+  // Set the origin to match the costmap
+  NodeLattice::footprint_collision_map.info.origin.position.x = costmap_ros->getCostmap()->getOriginX();
+  NodeLattice::footprint_collision_map.info.origin.position.y = costmap_ros->getCostmap()->getOriginY();
+  NodeLattice::footprint_collision_map.info.origin.position.z = 0.0;
+  NodeLattice::footprint_collision_map.info.origin.orientation.w = 1.0;
+
+  // Initialize all cells to unknown (-1)
+  NodeLattice::footprint_collision_map.data.assign(
+    NodeLattice::footprint_collision_map.info.width *
+    NodeLattice::footprint_collision_map.info.height,
+    -1);
+}
+
 bool NodeLattice::isNodeValid(
   const bool & traverse_unknown,
   GridCollisionChecker * collision_checker,
@@ -221,6 +245,17 @@ bool NodeLattice::isNodeValid(
   if (collision_checker->inCollision(
       this->pose.x, this->pose.y, angle /*bin in collision checker*/, traverse_unknown))
   {
+
+    // Mark this node as occupied (100) in the footprint collision map
+    unsigned int map_x, map_y;
+    if (costmap_ros->getCostmap()->worldToMap(
+        this->pose.x, this->pose.y, map_x, map_y))
+    {
+      unsigned int index = map_y * footprint_collision_map.info.width + map_x;
+      if (index < footprint_collision_map.data.size()) {
+        footprint_collision_map.data[index] = 100; // Mark as occupied
+      }
+    }
     return false;
   }
 
@@ -270,6 +305,17 @@ bool NodeLattice::isNodeValid(
   }
 
   _cell_cost = max_cell_cost;
+    // Mark this node as free (0) in the footprint collision map if it's valid
+  unsigned int map_x, map_y;
+  if (costmap_ros->getCostmap()->worldToMap(
+      this->pose.x, this->pose.y, map_x, map_y))
+  {
+    unsigned int index = map_y * footprint_collision_map.info.width + map_x;
+    if (index < footprint_collision_map.data.size()) {
+      footprint_collision_map.data[index] = 0; // Mark as free
+    }
+  }
+
   return true;
 }
 

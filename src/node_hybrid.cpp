@@ -20,9 +20,12 @@
 #include <limits>
 #include <utility>
 
+#include "costmap_2d/costmap_2d_ros.h"
+#include "nav_msgs/OccupancyGrid.h"
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
+#include "ros/time.h"
 
 #include "smac_planner/node_hybrid.hpp"
 
@@ -35,8 +38,8 @@ float NodeHybrid::travel_distance_cost = sqrtf(2.0f);
 HybridMotionTable NodeHybrid::motion_table;
 float NodeHybrid::size_lookup = 25;
 LookupTable NodeHybrid::dist_heuristic_lookup_table;
+nav_msgs::OccupancyGrid NodeHybrid::footprint_collision_map;
 costmap_2d::Costmap2DROS* NodeHybrid::costmap_ros = nullptr;
-
 ObstacleHeuristicQueue NodeHybrid::obstacle_heuristic_queue;
 
 // Each of these tables are the projected motion models through
@@ -48,6 +51,29 @@ ObstacleHeuristicQueue NodeHybrid::obstacle_heuristic_queue;
 
 // http://planning.cs.uiuc.edu/node821.html
 // Model for ackermann style vehicle with minimum radius restriction
+
+static void initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros) {
+  NodeHybrid::footprint_collision_map.header.frame_id = costmap_ros->getGlobalFrameID();
+  NodeHybrid::footprint_collision_map.header.stamp = ros::Time::now();
+  NodeHybrid::footprint_collision_map.info.resolution = costmap_ros->getCostmap()->getResolution();
+
+  // Set the same dimensions as the costmap
+  NodeHybrid::footprint_collision_map.info.width = costmap_ros->getCostmap()->getSizeInCellsX();
+  NodeHybrid::footprint_collision_map.info.height = costmap_ros->getCostmap()->getSizeInCellsY();
+
+  // Set the origin to match the costmap
+  NodeHybrid::footprint_collision_map.info.origin.position.x = costmap_ros->getCostmap()->getOriginX();
+  NodeHybrid::footprint_collision_map.info.origin.position.y = costmap_ros->getCostmap()->getOriginY();
+  NodeHybrid::footprint_collision_map.info.origin.position.z = 0.0;
+  NodeHybrid::footprint_collision_map.info.origin.orientation.w = 1.0;
+
+  // Initialize all cells to unknown (-1)
+  NodeHybrid::footprint_collision_map.data.assign(
+    NodeHybrid::footprint_collision_map.info.width *
+    NodeHybrid::footprint_collision_map.info.height,
+    -1);
+}
+
 void HybridMotionTable::initDubin(
   unsigned int & size_x_in,
   unsigned int & /*size_y_in*/,
@@ -342,6 +368,8 @@ NodeHybrid::NodeHybrid(const unsigned int index)
   _was_visited(false),
   _motion_primitive_index(std::numeric_limits<unsigned int>::max())
 {
+  // initializeFootprintCollisionMap;
+
 }
 
 NodeHybrid::~NodeHybrid()
@@ -365,13 +393,36 @@ bool NodeHybrid::isNodeValid(
   const bool & traverse_unknown,
   GridCollisionChecker * collision_checker)
 {
+  // Check if node is in collision
   if (collision_checker->inCollision(
       this->pose.x, this->pose.y, this->pose.theta /*bin number*/, traverse_unknown))
   {
+    // Mark this node as occupied (100) in the footprint collision map
+    unsigned int map_x, map_y;
+    if (costmap_ros->getCostmap()->worldToMap(
+        this->pose.x, this->pose.y, map_x, map_y))
+    {
+      unsigned int index = map_y * footprint_collision_map.info.width + map_x;
+      if (index < footprint_collision_map.data.size()) {
+        footprint_collision_map.data[index] = 100; // Mark as occupied
+      }
+    }
     return false;
   }
 
   _cell_cost = collision_checker->getCost();
+
+  // Mark this node as free (0) in the footprint collision map if it's valid
+  unsigned int map_x, map_y;
+  if (costmap_ros->getCostmap()->worldToMap(
+      this->pose.x, this->pose.y, map_x, map_y))
+  {
+    unsigned int index = map_y * footprint_collision_map.info.width + map_x;
+    if (index < footprint_collision_map.data.size()) {
+      footprint_collision_map.data[index] = 0; // Mark as free
+    }
+  }
+
   return true;
 }
 

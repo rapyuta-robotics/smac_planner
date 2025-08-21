@@ -25,6 +25,7 @@
 #include "costmap_2d/costmap_2d.h"
 
 #include "geometry_msgs/PoseStamped.h"
+#include "nav_msgs/OccupancyGrid.h"
 #include "smac_planner/thirdparty/robin_hood.h"
 #include "smac_planner/analytic_expansion.hpp"
 #include "smac_planner/node_2d.hpp"
