@@ -228,8 +228,8 @@ uint32_t SmacPlannerHybrid::makePlan(
   std::string &message)
 {
   geometry_msgs::PoseStamped* waypoint_ptr = nullptr;
-    BOOST_SCOPE_EXIT(&plan, &waypoint_ptr, this_) {
-      this_->publishVisualisations(plan, waypoint_ptr);
+  BOOST_SCOPE_EXIT(&plan, &waypoint_ptr, this_) {
+    this_->publishVisualisations(plan, waypoint_ptr);
   } BOOST_SCOPE_EXIT_END
 
   std::vector<geometry_msgs::PoseStamped> goal_align_poses;
@@ -349,6 +349,7 @@ void SmacPlannerHybrid::publishVisualisations(const std::vector<geometry_msgs::P
     Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
   }
 }
+
 
 void SmacPlannerHybrid::collision(const geometry_msgs::Pose& robot_pose, const ros::Publisher& collision_map_publisher) {
   base_local_planner::FootprintHelper fph;
