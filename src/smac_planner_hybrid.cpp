@@ -17,6 +17,7 @@
 #include <memory>
 #include <vector>
 #include <limits>
+#include <boost/scope_exit.hpp>
 
 #include "costmap_2d/costmap_2d_ros.h"
 #include "geometry_msgs/PoseStamped.h"
@@ -226,6 +227,11 @@ uint32_t SmacPlannerHybrid::makePlan(
   double &cost,
   std::string &message)
 {
+  geometry_msgs::PoseStamped* waypoint_ptr = nullptr;
+  BOOST_SCOPE_EXIT(&plan, &waypoint_ptr, this_) {
+    this_->publishVisualisations(plan, waypoint_ptr);
+  } BOOST_SCOPE_EXIT_END
+
   std::vector<geometry_msgs::PoseStamped> goal_align_poses;
 
   PlanResult plan_result;
@@ -270,10 +276,8 @@ uint32_t SmacPlannerHybrid::makePlan(
     goal_align_poses = {align_pose_front, align_pose_back};
   }
 
-
   // For single align pose
   uint32_t result_code;
-  geometry_msgs::PoseStamped* waypoint_ptr;
 
   if (goal_align_poses.size() == 1) {
     PlanResult result = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
@@ -317,15 +321,16 @@ uint32_t SmacPlannerHybrid::makePlan(
     result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
   }
 
+  return  result_code;
+}
+
+void SmacPlannerHybrid::publishVisualisations(const std::vector<geometry_msgs::PoseStamped>& plan, const geometry_msgs::PoseStamped* waypoint_ptr) {
   nav_msgs::Path output_path;
   output_path.header.stamp = ros::Time::now();
   output_path.header.frame_id = _global_frame;
   output_path.poses = plan;
 
-  if (_final_plan_publisher.getNumSubscribers() > 0) {
-    _final_plan_publisher.publish(output_path);
-  }
-
+  _final_plan_publisher.publish(output_path);
   // plot footprint path planned for debug
   if (_planned_footprints_publisher.getNumSubscribers() > 0) {
     visualization_msgs::Marker clear_all_marker;
@@ -343,8 +348,6 @@ uint32_t SmacPlannerHybrid::makePlan(
   if (waypoint_ptr) {
     Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
   }
-
-  return  result_code;
 }
 
 

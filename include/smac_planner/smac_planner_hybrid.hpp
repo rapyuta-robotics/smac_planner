@@ -155,6 +155,14 @@ protected:
   ros::Publisher _waypoint_publisher;
   ros::Publisher _collision_pub;
   std::mutex _mutex;
+
+  /**
+   *@brief publishes the visualisations like path, waypoint, footprints. To be called at end of the planning
+   *@param plan vector of geometry_msgs::PoseStamped
+   *@param waypoint pointer to the waypoint of type geometry_msgs::PoseStamped
+  */
+  void publishVisualisations(const std::vector<geometry_msgs::PoseStamped>& plan, const geometry_msgs::PoseStamped* waypoint);
+
 };
 
 }  // namespace smac_planner
