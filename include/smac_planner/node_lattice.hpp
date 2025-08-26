@@ -27,6 +27,7 @@
 #include <limits>
 #include <string>
 
+#include "costmap_2d/costmap_2d_ros.h"
 #include "nlohmann/json.hpp"
 #include "ompl/base/StateSpace.h"
 #include "angles/angles.h"
@@ -346,6 +347,10 @@ public:
     const MotionModel & motion_model,
     const unsigned int & dim_3_size,
     const SearchInfo & search_info);
+
+  static void initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros) {
+    NodeHybrid::initializeFootprintCollisionMap(costmap_ros);
+  }
 
   /**
    * @brief Compute the wavefront heuristic

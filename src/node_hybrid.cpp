@@ -36,6 +36,7 @@ HybridMotionTable NodeHybrid::motion_table;
 float NodeHybrid::size_lookup = 25;
 LookupTable NodeHybrid::dist_heuristic_lookup_table;
 costmap_2d::Costmap2DROS* NodeHybrid::costmap_ros = nullptr;
+nav_msgs::OccupancyGrid NodeHybrid::footprint_collision_map;
 
 ObstacleHeuristicQueue NodeHybrid::obstacle_heuristic_queue;
 
@@ -368,10 +369,36 @@ bool NodeHybrid::isNodeValid(
   if (collision_checker->inCollision(
       this->pose.x, this->pose.y, this->pose.theta /*bin number*/, traverse_unknown))
   {
+    std::cout << "NODE IN COLLISION!!!!!!!!!!: " << pose.x <<", "<< pose.y << "\n";
+    // Mark this node as occupied (100) in the footprint collision map
+    unsigned int map_x, map_y;
+    if (costmap_ros->getCostmap()->worldToMap(
+        this->pose.x, this->pose.y, map_x, map_y))
+    {
+      unsigned int index = map_y * NodeHybrid::footprint_collision_map.info.width + map_x;
+      if (index < NodeHybrid::footprint_collision_map.data.size()) {
+        NodeHybrid::footprint_collision_map.data[index] = 100; // Mark as occupied
+      }
+    }
     return false;
   }
 
   _cell_cost = collision_checker->getCost();
+
+  // Mark this node as free (0) in the footprint collision map if it's valid
+  unsigned int map_x, map_y;
+  if (costmap_ros->getCostmap()->worldToMap(
+      this->pose.x, this->pose.y, map_x, map_y))
+  {
+    unsigned int index = map_y * NodeHybrid::footprint_collision_map.info.width + map_x;
+    if (index < NodeHybrid::footprint_collision_map.data.size()) {
+      if (NodeHybrid::footprint_collision_map.data[index] != 0){
+      std::cout << "NODE NOT IN COLLISION: " << pose.x <<", "<< pose.y << "\n";
+      NodeHybrid::footprint_collision_map.data[index] = 0; // Mark as free
+      }
+    }
+  }
+
   return true;
 }
 
@@ -469,6 +496,24 @@ inline float distanceHeuristic2D(
   int dx = static_cast<int>(idx % size_x) - static_cast<int>(target_x);
   int dy = static_cast<int>(idx / size_x) - static_cast<int>(target_y);
   return std::sqrt(dx * dx + dy * dy);
+}
+
+void NodeHybrid::initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros)
+{
+    const costmap_2d::Costmap2D* costmap = costmap_ros->getCostmap();
+    NodeHybrid::footprint_collision_map.header.stamp = ros::Time::now();
+    NodeHybrid::footprint_collision_map.header.frame_id = "map";
+    NodeHybrid::footprint_collision_map.info.resolution = costmap->getResolution();
+    NodeHybrid::footprint_collision_map.info.width = costmap->getSizeInCellsX();
+    NodeHybrid::footprint_collision_map.info.height = costmap->getSizeInCellsY();
+    NodeHybrid::footprint_collision_map.info.origin.position.x = costmap->getOriginX();
+    NodeHybrid::footprint_collision_map.info.origin.position.y = costmap->getOriginY();
+    NodeHybrid::footprint_collision_map.info.origin.position.z = 0.0;
+    NodeHybrid::footprint_collision_map.info.origin.orientation.w = 1.0;
+
+    std::cout << "\n\nInitialize footprint collision map\n\n";
+    NodeHybrid::footprint_collision_map.data.assign(NodeHybrid::footprint_collision_map.info.width *
+                                       NodeHybrid::footprint_collision_map.info.height, 0);
 }
 
 void NodeHybrid::resetObstacleHeuristic(
