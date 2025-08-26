@@ -235,8 +235,6 @@ uint32_t SmacPlannerHybrid::makePlan(
   std::vector<geometry_msgs::PoseStamped> goal_align_poses;
 
   PlanResult plan_result;
-  uint32_t result_code;
-
   // check if the start is already under tolerance within the goal
   if (Utils::isSamePose(start.pose, goal.pose, tolerance)){
     ROS_INFO_NAMED("smac_planner_hybrid", "Start and goal same or goal under tolerance");
@@ -278,6 +276,8 @@ uint32_t SmacPlannerHybrid::makePlan(
   }
 
   // For single align pose
+  uint32_t result_code;
+
   if (goal_align_poses.size() == 1) {
     PlanResult result = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
     plan = result.path();
