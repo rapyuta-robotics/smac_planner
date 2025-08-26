@@ -161,7 +161,7 @@ protected:
    *@param plan vector of geometry_msgs::PoseStamped
    *@param waypoint pointer to the waypoint of type geometry_msgs::PoseStamped
   */
-  void publish_visualisations(const std::vector<geometry_msgs::PoseStamped>& plan, const geometry_msgs::PoseStamped* waypoint);
+  void publishVisualisations(const std::vector<geometry_msgs::PoseStamped>& plan, const geometry_msgs::PoseStamped* waypoint);
 
 };
 
