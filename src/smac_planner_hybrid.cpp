@@ -18,6 +18,7 @@
 #include <vector>
 #include <limits>
 #include <boost/scope_exit.hpp>
+
 #include "costmap_2d/costmap_2d_ros.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
@@ -226,7 +227,6 @@ uint32_t SmacPlannerHybrid::makePlan(
   double &cost,
   std::string &message)
 {
-
   geometry_msgs::PoseStamped* waypoint_ptr = nullptr;
     BOOST_SCOPE_EXIT(&plan, &waypoint_ptr, this_) {
       this_->publishVisualisations(plan, waypoint_ptr);
@@ -235,6 +235,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   std::vector<geometry_msgs::PoseStamped> goal_align_poses;
 
   PlanResult plan_result;
+
   // check if the start is already under tolerance within the goal
   if (Utils::isSamePose(start.pose, goal.pose, tolerance)){
     ROS_INFO_NAMED("smac_planner_hybrid", "Start and goal same or goal under tolerance");
