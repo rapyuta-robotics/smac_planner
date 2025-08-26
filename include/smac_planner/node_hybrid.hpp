@@ -25,8 +25,10 @@
 #include <utility>
 #include <limits>
 
+#include "nav_msgs/OccupancyGrid.h"
 #include "ompl/base/StateSpace.h"
 
+#include "ros/time.h"
 #include "smac_planner/constants.hpp"
 #include "smac_planner/types.hpp"
 #include "smac_planner/collision_checker.hpp"
@@ -421,6 +423,8 @@ public:
     const Coordinates & goal_coords,
     const float & obstacle_heuristic);
 
+  static void initializeFootprintCollisionMap(const std::shared_ptr<costmap_2d::Costmap2DROS>& costmap_ros);
+
   /**
    * @brief reset the obstacle heuristic state
    * @param costmap_ros Costmap to use
@@ -462,6 +466,7 @@ public:
   static ObstacleHeuristicQueue obstacle_heuristic_queue;
 
   static costmap_2d::Costmap2DROS* costmap_ros;
+  static nav_msgs::OccupancyGrid footprint_collision_map;
   // Dubin / Reeds-Shepp lookup and size for dereferencing
   static LookupTable dist_heuristic_lookup_table;
   static float size_lookup;

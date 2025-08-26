@@ -25,6 +25,7 @@
 
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
+#include "costmap_2d/costmap_2d_ros.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "smac_planner/utils.hpp"
 
@@ -253,9 +254,10 @@ void AStarAlgorithm<NodeT>::setGoal(
     if (!_start) {
       throw std::runtime_error("Start must be set before goal.");
     }
-
+    const std::shared_ptr<costmap_2d::Costmap2DROS> costmap_2d_ros = _collision_checker->getCostmapROS();
+    NodeT::initializeFootprintCollisionMap(costmap_2d_ros);
     NodeT::resetObstacleHeuristic(
-      _collision_checker->getCostmapROS(), _start->pose.x, _start->pose.y, mx, my);
+      costmap_2d_ros, _start->pose.x, _start->pose.y, mx, my);
   }
 
   _goal_coordinates = goal_coords;

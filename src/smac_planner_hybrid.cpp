@@ -24,6 +24,7 @@
 #include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/Path.h"
 #include "ros/console.h"
+#include "smac_planner/node_hybrid.hpp"
 #include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
 #include <base_local_planner/footprint_helper.h>
@@ -74,6 +75,7 @@ void SmacPlannerHybrid::initialize(
   _expansions_publisher = private_nh.advertise<geometry_msgs::PoseArray>("expansions", 1);
   _waypoint_publisher = private_nh.advertise<visualization_msgs::Marker>("waypoint_pose", 1);
   _collision_pub = private_nh.advertise<nav_msgs::OccupancyGrid>("collision_map", 1);
+  _footprint_collision_pub = private_nh.advertise<nav_msgs::OccupancyGrid>("footprint_collision_map", 1);
   _planned_footprints_publisher = private_nh.advertise<visualization_msgs::MarkerArray>(
       "planned_footprints", 1);
 
@@ -348,6 +350,19 @@ void SmacPlannerHybrid::publishVisualisations(const std::vector<geometry_msgs::P
   if (waypoint_ptr) {
     Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
   }
+
+  std::cout << "\nPublished visualisation\n";
+  _footprint_collision_pub.publish(NodeHybrid::footprint_collision_map);
+
+
+  // Count occupied cells for debugging
+  int occupied_count = 0;
+  for (const auto& value : NodeHybrid::footprint_collision_map.data) {
+      if (value != 0) {
+          occupied_count++;
+      }
+  }
+  ROS_INFO_NAMED("smac_planner_hybrid", "Occupied cells: %d", occupied_count);
 }
 
 
