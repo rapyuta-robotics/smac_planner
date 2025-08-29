@@ -229,6 +229,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   double &cost,
   std::string &message)
 {
+  NodeHybrid::initializeFootprintCollisionMap(_costmap_ros);
   geometry_msgs::PoseStamped* waypoint_ptr = nullptr;
   BOOST_SCOPE_EXIT(&plan, &waypoint_ptr, this_) {
     this_->publishVisualisations(plan, waypoint_ptr);
