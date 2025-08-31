@@ -366,33 +366,25 @@ bool NodeHybrid::isNodeValid(
   const bool & traverse_unknown,
   GridCollisionChecker * collision_checker)
 {
-  // this->pose is in map coordinates
   unsigned int map_x = static_cast<unsigned int>(this->pose.x + 0.5f);
   unsigned int map_y = static_cast<unsigned int>(this->pose.y + 0.5f);
   bool coordinates_in_bounds = (map_x < NodeHybrid::footprint_collision_map.info.width &&
-      map_y < NodeHybrid::footprint_collision_map.info.height);
+                                map_y < NodeHybrid::footprint_collision_map.info.height);
 
-  if (collision_checker->inCollision(
-      this->pose.x, this->pose.y, this->pose.theta /*bin number*/, traverse_unknown))
-  {
-    if (coordinates_in_bounds) {
-      unsigned int index = map_y * NodeHybrid::footprint_collision_map.info.width + map_x;
-      if (index < NodeHybrid::footprint_collision_map.data.size()) {
-        NodeHybrid::footprint_collision_map.data[index] = 100; // Mark as occupied
-      }
+  unsigned int index = map_y * NodeHybrid::footprint_collision_map.info.width + map_x;
+  bool index_valid = coordinates_in_bounds && (index < NodeHybrid::footprint_collision_map.data.size());
+
+  if (collision_checker->inCollision(this->pose.x, this->pose.y, this->pose.theta, traverse_unknown)) {
+    if (index_valid) {
+      NodeHybrid::footprint_collision_map.data[index] = 100; // Mark as occupied
     }
     return false;
   }
 
   _cell_cost = collision_checker->getCost();
 
-  if (coordinates_in_bounds) {
-    unsigned int index = map_y * NodeHybrid::footprint_collision_map.info.width + map_x;
-    if (index < NodeHybrid::footprint_collision_map.data.size()) {
-      if (NodeHybrid::footprint_collision_map.data[index] != 0){
-        NodeHybrid::footprint_collision_map.data[index] = _cell_cost; // Mark as free
-      }
-    }
+  if (index_valid && NodeHybrid::footprint_collision_map.data[index] != 0) {
+    NodeHybrid::footprint_collision_map.data[index] = _cell_cost; // Mark as free
   }
 
   return true;
