@@ -883,7 +883,6 @@ void NodeHybrid::getNeighbors(
       if (neighbor->isNodeValid(traverse_unknown, collision_checker)) {
         neighbor->setMotionPrimitiveIndex(i, motion_projections[i]._turn_dir);
         neighbors.push_back(neighbor);
-        // collision_checker->get
       } else {
         neighbor->setPose(initial_node_coords);
       }

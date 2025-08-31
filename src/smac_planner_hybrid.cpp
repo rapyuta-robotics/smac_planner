@@ -352,18 +352,7 @@ void SmacPlannerHybrid::publishVisualisations(const std::vector<geometry_msgs::P
     Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
   }
 
-  std::cout << "\nPublished visualisation\n";
   _footprint_collision_pub.publish(NodeHybrid::footprint_collision_map);
-
-
-  // Count occupied cells for debugging
-  int occupied_count = 0;
-  for (const auto& value : NodeHybrid::footprint_collision_map.data) {
-      if (value != 0) {
-          occupied_count++;
-      }
-  }
-  ROS_INFO_NAMED("smac_planner_hybrid", "Occupied cells: %d", occupied_count);
 }
 
 

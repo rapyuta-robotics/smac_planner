@@ -28,7 +28,6 @@
 #include "nav_msgs/OccupancyGrid.h"
 #include "ompl/base/StateSpace.h"
 
-#include "ros/time.h"
 #include "smac_planner/constants.hpp"
 #include "smac_planner/types.hpp"
 #include "smac_planner/collision_checker.hpp"
