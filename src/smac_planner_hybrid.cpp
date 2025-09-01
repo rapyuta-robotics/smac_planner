@@ -426,7 +426,6 @@ void SmacPlannerHybrid::getPath(
     const double& tolerance,
     PlanResult& plan_result)
 {
-
   std::lock_guard<std::mutex> lock_reinit(_mutex);
   ros::Time a = ros::Time::now();
 
