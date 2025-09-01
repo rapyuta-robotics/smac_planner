@@ -227,6 +227,8 @@ uint32_t SmacPlannerHybrid::makePlan(
   double &cost,
   std::string &message)
 {
+  _planning_canceled = false;
+
   geometry_msgs::PoseStamped* waypoint_ptr = nullptr;
   BOOST_SCOPE_EXIT(&plan, &waypoint_ptr, this_) {
     this_->publishVisualisations(plan, waypoint_ptr);
@@ -424,7 +426,6 @@ void SmacPlannerHybrid::getPath(
     const double& tolerance,
     PlanResult& plan_result)
 {
-  _planning_canceled = false;
 
   std::lock_guard<std::mutex> lock_reinit(_mutex);
   ros::Time a = ros::Time::now();
