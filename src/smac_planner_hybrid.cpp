@@ -559,19 +559,17 @@ void SmacPlannerHybrid::getPath(
 
     if (result == mbf_msgs::GetPathResult::CANCELED) {
       plan_result.message = "Planner was cancelled";
-      plan_result.result_code = mbf_msgs::GetPathResult::CANCELED;
     }
     else if (result == mbf_msgs::GetPathResult::PAT_EXCEEDED) {
       plan_result.message = "Exceeded maximum planning time";
-      plan_result.result_code = mbf_msgs::GetPathResult::PAT_EXCEEDED;
     }
     else if (num_iterations >= _a_star->getMaxIterations()) {
       plan_result.message = "Exceeded maximum iterations";
-      plan_result.result_code = mbf_msgs::GetPathResult::PAT_EXCEEDED;
     } else {
       plan_result.message = "No valid path found";
       plan_result.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
     }
+    plan_result.result_code = result;
     return;
   }
 
