@@ -567,6 +567,7 @@ void SmacPlannerHybrid::getPath(
     } else {
       plan_result.message = "No valid path found";
       plan_result.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
+      return;
     }
     plan_result.result_code = result;
     return;
