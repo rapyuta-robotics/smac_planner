@@ -570,7 +570,6 @@ void SmacPlannerHybrid::getPath(
       plan_result.message = "No valid path found";
       plan_result.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
     }
-    // return;
   }
 
   // Convert to world coordinates
@@ -623,8 +622,6 @@ void SmacPlannerHybrid::getPath(
     " milliseconds to smooth path." << std::endl;
 #endif
   plan_result.setPath(output_path.poses);
-  // plan_result.result_code = mbf_msgs::GetPathResult::SUCCESS;
-  // return;
 }
 
 bool SmacPlannerHybrid::cancel() {
