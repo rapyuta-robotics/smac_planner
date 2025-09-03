@@ -171,58 +171,6 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
     _config.tolerance, toString(_motion_model).c_str());
 }
 
-// PlanResult SmacPlannerHybrid::planWithWaypoint(
-//   const geometry_msgs::PoseStamped& start,
-//   const geometry_msgs::PoseStamped& waypoint,
-//   const geometry_msgs::PoseStamped& goal_pose,
-//   const double& tolerance)
-// {
-//   if (!_search_info.allow_goal_overshoot){
-//   _search_info.setSearchBound(goal_pose.pose);
-//   _search_info.setStart(waypoint.pose.position);
-//   _a_star->setSearchBounds(goal_pose.pose, waypoint.pose.position,  _search_info.allow_goal_overshoot);
-//   }
-
-//   PlanResult segment2;
-//   if (Utils::isSamePose(start.pose, waypoint.pose, tolerance)){
-//     getPath(start, goal_pose, tolerance, segment2);
-//     return segment2;
-//   }
-
-//   // waypoint to goal pose
-//   getPath(waypoint, goal_pose, tolerance, segment2);
-//   if (!segment2.isValid())
-//   {
-//     // the segment is from waypoint to goal pose, so blocked start means blocked waypoint.
-//     if (segment2.result_code == mbf_msgs::GetPathResult::BLOCKED_START) {
-//       segment2.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
-//       ROS_ERROR_NAMED("smac_planner_hybrid", "waypoint pose is blocked");
-//       segment2.message = "Waypoint pose is blocked";
-//     }
-//     return segment2;
-//   }
-
-//   // if the robot is not between the goal and the waypoint, then we set the search bounds to the waypoint.
-//   const bool is_robot_between_goal_and_waypoint = Utils::isBetweenPoints(start.pose, waypoint.pose, goal_pose.pose);
-//   if (!is_robot_between_goal_and_waypoint){
-//     _search_info.setSearchBound(waypoint.pose);
-//     _search_info.setStart(start.pose.position);
-//     _a_star->setSearchBounds(waypoint.pose, start.pose.position,  _search_info.allow_goal_overshoot);
-//   }
-
-//   // robot_pose to waypoint
-//   PlanResult segment1;
-//   getPath(start, waypoint, tolerance, segment1);
-
-//   if (!segment1.isValid())
-//   {
-//     return segment1;
-//   }
-
-//   const PlanResult result = segment1 + segment2;
-//   return result;
-// }
-
 PlanResult SmacPlannerHybrid::planWithWaypoint(
   const geometry_msgs::PoseStamped& start,
   const geometry_msgs::PoseStamped& waypoint,
