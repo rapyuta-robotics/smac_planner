@@ -179,7 +179,7 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
 {
   // Check if start and waypoint are the same first
   if (Utils::isSamePose(start.pose, waypoint.pose, tolerance)) {
-    ROS_WARN_NAMED("smac_planner_hybrid", "Start and waypoint are the same, planning directly to goal");
+    ROS_WARN_NAMED("smac_planner_hybrid", "Start and waypoint are the same, skipping waypoint and planning from start to goal");
     if (!_search_info.allow_goal_overshoot) {
       _search_info.setSearchBound(goal_pose.pose);
       _search_info.setStart(start.pose.position);
