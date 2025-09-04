@@ -20,7 +20,6 @@
 #include <limits>
 #include <utility>
 
-// #include "geometry_msgs/Pose.h"
 #include "costmap_2d/costmap_2d.h"
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"

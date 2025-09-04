@@ -180,10 +180,10 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   const geometry_msgs::PoseStamped& goal_pose,
   const double& tolerance)
 {
-  if (!_search_info.allow_goal_overshoot) {
-    _search_info.setSearchBound(goal_pose.pose);
-    _search_info.setStart(waypoint.pose.position);
-    _a_star->setSearchBounds(goal_pose.pose, waypoint.pose.position,  _search_info.allow_goal_overshoot);
+  if (!_search_info.allow_goal_overshoot){
+  _search_info.setSearchBound(goal_pose.pose);
+  _search_info.setStart(waypoint.pose.position);
+  _a_star->setSearchBounds(goal_pose.pose, waypoint.pose.position,  _search_info.allow_goal_overshoot);
   }
 
   // waypoint to goal pose
