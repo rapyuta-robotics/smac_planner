@@ -180,9 +180,6 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   const geometry_msgs::PoseStamped& goal_pose,
   const double& tolerance)
 {
-  // Get the costmap (downsampled if needed)
-  costmap_2d::Costmap2D* costmap = _costmap;
-
   if (!_search_info.allow_goal_overshoot) {
     _search_info.setSearchBound(goal_pose.pose);
     _search_info.setStart(waypoint.pose.position);
