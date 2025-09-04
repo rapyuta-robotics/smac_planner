@@ -182,7 +182,7 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   costmap_2d::Costmap2D* costmap = _costmap;
 
   // Check if start and waypoint are the same in discrete planning space
-  bool same_discrete_state = NodeHybrid::arePosesSameDiscreteState(start.pose, waypoint.pose); // equivalent to *_a_star->getStart() == *_a_star->getGoal()
+  bool same_discrete_state = NodeHybrid::arePosesSameDiscreteState(start.pose, waypoint.pose, costmap); // equivalent to *_a_star->getStart() == *_a_star->getGoal()
   bool within_tolerance = tolerance > 0 && Utils::isSamePose(start.pose, waypoint.pose, tolerance);
 
   if (same_discrete_state || within_tolerance) {

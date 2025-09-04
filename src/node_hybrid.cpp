@@ -21,6 +21,7 @@
 #include <utility>
 
 // #include "geometry_msgs/Pose.h"
+#include "costmap_2d/costmap_2d.h"
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
@@ -475,10 +476,10 @@ inline float distanceHeuristic2D(
 
 bool NodeHybrid::arePosesSameDiscreteState(
   const geometry_msgs::Pose& pose1,
-  const geometry_msgs::Pose& pose2)
+  const geometry_msgs::Pose& pose2,
+  costmap_2d::Costmap2D* costmap)
 {
   unsigned int pose1_mx, pose1_my, pose2_mx, pose2_my;
-  const costmap_2d::Costmap2D* costmap = costmap_ros->getCostmap();
 
   // Convert world coordinates to map coordinates
   costmap->worldToMap(pose1.position.x, pose1.position.y, pose1_mx, pose1_my);
