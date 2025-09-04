@@ -229,6 +229,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   double &cost,
   std::string &message)
 {
+  _planning_canceled = false;
   NodeHybrid::initializeFootprintCollisionMap(_costmap_ros);
   geometry_msgs::PoseStamped* waypoint_ptr = nullptr;
   BOOST_SCOPE_EXIT(&plan, &waypoint_ptr, this_) {
@@ -429,8 +430,6 @@ void SmacPlannerHybrid::getPath(
     const double& tolerance,
     PlanResult& plan_result)
 {
-  _planning_canceled = false;
-
   std::lock_guard<std::mutex> lock_reinit(_mutex);
   ros::Time a = ros::Time::now();
 
@@ -560,6 +559,7 @@ void SmacPlannerHybrid::getPath(
       plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
       return;
     }
+    plan_result.result_code = result;
 
     if (result == mbf_msgs::GetPathResult::CANCELED) {
       plan_result.message = "Planner was cancelled";
@@ -569,10 +569,11 @@ void SmacPlannerHybrid::getPath(
     }
     else if (num_iterations >= _a_star->getMaxIterations()) {
       plan_result.message = "Exceeded maximum iterations";
+      plan_result.result_code = mbf_msgs::GetPathResult::PAT_EXCEEDED;
     } else {
       plan_result.message = "No valid path found";
+      plan_result.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
     }
-    return;
   }
 
   // Convert to world coordinates
@@ -625,8 +626,6 @@ void SmacPlannerHybrid::getPath(
     " milliseconds to smooth path." << std::endl;
 #endif
   plan_result.setPath(output_path.poses);
-  plan_result.result_code = mbf_msgs::GetPathResult::SUCCESS;
-  return;
 }
 
 bool SmacPlannerHybrid::cancel() {
