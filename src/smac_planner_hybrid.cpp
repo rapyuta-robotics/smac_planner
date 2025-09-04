@@ -313,7 +313,6 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   // If no waypoint, proceed with normal planning
   if (waypoints.size() ==0) {
-    ROS_INFO_NAMED("smac_planner_hybrid", "No waypoint... ");
     getPath(start, goal, tolerance, plan_result);
     plan = plan_result.path();
     return plan_result.result_code;
