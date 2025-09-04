@@ -225,19 +225,16 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
 }
 
 std::vector<geometry_msgs::PoseStamped> SmacPlannerHybrid::computeWaypoints(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal, float tolerance) {
-
-  std::cout << "\n\n goal_align_distance : " << _search_info.goal_align_distance << "\n\n";
-  std::cout << "\n\n allow_goal_overshoot: " << _search_info.allow_goal_overshoot << "\n\n";
-  if (_search_info.goal_align_distance <= tolerance) {
-    return {};
-  }
-
   geometry_msgs::PoseStamped waypoint_front;
   geometry_msgs::PoseStamped waypoint_back;
   waypoint_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
   waypoint_back.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose,  -_search_info.goal_align_distance);
   waypoint_front.header = goal.header;
   waypoint_back.header = goal.header;
+
+  if (Utils::isSamePose(goal.pose, waypoint_front.pose, tolerance)) {
+    return {};
+  }
 
   std::vector<geometry_msgs::PoseStamped> waypoints;
 
