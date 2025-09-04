@@ -183,23 +183,6 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   // Get the costmap (downsampled if needed)
   costmap_2d::Costmap2D* costmap = _costmap;
 
-  // Check if start and waypoint are the same in discrete planning space
-  // bool same_discrete_state = NodeHybrid::arePosesSameDiscreteState(start.pose, waypoint.pose, costmap); // equivalent to *_a_star->getStart() == *_a_star->getGoal()
-  // bool within_tolerance = tolerance > 0 && Utils::isSamePose(start.pose, waypoint.pose, tolerance);
-
-  // if (same_discrete_state || within_tolerance) {
-  //   ROS_WARN_NAMED("smac_planner_hybrid",
-  //     "Start and waypoint map to same discrete state, skipping waypoint and planning from start to goal");
-  //   if (!_search_info.allow_goal_overshoot) {
-  //     _search_info.setSearchBound(goal_pose.pose);
-  //     _search_info.setStart(start.pose.position);
-  //     _a_star->setSearchBounds(goal_pose.pose, start.pose.position, _search_info.allow_goal_overshoot);
-  //   }
-  //   PlanResult result;
-  //   getPath(start, goal_pose, tolerance, result);
-  //   return result;
-  // }
-
   if (!_search_info.allow_goal_overshoot) {
     _search_info.setSearchBound(goal_pose.pose);
     _search_info.setStart(waypoint.pose.position);
