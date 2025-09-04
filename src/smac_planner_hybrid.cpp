@@ -180,7 +180,7 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   const geometry_msgs::PoseStamped& goal_pose,
   const double& tolerance)
 {
-  if (!_search_info.allow_goal_overshoot){
+  if (!_search_info.allow_goal_overshoot) {
   _search_info.setSearchBound(goal_pose.pose);
   _search_info.setStart(waypoint.pose.position);
   _a_star->setSearchBounds(goal_pose.pose, waypoint.pose.position,  _search_info.allow_goal_overshoot);
@@ -202,7 +202,7 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
 
   // if the robot is not between the goal and the waypoint, then we set the search bounds to the waypoint.
   const bool is_robot_between_goal_and_waypoint = Utils::isBetweenPoints(start.pose, waypoint.pose, goal_pose.pose);
-  if (!is_robot_between_goal_and_waypoint){
+  if (!is_robot_between_goal_and_waypoint) {
     _search_info.setSearchBound(waypoint.pose);
     _search_info.setStart(start.pose.position);
     _a_star->setSearchBounds(waypoint.pose, start.pose.position,  _search_info.allow_goal_overshoot);
@@ -250,9 +250,9 @@ std::vector<geometry_msgs::PoseStamped> SmacPlannerHybrid::computeWaypoints(cons
       ROS_INFO_NAMED("smac_planner_hybrid", "waypoint is %f meters front of the goal pose", _search_info.goal_align_distance);
       waypoints.push_back(waypoint_front);
     }
-  } else if (can_use_front_waypoint && can_use_back_waypoint){
-    ROS_INFO_NAMED("smac_planner_hybrid", "found two waypoint, %f meters before and after the goal pose", _search_info.goal_align_distance);
-    waypoints = {waypoint_front, waypoint_back};
+  } else if (can_use_front_waypoint && can_use_back_waypoint) {
+      ROS_INFO_NAMED("smac_planner_hybrid", "found two waypoint, %f meters before and after the goal pose", _search_info.goal_align_distance);
+      waypoints = {waypoint_front, waypoint_back};
   }
   return waypoints;
 }
@@ -277,7 +277,7 @@ uint32_t SmacPlannerHybrid::makePlan(
 
 
   // check if the start is already under tolerance within the goal
-  if (Utils::isSamePose(start.pose, goal.pose, tolerance)){
+  if (Utils::isSamePose(start.pose, goal.pose, tolerance)) {
     ROS_INFO_NAMED("smac_planner_hybrid", "Start and goal same or goal under tolerance");
     plan = {};
     return mbf_msgs::GetPathResult::SUCCESS;
@@ -403,7 +403,7 @@ void SmacPlannerHybrid::collision(const geometry_msgs::Pose& robot_pose, const r
     }
   }
 
-  if (colliding_cells.empty()){
+  if (colliding_cells.empty()) {
     ROS_DEBUG_STREAM_NAMED("smac_planner_hybrid","no collision cells found at robot pose" << robot_pose);
     return;
   }
