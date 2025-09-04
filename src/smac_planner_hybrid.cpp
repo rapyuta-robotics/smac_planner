@@ -238,39 +238,25 @@ std::vector<geometry_msgs::PoseStamped> SmacPlannerHybrid::computeWaypoints(cons
 
   std::vector<geometry_msgs::PoseStamped> waypoints;
 
+  const bool can_use_front_waypoint = !NodeHybrid::arePosesSameDiscreteState(waypoint_front.pose, start.pose, _costmap);
+  const bool can_use_back_waypoint = !NodeHybrid::arePosesSameDiscreteState(waypoint_back.pose, start.pose, _costmap);
 
-  bool front_waypt_is_same_as_start = NodeHybrid::arePosesSameDiscreteState(waypoint_front.pose, start.pose, _costmap);
-  bool back_waypt_is_same_as_start= NodeHybrid::arePosesSameDiscreteState(waypoint_back.pose, start.pose, _costmap);
+  ROS_WARN_COND_NAMED(!can_use_back_waypoint, "smac_planner_hybrid", "front waypoint same as start");
+  ROS_WARN_COND_NAMED(!can_use_front_waypoint, "smac_planner_hybrid", "back_waypoint is same as start");
 
   if (!_search_info.allow_goal_overshoot) {
-    if (_search_info.isStartBehindSearchBounds()) {
+    if (_search_info.isStartBehindSearchBounds() && can_use_back_waypoint) {
       ROS_INFO_NAMED("smac_planner_hybrid", "waypoint is %f meters back of the goal pose", _search_info.goal_align_distance);
-      if (!back_waypt_is_same_as_start) {
         waypoints.push_back(waypoint_back);
-      }
-      else {
-        ROS_WARN_NAMED("smac_planner_hybrid", "front waypoint same as start");
-      }
-    } else {
+    }
+    else if (can_use_front_waypoint) {
       ROS_INFO_NAMED("smac_planner_hybrid", "waypoint is align %f meters front of the goal pose", _search_info.goal_align_distance);
-      if (!front_waypt_is_same_as_start) {
         waypoints.push_back(waypoint_front);
-      }
-      else {
-        ROS_WARN_NAMED("smac_planner_hybrid", "back_waypoint is same as start");
-      }
     }
-  // Else both (if they're different from start pose)
-  } else {
+  } else if (can_use_front_waypoint && can_use_back_waypoint){
     ROS_INFO_NAMED("smac_planner_hybrid", "found two waypoint, %f meters before and after the goal pose", _search_info.goal_align_distance);
-    if (!front_waypt_is_same_as_start) {
-      waypoints.push_back(waypoint_front);
-    }
-    if (!back_waypt_is_same_as_start) {
-      waypoints.push_back(waypoint_back);
-    }
+      waypoints = {waypoint_front, waypoint_back};
   }
-
   return waypoints;
 }
 
