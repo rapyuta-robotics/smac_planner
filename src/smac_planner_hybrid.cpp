@@ -238,8 +238,8 @@ std::vector<geometry_msgs::PoseStamped> SmacPlannerHybrid::computeWaypoints(cons
   const bool can_use_front_waypoint = !NodeHybrid::arePosesSameDiscreteState(waypoint_front.pose, start.pose, _costmap);
   const bool can_use_back_waypoint = !NodeHybrid::arePosesSameDiscreteState(waypoint_back.pose, start.pose, _costmap);
 
-  ROS_WARN_COND_NAMED(!can_use_back_waypoint, "smac_planner_hybrid", "front waypoint same as start");
-  ROS_WARN_COND_NAMED(!can_use_front_waypoint, "smac_planner_hybrid", "back_waypoint is same as start");
+  ROS_WARN_COND_NAMED(!can_use_back_waypoint, "smac_planner_hybrid", "front waypoint is same as start, will skip waypoint and plan to the goal");
+  ROS_WARN_COND_NAMED(!can_use_front_waypoint, "smac_planner_hybrid", "back_waypoint is same as start, will skip waypoint and plan to the goal");
 
   if (!_search_info.allow_goal_overshoot) {
     if (_search_info.isStartBehindSearchBounds() && can_use_back_waypoint) {
