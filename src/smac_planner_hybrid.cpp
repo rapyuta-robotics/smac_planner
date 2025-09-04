@@ -82,28 +82,6 @@ void SmacPlannerHybrid::initialize(
   dsrv_->setCallback(boost::bind(&SmacPlannerHybrid::reconfigureCB, this, _1, _2));
 }
 
-bool SmacPlannerHybrid::arePosesSameDiscreteState(
-  const geometry_msgs::Pose& pose1,
-  const geometry_msgs::Pose& pose2,
-  costmap_2d::Costmap2D* costmap) const
-{
-  // Convert world coordinates to map coordinates
-  float pose1_mx, pose1_my, pose2_mx, pose2_my;
-  costmap->worldToMapContinuous(pose1.position.x, pose1.position.y, pose1_mx, pose1_my);
-  costmap->worldToMapContinuous(pose2.position.x, pose2.position.y, pose2_mx, pose2_my);
-
-  // Get orientation bins (using NodeHybrid's method)
-  double pose1_orientation = tf2::getYaw(pose1.orientation);
-  double pose2_orientation = tf2::getYaw(pose2.orientation);
-  unsigned int pose1_bin_id = NodeHybrid::motion_table.getClosestAngularBin(pose1_orientation);
-  unsigned int pose2_bin_id = NodeHybrid::motion_table.getClosestAngularBin(pose2_orientation);
-
-  // Check if they map to the same discrete planning state
-  return (static_cast<unsigned int>(std::round(pose1_mx)) == static_cast<unsigned int>(std::round(pose2_mx)) &&
-         (static_cast<unsigned int>(std::round(pose1_my)) == static_cast<unsigned int>(std::round(pose2_my)) &&
-         pose1_bin_id == pose2_bin_id));
-}
-
 void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t level)
 {
   std::lock_guard<std::mutex> lock_reinit(_mutex);
@@ -204,7 +182,7 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   costmap_2d::Costmap2D* costmap = _costmap;
 
   // Check if start and waypoint are the same in discrete planning space
-  bool same_discrete_state = arePosesSameDiscreteState(start.pose, waypoint.pose, costmap); // equivalent to *_a_star->getStart() == *_a_star->getGoal()
+  bool same_discrete_state = NodeHybrid::arePosesSameDiscreteState(start.pose, waypoint.pose); // equivalent to *_a_star->getStart() == *_a_star->getGoal()
   bool within_tolerance = tolerance > 0 && Utils::isSamePose(start.pose, waypoint.pose, tolerance);
 
   if (same_discrete_state || within_tolerance) {

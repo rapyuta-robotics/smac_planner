@@ -20,9 +20,11 @@
 #include <limits>
 #include <utility>
 
+#include "geometry_msgs/Pose.h"
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
+#include "tf2/utils.h"
 
 #include "smac_planner/node_hybrid.hpp"
 
@@ -375,6 +377,8 @@ bool NodeHybrid::isNodeValid(
   return true;
 }
 
+
+
 float NodeHybrid::getTraversalCost(const NodePtr & child)
 {
   const float normalized_cost = child->getCost() / 252.0f;
@@ -469,6 +473,27 @@ inline float distanceHeuristic2D(
   int dx = static_cast<int>(idx % size_x) - static_cast<int>(target_x);
   int dy = static_cast<int>(idx / size_x) - static_cast<int>(target_y);
   return std::sqrt(dx * dx + dy * dy);
+}
+
+bool NodeHybrid::arePosesSameDiscreteState(
+  const geometry_msgs::Pose& pose1,
+  const geometry_msgs::Pose& pose2)
+{
+  unsigned int pose1_mx, pose1_my, pose2_mx, pose2_my;
+  const costmap_2d::Costmap2D* costmap = costmap_ros->getCostmap();
+
+  // Convert world coordinates to map coordinates
+  costmap->worldToMap(pose1.position.x, pose1.position.y, pose1_mx, pose1_my);
+  costmap->worldToMap(pose2.position.x, pose2.position.y, pose2_mx, pose2_my);
+
+  // Get orientation bins
+  const unsigned int pose1_bin_id = NodeHybrid::motion_table.getClosestAngularBin(tf2::getYaw(pose1.orientation));
+  const unsigned int pose2_bin_id = NodeHybrid::motion_table.getClosestAngularBin(tf2::getYaw(pose2.orientation));
+
+  // Check if they map to the same discrete planning state
+  return (pose1_mx == pose2_mx &&
+          pose1_my == pose2_my &&
+          pose1_bin_id == pose2_bin_id);
 }
 
 void NodeHybrid::resetObstacleHeuristic(

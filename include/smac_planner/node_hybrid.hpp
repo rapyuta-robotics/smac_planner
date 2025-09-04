@@ -25,6 +25,7 @@
 #include <utility>
 #include <limits>
 
+#include "geometry_msgs/PoseStamped.h"
 #include "ompl/base/StateSpace.h"
 
 #include "smac_planner/constants.hpp"
@@ -396,6 +397,11 @@ public:
     const MotionModel & motion_model,
     const unsigned int & dim_3_size,
     const SearchInfo & search_info);
+
+  static bool arePosesSameDiscreteState(
+    const geometry_msgs::Pose& pose1,
+    const geometry_msgs::Pose& pose2
+  );
 
   /**
    * @brief Compute the Obstacle heuristic

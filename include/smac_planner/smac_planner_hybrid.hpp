@@ -132,12 +132,6 @@ protected:
     const geometry_msgs::PoseStamped& goal,
     const double& tolerance);
 
-
-  bool arePosesSameDiscreteState(
-    const geometry_msgs::Pose& pose1,
-    const geometry_msgs::Pose& pose2,
-    costmap_2d::Costmap2D* costmap) const;
-
   std::unique_ptr<dynamic_reconfigure::Server<SmacPlannerHybridConfig>> dsrv_;
 
   std::unique_ptr<AStarAlgorithm<NodeHybrid>> _a_star;
