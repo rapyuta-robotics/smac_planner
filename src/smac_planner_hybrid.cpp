@@ -15,11 +15,13 @@
 
 #include <string>
 #include <memory>
+#include <utility>
 #include <vector>
 #include <limits>
 #include <boost/scope_exit.hpp>
 
 #include "costmap_2d/costmap_2d_ros.h"
+#include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/Path.h"
@@ -182,23 +184,22 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   costmap_2d::Costmap2D* costmap = _costmap;
 
   // Check if start and waypoint are the same in discrete planning space
-  bool same_discrete_state = NodeHybrid::arePosesSameDiscreteState(start.pose, waypoint.pose, costmap); // equivalent to *_a_star->getStart() == *_a_star->getGoal()
-  bool within_tolerance = tolerance > 0 && Utils::isSamePose(start.pose, waypoint.pose, tolerance);
+  // bool same_discrete_state = NodeHybrid::arePosesSameDiscreteState(start.pose, waypoint.pose, costmap); // equivalent to *_a_star->getStart() == *_a_star->getGoal()
+  // bool within_tolerance = tolerance > 0 && Utils::isSamePose(start.pose, waypoint.pose, tolerance);
 
-  if (same_discrete_state || within_tolerance) {
-    ROS_WARN_NAMED("smac_planner_hybrid",
-      "Start and waypoint map to same discrete state, skipping waypoint and planning from start to goal");
-    if (!_search_info.allow_goal_overshoot) {
-      _search_info.setSearchBound(goal_pose.pose);
-      _search_info.setStart(start.pose.position);
-      _a_star->setSearchBounds(goal_pose.pose, start.pose.position, _search_info.allow_goal_overshoot);
-    }
-    PlanResult result;
-    getPath(start, goal_pose, tolerance, result);
-    return result;
-  }
+  // if (same_discrete_state || within_tolerance) {
+  //   ROS_WARN_NAMED("smac_planner_hybrid",
+  //     "Start and waypoint map to same discrete state, skipping waypoint and planning from start to goal");
+  //   if (!_search_info.allow_goal_overshoot) {
+  //     _search_info.setSearchBound(goal_pose.pose);
+  //     _search_info.setStart(start.pose.position);
+  //     _a_star->setSearchBounds(goal_pose.pose, start.pose.position, _search_info.allow_goal_overshoot);
+  //   }
+  //   PlanResult result;
+  //   getPath(start, goal_pose, tolerance, result);
+  //   return result;
+  // }
 
-  // Normal case: start and waypoint are different in discrete space
   if (!_search_info.allow_goal_overshoot) {
     _search_info.setSearchBound(goal_pose.pose);
     _search_info.setStart(waypoint.pose.position);
@@ -240,6 +241,59 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   return result;
 }
 
+std::vector<geometry_msgs::PoseStamped> SmacPlannerHybrid::computeWaypoints(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal, float tolerance) {
+
+  std::cout << "\n\n goal_align_distance : " << _search_info.goal_align_distance << "\n\n";
+  std::cout << "\n\n allow_goal_overshoot: " << _search_info.allow_goal_overshoot << "\n\n";
+  if (_search_info.goal_align_distance <= tolerance) {
+    return {};
+  }
+
+  geometry_msgs::PoseStamped waypoint_front;
+  geometry_msgs::PoseStamped waypoint_back;
+  waypoint_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
+  waypoint_back.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose,  -_search_info.goal_align_distance);
+  waypoint_front.header = goal.header;
+  waypoint_back.header = goal.header;
+
+  std::vector<geometry_msgs::PoseStamped> waypoints;
+
+
+  bool front_waypt_is_same_as_start = NodeHybrid::arePosesSameDiscreteState(waypoint_front.pose, start.pose, _costmap);
+  bool back_waypt_is_same_as_start= NodeHybrid::arePosesSameDiscreteState(waypoint_back.pose, start.pose, _costmap);
+
+  if (!_search_info.allow_goal_overshoot) {
+    if (_search_info.isStartBehindSearchBounds()) {
+      ROS_INFO_NAMED("smac_planner_hybrid", "waypoint is %f meters back of the goal pose", _search_info.goal_align_distance);
+      if (!back_waypt_is_same_as_start) {
+        waypoints.push_back(waypoint_back);
+      }
+      else {
+        ROS_WARN_NAMED("smac_planner_hybrid", "front waypoint same as start");
+      }
+    } else {
+      ROS_INFO_NAMED("smac_planner_hybrid", "waypoint is align %f meters front of the goal pose", _search_info.goal_align_distance);
+      if (!front_waypt_is_same_as_start) {
+        waypoints.push_back(waypoint_front);
+      }
+      else {
+        ROS_WARN_NAMED("smac_planner_hybrid", "back_waypoint is same as start");
+      }
+    }
+  // Else both (if they're different from start pose)
+  } else {
+    ROS_INFO_NAMED("smac_planner_hybrid", "found two waypoint, %f meters before and after the goal pose", _search_info.goal_align_distance);
+    if (!front_waypt_is_same_as_start) {
+      waypoints.push_back(waypoint_front);
+    }
+    if (!back_waypt_is_same_as_start) {
+      waypoints.push_back(waypoint_back);
+    }
+  }
+
+  return waypoints;
+}
+
 
 uint32_t SmacPlannerHybrid::makePlan(
   const geometry_msgs::PoseStamped & start,
@@ -256,9 +310,8 @@ uint32_t SmacPlannerHybrid::makePlan(
     this_->publishVisualisations(plan, waypoint_ptr);
   } BOOST_SCOPE_EXIT_END
 
-  std::vector<geometry_msgs::PoseStamped> goal_align_poses;
-
   PlanResult plan_result;
+
 
   // check if the start is already under tolerance within the goal
   if (Utils::isSamePose(start.pose, goal.pose, tolerance)){
@@ -273,49 +326,32 @@ uint32_t SmacPlannerHybrid::makePlan(
     _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
   }
 
-  // If goal_align_distance less than or equal to tolerance, proceed with normal planning
-  if (_search_info.goal_align_distance <= tolerance) {
+  std::vector<geometry_msgs::PoseStamped> waypoints = computeWaypoints(start, goal, tolerance);
+
+  // If no waypoint, proceed with normal planning
+  if (waypoints.size() ==0) {
+    ROS_INFO_NAMED("smac_planner_hybrid", "No waypoint... ");
     getPath(start, goal, tolerance, plan_result);
     plan = plan_result.path();
     return plan_result.result_code;
   }
 
-  // if goal_align_distance > 0 then calculate two possible goal align poses
-  geometry_msgs::PoseStamped align_pose_front, align_pose_back;
-  align_pose_front.pose = Utils::getPoseAtDistanceAlongHeading(goal.pose, _search_info.goal_align_distance);
-  align_pose_back.pose  = Utils::getPoseAtDistanceAlongHeading(goal.pose,  -_search_info.goal_align_distance);
-
-  // if !allow_goal_overshoot then we select pose on the same side of goal as the robot
-  if (!_search_info.allow_goal_overshoot) {
-    if (_search_info.isStartBehindSearchBounds()) {
-      ROS_INFO_NAMED("smac_planner_hybrid", "Robot will align %f meters back of the goal pose", _search_info.goal_align_distance);
-      goal_align_poses.push_back(align_pose_back);
-    } else {
-      ROS_INFO_NAMED("smac_planner_hybrid", "Robot will align %f meters front of the goal pose", _search_info.goal_align_distance);
-      goal_align_poses.push_back(align_pose_front);
-    }
-  // else both
-  } else {
-    ROS_INFO_NAMED("smac_planner_hybrid", "Robot may align either %f meters before or after the goal pose", _search_info.goal_align_distance);
-    goal_align_poses = {align_pose_front, align_pose_back};
-  }
-
-  // For single align pose
   uint32_t result_code;
 
-  if (goal_align_poses.size() == 1) {
-    PlanResult result = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
+  // For single align waypoint
+  if (waypoints.size() == 1) {
+    PlanResult result = planWithWaypoint(start, waypoints[0], goal, tolerance);
     plan = result.path();
     cost = result.cost;
     message = result.message;
     result_code = result.result_code;
-    waypoint_ptr = &goal_align_poses[0];
+    waypoint_ptr = &waypoints[0];
   }
 
-  // For two align poses (choose the path with smaller path length)
-  else if (goal_align_poses.size() == 2) {
-    PlanResult result_option_1 = planWithWaypoint(start, goal_align_poses[0], goal, tolerance);
-    PlanResult result_option_2 = planWithWaypoint(start, goal_align_poses[1], goal, tolerance);
+  // For two waypoints (choose the path with smaller path length)
+  else if (waypoints.size() == 2) {
+    PlanResult result_option_1 = planWithWaypoint(start, waypoints[0], goal, tolerance);
+    PlanResult result_option_2 = planWithWaypoint(start, waypoints[1], goal, tolerance);
 
     if (!result_option_1.isValid() && !result_option_2.isValid()) {
       message = "Could not plan to either of the goal align poses";
@@ -329,19 +365,19 @@ uint32_t SmacPlannerHybrid::makePlan(
       cost = result_option_1.cost;
       message = result_option_1.message;
       result_code = result_option_2.result_code;
-      waypoint_ptr = &goal_align_poses[0];
+      waypoint_ptr = &waypoints[0];
     } else {
       // Use second option
       plan = result_option_2.path();
       cost = result_option_2.cost;
       message = result_option_2.message;
       result_code = result_option_2.result_code;
-      waypoint_ptr = &goal_align_poses[1];
+      waypoint_ptr = &waypoints[1];
     }
   }
 
   else {
-    ROS_ERROR_NAMED("smac_planner_hybrid", "the number of waypoints is %zu", goal_align_poses.size());
+    ROS_ERROR_NAMED("smac_planner_hybrid", "the number of waypoints is %zu", waypoints.size());
     result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
   }
 
@@ -373,7 +409,6 @@ void SmacPlannerHybrid::publishVisualisations(const std::vector<geometry_msgs::P
     Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
   }
 }
-
 
 void SmacPlannerHybrid::collision(const geometry_msgs::Pose& robot_pose, const ros::Publisher& collision_map_publisher) {
   base_local_planner::FootprintHelper fph;
