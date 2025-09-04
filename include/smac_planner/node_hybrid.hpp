@@ -25,7 +25,6 @@
 #include <utility>
 #include <limits>
 
-#include "geometry_msgs/PoseStamped.h"
 #include "ompl/base/StateSpace.h"
 
 #include "smac_planner/constants.hpp"

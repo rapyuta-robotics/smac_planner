@@ -377,8 +377,6 @@ bool NodeHybrid::isNodeValid(
   return true;
 }
 
-
-
 float NodeHybrid::getTraversalCost(const NodePtr & child)
 {
   const float normalized_cost = child->getCost() / 252.0f;
