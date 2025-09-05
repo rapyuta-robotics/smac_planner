@@ -21,7 +21,6 @@
 #include <boost/scope_exit.hpp>
 
 #include "costmap_2d/costmap_2d_ros.h"
-#include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/Path.h"
