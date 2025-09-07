@@ -245,11 +245,12 @@ std::vector<geometry_msgs::PoseStamped> SmacPlannerHybrid::computeWaypoints(cons
       ROS_INFO_NAMED("smac_planner_hybrid", "waypoint is %f meters back of the goal pose", _search_info.goal_align_distance);
       waypoints.push_back(waypoint_back);
     }
-    else if (can_use_front_waypoint) {
+    if (can_use_front_waypoint) {
       ROS_INFO_NAMED("smac_planner_hybrid", "waypoint is %f meters front of the goal pose", _search_info.goal_align_distance);
       waypoints.push_back(waypoint_front);
     }
-  } else if (can_use_front_waypoint && can_use_back_waypoint) {
+  }
+  if (can_use_front_waypoint && can_use_back_waypoint) {
       ROS_INFO_NAMED("smac_planner_hybrid", "found two waypoint, %f meters before and after the goal pose", _search_info.goal_align_distance);
       waypoints = {waypoint_front, waypoint_back};
   }
