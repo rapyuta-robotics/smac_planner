@@ -232,29 +232,32 @@ std::vector<geometry_msgs::PoseStamped> SmacPlannerHybrid::computeWaypoints(cons
     return {};
   }
 
-  std::vector<geometry_msgs::PoseStamped> waypoints;
-
   const bool can_use_front_waypoint = !NodeHybrid::arePosesSameDiscreteState(waypoint_front.pose, start.pose, _costmap);
   const bool can_use_back_waypoint = !NodeHybrid::arePosesSameDiscreteState(waypoint_back.pose, start.pose, _costmap);
 
-  ROS_WARN_COND_NAMED(!can_use_back_waypoint, "smac_planner_hybrid", "front waypoint is same as start, will skip waypoint and plan to the goal");
-  ROS_WARN_COND_NAMED(!can_use_front_waypoint, "smac_planner_hybrid", "back_waypoint is same as start, will skip waypoint and plan to the goal");
+  // skip and plan directly to the goal, if any of the waypoint is same as the goal
+  if (!can_use_front_waypoint || !can_use_back_waypoint) {
+    ROS_WARN_NAMED("smac_planner_hybrid",
+                  "%s waypoint is same as start, will skip waypoint and plan to the goal",
+                  !can_use_back_waypoint ? "front" : "back");
+    return {};
+  }
 
+  // if allow goal overshoot: select any one from front or back
   if (!_search_info.allow_goal_overshoot) {
-    if (_search_info.isStartBehindSearchBounds() && can_use_back_waypoint) {
+    if (_search_info.isStartBehindSearchBounds()) {
       ROS_INFO_NAMED("smac_planner_hybrid", "waypoint is %f meters back of the goal pose", _search_info.goal_align_distance);
-      waypoints.push_back(waypoint_back);
+      return {waypoint_back};
     }
-    if (can_use_front_waypoint) {
+    else {
       ROS_INFO_NAMED("smac_planner_hybrid", "waypoint is %f meters front of the goal pose", _search_info.goal_align_distance);
-      waypoints.push_back(waypoint_front);
+      return {waypoint_front};
     }
   }
-  if (can_use_front_waypoint && can_use_back_waypoint) {
-      ROS_INFO_NAMED("smac_planner_hybrid", "found two waypoint, %f meters before and after the goal pose", _search_info.goal_align_distance);
-      waypoints = {waypoint_front, waypoint_back};
-  }
-  return waypoints;
+
+  // return both when allow goal overshoot is true and both are valid
+  ROS_INFO_NAMED("smac_planner_hybrid", "found two waypoint, %f meters before and after the goal pose", _search_info.goal_align_distance);
+  return {waypoint_front, waypoint_back};
 }
 
 
