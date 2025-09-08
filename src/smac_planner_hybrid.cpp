@@ -235,7 +235,7 @@ std::vector<geometry_msgs::PoseStamped> SmacPlannerHybrid::computeWaypoints(cons
   const bool can_use_front_waypoint = !NodeHybrid::arePosesSameDiscreteState(waypoint_front.pose, start.pose, _costmap);
   const bool can_use_back_waypoint = !NodeHybrid::arePosesSameDiscreteState(waypoint_back.pose, start.pose, _costmap);
 
-  // skip and plan directly to the goal, if any of the waypoint is same as the goal
+  // skip and plan directly to the goal, if any of the waypoint is same as the start
   if (!can_use_front_waypoint || !can_use_back_waypoint) {
     ROS_WARN_NAMED("smac_planner_hybrid",
                   "%s waypoint is same as start, will skip waypoint and plan to the goal",
