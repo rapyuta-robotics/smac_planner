@@ -190,10 +190,11 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   getPath(waypoint, goal_pose, tolerance, segment2);
   if (!segment2.isValid())
   {
+    ROS_ERROR_NAMED("smac_planner_hybrid", "Could not find path from waypoint to goal, with error: %s",
+                    segment2.message.c_str());
     // the segment is from waypoint to goal pose, so blocked start means blocked waypoint.
     if (segment2.result_code == mbf_msgs::GetPathResult::BLOCKED_START) {
       segment2.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
-      ROS_ERROR_NAMED("smac_planner_hybrid", "waypoint pose is blocked");
       segment2.message = "Waypoint pose is blocked";
     }
     return segment2;
@@ -213,6 +214,8 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
 
   if (!segment1.isValid())
   {
+    ROS_ERROR_NAMED("smac_planner_hybrid", "Could not find path from start to waypoint, with error: %s",
+                    segment1.message.c_str());
     return segment1;
   }
 
@@ -276,8 +279,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     this_->publishVisualisations(plan, waypoint_ptr);
   } BOOST_SCOPE_EXIT_END
 
-  PlanResult plan_result;
-
+  std::vector<geometry_msgs::PoseStamped> goal_align_poses;
 
   // check if the start is already under tolerance within the goal
   if (Utils::isSamePose(start.pose, goal.pose, tolerance)) {
@@ -296,57 +298,57 @@ uint32_t SmacPlannerHybrid::makePlan(
 
   // If no waypoint, proceed with normal planning
   if (waypoints.size() ==0) {
+    PlanResult plan_result;
     getPath(start, goal, tolerance, plan_result);
     plan = plan_result.path();
     return plan_result.result_code;
   }
 
-  uint32_t result_code;
-
   // For single align waypoint
   if (waypoints.size() == 1) {
+    ROS_INFO_NAMED("smac_planner_hybrid", "Plan with single waypoint for goal alignment");
     PlanResult result = planWithWaypoint(start, waypoints[0], goal, tolerance);
     plan = result.path();
     cost = result.cost;
     message = result.message;
-    result_code = result.result_code;
     waypoint_ptr = &waypoints[0];
+    return result.result_code;
   }
 
-  // For two waypoints (choose the path with smaller path length)
-  else if (waypoints.size() == 2) {
+  if (waypoints.size() == 2) {
+    ROS_INFO_NAMED("smac_planner_hybrid", "Plan with two waypoints for goal alignment");
     PlanResult result_option_1 = planWithWaypoint(start, waypoints[0], goal, tolerance);
     PlanResult result_option_2 = planWithWaypoint(start, waypoints[1], goal, tolerance);
 
-    if (!result_option_1.isValid() && !result_option_2.isValid()) {
+    if (!result_option_1.isValid() && !result_option_2.isValid())
+    {
       message = "Could not plan to either of the goal align poses";
       // use result code from the first option as the error code
-      result_code = result_option_1.result_code;
+      return result_option_1.result_code;
     }
 
-    if (result_option_1.isValid() && (!result_option_2.isValid() || result_option_1.length() <= result_option_2.length())) {
+    if (result_option_1.isValid() &&
+        (!result_option_2.isValid() || result_option_1.length() <= result_option_2.length()))
+    {
       // Use first option if it's valid and either the only valid option or has smaller path length
       plan = result_option_1.path();
       cost = result_option_1.cost;
       message = result_option_1.message;
-      result_code = result_option_2.result_code;
       waypoint_ptr = &waypoints[0];
-    } else {
-      // Use second option
-      plan = result_option_2.path();
-      cost = result_option_2.cost;
-      message = result_option_2.message;
-      result_code = result_option_2.result_code;
-      waypoint_ptr = &waypoints[1];
+      return result_option_1.result_code;
     }
+
+    // Use second option
+    plan = result_option_2.path();
+    cost = result_option_2.cost;
+    message = result_option_2.message;
+    waypoint_ptr = &waypoints[1];
+    return result_option_2.result_code;
   }
 
-  else {
-    ROS_ERROR_NAMED("smac_planner_hybrid", "the number of waypoints is %zu", waypoints.size());
-    result_code = mbf_msgs::GetPathResult::INTERNAL_ERROR;
-  }
-
-  return  result_code;
+  // unexpected number of waypoints
+  ROS_ERROR_NAMED("smac_planner_hybrid", "the number of waypoints is %zu", goal_align_poses.size());
+  return mbf_msgs::GetPathResult::INTERNAL_ERROR;
 }
 
 void SmacPlannerHybrid::publishVisualisations(const std::vector<geometry_msgs::PoseStamped>& plan, const geometry_msgs::PoseStamped* waypoint_ptr) {
