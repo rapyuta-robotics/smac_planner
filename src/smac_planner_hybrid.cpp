@@ -279,8 +279,6 @@ uint32_t SmacPlannerHybrid::makePlan(
     this_->publishVisualisations(plan, waypoint_ptr);
   } BOOST_SCOPE_EXIT_END
 
-  std::vector<geometry_msgs::PoseStamped> goal_align_poses;
-
   // check if the start is already under tolerance within the goal
   if (Utils::isSamePose(start.pose, goal.pose, tolerance)) {
     ROS_INFO_NAMED("smac_planner_hybrid", "Start and goal same or goal under tolerance");
@@ -347,7 +345,7 @@ uint32_t SmacPlannerHybrid::makePlan(
   }
 
   // unexpected number of waypoints
-  ROS_ERROR_NAMED("smac_planner_hybrid", "the number of waypoints is %zu", goal_align_poses.size());
+  ROS_ERROR_NAMED("smac_planner_hybrid", "the number of waypoints is %zu", waypoints.size());
   return mbf_msgs::GetPathResult::INTERNAL_ERROR;
 }
 
