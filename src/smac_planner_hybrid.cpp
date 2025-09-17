@@ -206,6 +206,7 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
     segment2.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
     ROS_ERROR_NAMED("smac_planner_hybrid", "path from waypoint to goal is not straight");
     segment2.message = "Path from waypoint to goal is not straight";
+    return segment2;
   }
 
   // if the robot is not between the goal and the waypoint, then we set the search bounds to the waypoint.
