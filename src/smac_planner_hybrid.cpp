@@ -188,6 +188,7 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   // waypoint to goal pose
   PlanResult segment2;
   getPath(waypoint, goal_pose, tolerance, segment2);
+
   if (!segment2.isValid())
   {
     // the segment is from waypoint to goal pose, so blocked start means blocked waypoint.
@@ -197,6 +198,14 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
       segment2.message = "Waypoint pose is blocked";
     }
     return segment2;
+  }
+
+  // check if the robot is trying to move reverse at the waypoint which is not allowed
+  bool pathStartsWithReverse = Utils::isBehindPose(segment2.path()[1].pose.position, segment2.path()[0].pose);
+  if (pathStartsWithReverse){
+    segment2.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
+    ROS_ERROR_NAMED("smac_planner_hybrid", "path from waypoint to goal is not straight");
+    segment2.message = "Path from waypoint to goal is not straight";
   }
 
   // if the robot is not between the goal and the waypoint, then we set the search bounds to the waypoint.
