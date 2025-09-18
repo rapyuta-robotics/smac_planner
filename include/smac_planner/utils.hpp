@@ -25,6 +25,7 @@
 #include "nlohmann/json.hpp"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Pose.h"
+#include "ros/console.h"
 #include "tf2/utils.h"
 #include "costmap_2d/costmap_2d_ros.h"
 #include "costmap_2d/inflation_layer.h"
@@ -187,8 +188,8 @@ public:
 
     auto angleDiff = [](double a, double b) {
       double diff = a - b;
-      while (diff > M_PI) diff -= 2.0 * M_PI;
-      while (diff < -M_PI) diff += 2.0 * M_PI;
+      while (diff > M_PI) diff -= 2.0 * M_PI; // normalize
+      while (diff < -M_PI) diff += 2.0 * M_PI; // normalize
       return diff;
     };
 
@@ -202,10 +203,6 @@ public:
 
       double heading_diff = std::abs(angleDiff(curr_heading, prev_heading));
       if (heading_diff > M_PI_2) {
-        ROS_INFO("Found cusp point at (%f, %f), heading diff: %f",
-                path[i].pose.position.x,
-                path[i].pose.position.y,
-                heading_diff);
         return true;
       }
     }
