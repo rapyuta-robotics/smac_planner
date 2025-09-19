@@ -171,6 +171,13 @@ public:
     return output_pose;
   }
 
+
+  /**
+  * @brief check if the path fits in a width_threshold wide aisle if it fits then it is considered straight
+  * @param path vector of geometry_msgs::PoseStamped
+  * @param width_thresold allowed deviation in meters (default is 0.1)
+  * @return bool
+  */
   static bool isPathStraight(const std::vector<geometry_msgs::PoseStamped>& path, double width_threshold = 0.1)
   {
       if (path.size() < 3) {
@@ -210,43 +217,6 @@ public:
       return true;
   }
 
-  static bool hasCuspPoint(const std::vector<geometry_msgs::PoseStamped>& path)
-  {
-    if (path.size() < 3) {
-      return false;
-    }
-
-    auto computeHeading = [](const geometry_msgs::PoseStamped& from,
-                            const geometry_msgs::PoseStamped& to) {
-      double dx = to.pose.position.x - from.pose.position.x;
-      double dy = to.pose.position.y - from.pose.position.y;
-      return (dx == 0.0 && dy == 0.0) ? NAN
-                                      : std::atan2(dy, dx);
-    };
-
-    auto angleDiff = [](double a, double b) {
-      double diff = a - b;
-      while (diff > M_PI) diff -= 2.0 * M_PI; // normalize
-      while (diff < -M_PI) diff += 2.0 * M_PI; // normalize
-      return diff;
-    };
-
-    for (size_t i = 1; i < path.size() - 1; ++i) {
-      double prev_heading = computeHeading(path[i-1], path[i]);
-      double curr_heading = computeHeading(path[i], path[i+1]);
-
-      if (std::isnan(prev_heading) || std::isnan(curr_heading)) {
-        continue;
-      }
-
-      double heading_diff = std::abs(angleDiff(curr_heading, prev_heading));
-      if (heading_diff > M_PI_2) {
-        return true;
-      }
-    }
-
-    return false;
-  }
 
   /**
   * Computes the length of given path, where the path is a vector of geometry_msgs::PoseStamped and the length is

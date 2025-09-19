@@ -206,14 +206,6 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
     ROS_ERROR_NAMED("smac_planner_hybrid", "Path from waypoint to goal is not straight");
     return failed_result;
   }
-  // if the segment from waypoint to goal has a cusp point, then fail
-  if (Utils::hasCuspPoint(segment2.path())) {
-    PlanResult failed_result;
-    failed_result.result_code = mbf_msgs::GetPathResult::NO_PATH_FOUND;
-    failed_result.message = "Path from waypoint to goal contains cusp point";
-    ROS_ERROR_NAMED("smac_planner_hybrid", "Path from waypoint to goal contains cusp point");
-    return failed_result;
-  }
 
   // if the robot is not between the goal and the waypoint, then we set the search bounds to the waypoint.
   const bool is_robot_between_goal_and_waypoint = Utils::isBetweenPoints(start.pose, waypoint.pose, goal_pose.pose);
