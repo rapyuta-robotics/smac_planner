@@ -191,24 +191,19 @@ public:
         length = 1.0; // minimum length
     }
 
-    // Calculate perpendicular vector (rotated 90 degrees counterclockwise)
-    double perp_dx = -dy;
-    double perp_dy = dx;
-
     const double front_padding = 2.0; // padding in front of goal
     const double back_padding = 2.0;  // padding behind start
 
     geometry_msgs::Point diagonal_corner_1, diagonal_corner_2;
 
-    // Start with the perpendicular offset for width
-    double half_width = width / 2.0;
+    const double half_width = width / 2.0;
 
     // Corner behind start (negative direction along the line)
-    diagonal_corner_1.x = start.x - back_padding * dx + half_width * perp_dx;
-    diagonal_corner_1.y = start.y - back_padding * dy + half_width * perp_dy;
+    diagonal_corner_1.x = start.x - back_padding * dx - half_width * dy;
+    diagonal_corner_1.y = start.y - back_padding * dy + half_width * dx;
 
-    diagonal_corner_2.x = goal.x + front_padding * dx - half_width * perp_dx;
-    diagonal_corner_2.y = goal.y + front_padding * dy - half_width * perp_dy;
+    diagonal_corner_2.x = goal.x + front_padding * dx + half_width * dy;
+    diagonal_corner_2.y = goal.y + front_padding * dy - half_width * dx;
 
     return Rectangle(diagonal_corner_1, diagonal_corner_2, width);
   }
