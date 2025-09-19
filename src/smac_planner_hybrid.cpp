@@ -191,6 +191,7 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
 
   Rectangle search_space = Utils::createSearchSpace(waypoint.pose.position, goal_pose.pose.position, 0.1);
 
+  // set search space from waypoint to goal to get straight path
   _a_star->setSearchSpace(search_space);
   getPath(waypoint, goal_pose, tolerance, segment2);
   _a_star->removeSearchSpace();
