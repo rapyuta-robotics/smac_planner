@@ -28,17 +28,22 @@ namespace smac_planner
 
 typedef std::pair<float, unsigned int> NodeHeuristicPair;
 
+
 struct Rectangle {
   Rectangle() = default;
-  Rectangle(geometry_msgs::Point diagonal_corner_1, geometry_msgs::Point diagonal_corner_2);
+  Rectangle(geometry_msgs::Point diagonal_corner_1, geometry_msgs::Point diagonal_corner_2, double width);
 
   bool pointInside(const geometry_msgs::Point& point) const;
 
-  private:
-    geometry_msgs::Point diagonal_corner_1;
-    geometry_msgs::Point diagonal_corner_2;
-    double _max_x, _max_y, _min_x, _min_y;
+private:
+  geometry_msgs::Point _corner1, _corner2;
+  double _width;
+  // void visualize();
+  // get_corners();
+  geometry_msgs::Point _dir;    // unit direction vector from corner1 to corner2
+  double _length;               // total length from corner1 to corner2
 };
+
 
 /**
  * @struct smac_planner::SearchInfo

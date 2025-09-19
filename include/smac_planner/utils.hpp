@@ -195,54 +195,22 @@ public:
     double perp_dx = -dy;
     double perp_dy = dx;
 
-    // Define padding (you can adjust these values as needed)
     const double front_padding = 2.0; // padding in front of goal
     const double back_padding = 2.0;  // padding behind start
 
-    // Calculate the four corners of the rectangle
-    geometry_msgs::Point corner1, corner2, corner3, corner4;
+    geometry_msgs::Point diagonal_corner_1, diagonal_corner_2;
 
     // Start with the perpendicular offset for width
     double half_width = width / 2.0;
 
-    // Calculate the four corners
     // Corner behind start (negative direction along the line)
-    corner1.x = start.x - back_padding * dx + half_width * perp_dx;
-    corner1.y = start.y - back_padding * dy + half_width * perp_dy;
+    diagonal_corner_1.x = start.x - back_padding * dx + half_width * perp_dx;
+    diagonal_corner_1.y = start.y - back_padding * dy + half_width * perp_dy;
 
-    corner2.x = start.x - back_padding * dx - half_width * perp_dx;
-    corner2.y = start.y - back_padding * dy - half_width * perp_dy;
+    diagonal_corner_2.x = goal.x + front_padding * dx - half_width * perp_dx;
+    diagonal_corner_2.y = goal.y + front_padding * dy - half_width * perp_dy;
 
-    // Corner in front of goal (positive direction along the line)
-    corner3.x = goal.x + front_padding * dx - half_width * perp_dx;
-    corner3.y = goal.y + front_padding * dy - half_width * perp_dy;
-
-    corner4.x = goal.x + front_padding * dx + half_width * perp_dx;
-    corner4.y = goal.y + front_padding * dy + half_width * perp_dy;
-
-    // Find the bounding box (min/max coordinates)
-    std::vector<geometry_msgs::Point> corners = {corner1, corner2, corner3, corner4};
-
-    double min_x = corners[0].x;
-    double max_x = corners[0].x;
-    double min_y = corners[0].y;
-    double max_y = corners[0].y;
-
-    for (const auto& corner : corners) {
-        min_x = std::min(min_x, corner.x);
-        max_x = std::max(max_x, corner.x);
-        min_y = std::min(min_y, corner.y);
-        max_y = std::max(max_y, corner.y);
-    }
-
-    // Create the two diagonal corners for the rectangle
-    geometry_msgs::Point diagonal1, diagonal2;
-    diagonal1.x = min_x;
-    diagonal1.y = min_y;
-    diagonal2.x = max_x;
-    diagonal2.y = max_y;
-
-    return Rectangle(diagonal1, diagonal2);
+    return Rectangle(diagonal_corner_1, diagonal_corner_2, width);
   }
 
 

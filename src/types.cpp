@@ -102,16 +102,42 @@ PlanResult PlanResult::operator+(const PlanResult& other_result) const {
   return combined;
   }
 
-Rectangle::Rectangle(geometry_msgs::Point diagonal_corner_1, geometry_msgs::Point diagonal_corner_2) : diagonal_corner_1(diagonal_corner_1), diagonal_corner_2(diagonal_corner_2) {
-  _max_x = std::max(diagonal_corner_1.x, diagonal_corner_2.x);
-  _max_y = std::max(diagonal_corner_1.y, diagonal_corner_2.y);
-  _min_x = std::min(diagonal_corner_1.x, diagonal_corner_2.x);
-  _min_y = std::min(diagonal_corner_1.y, diagonal_corner_2.y);
+Rectangle::Rectangle(geometry_msgs::Point diagonal_corner_1,
+                     geometry_msgs::Point diagonal_corner_2,
+                     double width)
+    : _corner1(diagonal_corner_1),
+      _corner2(diagonal_corner_2),
+      _width(width)
+{
+    double dx = _corner2.x - _corner1.x;
+    double dy = _corner2.y - _corner1.y;
+    _length = std::sqrt(dx * dx + dy * dy);
+
+    // Direction unit vector
+    _dir.x = dx / _length;
+    _dir.y = dy / _length;
+
+    // visualize();
 }
 
+// void Rectangle::visualize() {
+    // get_corners()
+// }
+
+// get_corners(){
+
+// }
 bool Rectangle::pointInside(const geometry_msgs::Point& point) const {
-  return (point.x >= _min_x && point.x <= _max_x &&
-          point.y >= _min_y && point.y <= _max_y);
-}
+    // Translate point relative to corner1
+    double px = point.x - _corner1.x;
+    double py = point.y - _corner1.y;
 
+    // Project onto direction and perpendicular axes
+    double proj_along = px * _dir.x + py * _dir.y;
+    double proj_perp  = px * -_dir.y + py * _dir.x;
+
+    // Check bounds
+    return (proj_along >= 0 && proj_along <= _length &&
+            std::abs(proj_perp) <= _width / 2.0);
+}
 }  // namespace smac_planner
