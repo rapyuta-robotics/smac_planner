@@ -363,11 +363,13 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (index >= max_index) {
         return false;
       }
-
+      auto iter = _graph.find(index);
+      if (_search_info.isSearchSpaceSet() && !isInsideSearchSpace(&(iter->second), _search_info.getSearchSpace().value())) {
+        return false;
+      }
       if (!_search_info.allow_goal_overshoot){
-        auto iter = _graph.find(index);
         if (iter != _graph.end()) {
-               if (isBehindPose(&(iter->second), _search_info.getSearchBound()) != is_start_behind_goal || (_search_info.isSearchSpaceSet() && !isInsideSearchSpace(&(iter->second), _search_info.getSearchSpace().value()))){
+               if (isBehindPose(&(iter->second), _search_info.getSearchBound()) != is_start_behind_goal){
                 return false;
                }
             }
@@ -437,8 +439,12 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
     {
       neighbor = *neighbor_iterator;
 
+      if (_search_info.isSearchSpaceSet() && !isInsideSearchSpace(neighbor, _search_info.getSearchSpace().value())) {
+        continue;
+      }
+
       if (!_search_info.allow_goal_overshoot) {
-        if ((isBehindPose(neighbor, _search_info.getSearchBound())) != is_start_behind_goal || (_search_info.isSearchSpaceSet() && !isInsideSearchSpace(neighbor, _search_info.getSearchSpace().value()))) {
+        if ((isBehindPose(neighbor, _search_info.getSearchBound())) != is_start_behind_goal) {
           continue;
         }
       }
