@@ -364,14 +364,15 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
         return false;
       }
 
-      if (!_search_info.allow_goal_overshoot){
-        auto iter = _graph.find(index);
-        if (iter != _graph.end()) {
-               if (isBehindPose(&(iter->second), _search_info.getSearchBound()) != is_start_behind_goal || (_search_info.isSearchSpaceSet() && !isInsideSearchSpace(&(iter->second), _search_info.getSearchSpace().value()))){
-                return false;
-               }
-            }
+      auto iter = _graph.find(index);
+      if (iter != _graph.end()) {
+        if (_search_info.isSearchSpaceSet() && !isInsideSearchSpace(&(iter->second), _search_info.getSearchSpace().value())) {
+          return false;
         }
+        if (!_search_info.allow_goal_overshoot && isBehindPose(&(iter->second), _search_info.getSearchBound()) != is_start_behind_goal) {
+          return false;
+        }
+      }
       neighbor_rtn = addToGraph(index);
       return true;
     };
@@ -437,12 +438,13 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
     {
       neighbor = *neighbor_iterator;
 
-      if (!_search_info.allow_goal_overshoot) {
-        if ((isBehindPose(neighbor, _search_info.getSearchBound())) != is_start_behind_goal || (_search_info.isSearchSpaceSet() && !isInsideSearchSpace(neighbor, _search_info.getSearchSpace().value()))) {
-          continue;
-        }
-      }
+    if (_search_info.isSearchSpaceSet() && !isInsideSearchSpace(neighbor, _search_info.getSearchSpace().value())) {
+      continue;
+    }
 
+    if (!_search_info.allow_goal_overshoot && (isBehindPose(neighbor, _search_info.getSearchBound()) != is_start_behind_goal)) {
+      continue;
+    }
       // 4.1) Compute the cost to go to this node
       g_cost = current_node->getAccumulatedCost() + current_node->getTraversalCost(neighbor);
 

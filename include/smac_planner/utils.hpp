@@ -245,51 +245,6 @@ public:
     return Rectangle(diagonal1, diagonal2);
   }
 
-  // /**
-  // * @brief check if the path fits in a width_threshold wide aisle if it fits then it is considered straight
-  // * @param path vector of geometry_msgs::PoseStamped
-  // * @param width_thresold allowed deviation in meters (default is 0.1)
-  // * @return bool
-  // */
-  // static bool isPathStraight(const std::vector<geometry_msgs::PoseStamped>& path, double width_threshold = 0.1)
-  // {
-  //     if (path.size() < 3) {
-  //         return true;
-  //     }
-
-  //     // Create a line from start to end point
-  //     const auto& start = path.front().pose.position;
-  //     const auto& end = path.back().pose.position;
-
-  //     // Calculate the line equation: ax + by + c = 0
-  //     double a = end.y - start.y;
-  //     double b = start.x - end.x;
-  //     double c = end.x * start.y - start.x * end.y;
-
-  //     // Normalize the line equation coefficients
-  //     double norm = std::sqrt(a * a + b * b);
-  //     if (norm < 1e-6) {
-  //         return true; // Start and end are the same point
-  //     }
-  //     a /= norm;
-  //     b /= norm;
-  //     c /= norm;
-
-  //     // Check if all points are within the width threshold from the line
-  //     for (const auto& pose_stamped : path) {
-  //         const auto& point = pose_stamped.pose.position;
-
-  //         // Calculate perpendicular distance from point to line
-  //         double distance = std::abs(a * point.x + b * point.y + c);
-
-  //         if (distance > width_threshold / 2.0) { // Half width since we check both sides
-  //             return false;
-  //         }
-  //     }
-
-  //     return true;
-  // }
-
 
   /**
   * Computes the length of given path, where the path is a vector of geometry_msgs::PoseStamped and the length is
