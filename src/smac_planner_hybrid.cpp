@@ -189,7 +189,7 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   // waypoint to goal pose
   PlanResult segment2;
 
-  Rectangle search_space = Utils::createSearchSpace(waypoint.pose.position, goal_pose.pose.position, 0.2);
+  Rectangle search_space = Utils::createSearchSpace(waypoint.pose.position, goal_pose.pose.position, 0.1);
 
   _a_star->setSearchSpace(search_space);
   getPath(waypoint, goal_pose, tolerance, segment2);
