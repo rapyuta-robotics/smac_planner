@@ -172,6 +172,79 @@ public:
   }
 
 
+  static Rectangle createSearchSpace(geometry_msgs::Point start, geometry_msgs::Point goal, double width) {
+    // Calculate the direction vector from start to goal
+    double dx = goal.x - start.x;
+    double dy = goal.y - start.y;
+
+    // Calculate the length of the line segment
+    double length = sqrt(dx * dx + dy * dy);
+
+    // Normalize the direction vector
+    if (length > 0) {
+        dx /= length;
+        dy /= length;
+    } else {
+        // If start and goal are the same point, use arbitrary direction
+        dx = 1.0;
+        dy = 0.0;
+        length = 1.0; // minimum length
+    }
+
+    // Calculate perpendicular vector (rotated 90 degrees counterclockwise)
+    double perp_dx = -dy;
+    double perp_dy = dx;
+
+    // Define padding (you can adjust these values as needed)
+    const double front_padding = 2.0; // padding in front of goal
+    const double back_padding = 2.0;  // padding behind start
+
+    // Calculate the four corners of the rectangle
+    geometry_msgs::Point corner1, corner2, corner3, corner4;
+
+    // Start with the perpendicular offset for width
+    double half_width = width / 2.0;
+
+    // Calculate the four corners
+    // Corner behind start (negative direction along the line)
+    corner1.x = start.x - back_padding * dx + half_width * perp_dx;
+    corner1.y = start.y - back_padding * dy + half_width * perp_dy;
+
+    corner2.x = start.x - back_padding * dx - half_width * perp_dx;
+    corner2.y = start.y - back_padding * dy - half_width * perp_dy;
+
+    // Corner in front of goal (positive direction along the line)
+    corner3.x = goal.x + front_padding * dx - half_width * perp_dx;
+    corner3.y = goal.y + front_padding * dy - half_width * perp_dy;
+
+    corner4.x = goal.x + front_padding * dx + half_width * perp_dx;
+    corner4.y = goal.y + front_padding * dy + half_width * perp_dy;
+
+    // Find the bounding box (min/max coordinates)
+    std::vector<geometry_msgs::Point> corners = {corner1, corner2, corner3, corner4};
+
+    double min_x = corners[0].x;
+    double max_x = corners[0].x;
+    double min_y = corners[0].y;
+    double max_y = corners[0].y;
+
+    for (const auto& corner : corners) {
+        min_x = std::min(min_x, corner.x);
+        max_x = std::max(max_x, corner.x);
+        min_y = std::min(min_y, corner.y);
+        max_y = std::max(max_y, corner.y);
+    }
+
+    // Create the two diagonal corners for the rectangle
+    geometry_msgs::Point diagonal1, diagonal2;
+    diagonal1.x = min_x;
+    diagonal1.y = min_y;
+    diagonal2.x = max_x;
+    diagonal2.y = max_y;
+
+    return Rectangle(diagonal1, diagonal2);
+  }
+
   /**
   * @brief check if the path fits in a width_threshold wide aisle if it fits then it is considered straight
   * @param path vector of geometry_msgs::PoseStamped

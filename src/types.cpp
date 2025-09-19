@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <optional>
 #include <smac_planner/types.hpp>
 #include <geometry_msgs/Point.h>
 #include <smac_planner/utils.hpp>
@@ -17,6 +19,23 @@ geometry_msgs::Pose SearchInfo::getSearchBound(){
 void SearchInfo::setSearchBound(const geometry_msgs::Pose& search_bound){
   _search_bound = search_bound;
   is_start_behind_goal.reset();
+}
+
+void SearchInfo::setSearchSpace(const Rectangle& space) {
+  _search_space = space;
+}
+
+void SearchInfo::removeSearchSpace(){
+  _search_space.reset();
+}
+
+std::optional<Rectangle >SearchInfo::getSearchSpace() {
+  return _search_space;
+}
+
+bool SearchInfo::isSearchSpaceSet()
+{
+  return (_search_space.has_value());
 }
 
 bool SearchInfo::isStartBehindSearchBounds(){
@@ -82,4 +101,17 @@ PlanResult PlanResult::operator+(const PlanResult& other_result) const {
   combined.setPath(std::move(new_combined_path));
   return combined;
   }
+
+Rectangle::Rectangle(geometry_msgs::Point diagonal_corner_1, geometry_msgs::Point diagonal_corner_2) : diagonal_corner_1(diagonal_corner_1), diagonal_corner_2(diagonal_corner_2) {
+  _max_x = std::max(diagonal_corner_1.x, diagonal_corner_2.x);
+  _max_y = std::max(diagonal_corner_1.y, diagonal_corner_2.y);
+  _min_x = std::min(diagonal_corner_1.x, diagonal_corner_2.x);
+  _min_y = std::min(diagonal_corner_1.y, diagonal_corner_2.y);
+}
+
+bool Rectangle::pointInside(const geometry_msgs::Point& point) const {
+  return (point.x >= _min_x && point.x <= _max_x &&
+          point.y >= _min_y && point.y <= _max_y);
+}
+
 }  // namespace smac_planner

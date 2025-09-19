@@ -26,6 +26,8 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
 #include "mbf_msgs/GetPathResult.h"
+#include "smac_planner/node_2d.hpp"
+#include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
 
 #include "smac_planner/a_star.hpp"
@@ -130,6 +132,16 @@ void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::Pose& search_bo
   _expander->setSearchBounds(search_bounds, start_point, allow_goal_overshoot);
 }
 
+template <typename NodeT>
+void AStarAlgorithm<NodeT>::removeSearchSpace(){
+  _search_info.removeSearchSpace();
+}
+
+template <typename NodeT>
+void AStarAlgorithm<NodeT>::setSearchSpace(const Rectangle& space){
+  _search_info.setSearchSpace(space);
+}
+
 
 template<typename NodeT>
 typename AStarAlgorithm<NodeT>::NodePtr AStarAlgorithm<NodeT>::addToGraph(
@@ -203,6 +215,25 @@ bool AStarAlgorithm<NodeT>::isBehindPose(
   typename NodeT::Coordinates node_coords = node->pose;
   const geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
   return Utils::isBehindPose(node_in_world_frame.position, pose);
+}
+
+template<>
+bool AStarAlgorithm<Node2D>::isInsideSearchSpace(
+  const NodePtr & node,
+  const Rectangle& search_space
+)
+{
+  const Node2D::Coordinates node_coords = node->getCoords(node->getIndex());
+  const geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
+  return search_space.pointInside(node_in_world_frame.position);
+}
+
+template<typename NodeT>
+bool AStarAlgorithm<NodeT>::isInsideSearchSpace(const NodePtr & node, const Rectangle& search_space)
+{
+  typename NodeT::Coordinates node_coords = node->pose;
+  const geometry_msgs::Pose node_in_world_frame =  Utils::getWorldCoords(node_coords.x, node_coords.y, _costmap);
+  return search_space.pointInside(node_in_world_frame.position);
 }
 
 template<typename NodeT>
@@ -336,7 +367,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       if (!_search_info.allow_goal_overshoot){
         auto iter = _graph.find(index);
         if (iter != _graph.end()) {
-               if (isBehindPose(&(iter->second), _search_info.getSearchBound()) != is_start_behind_goal){
+               if (isBehindPose(&(iter->second), _search_info.getSearchBound()) != is_start_behind_goal || (_search_info.isSearchSpaceSet() && !isInsideSearchSpace(&(iter->second), _search_info.getSearchSpace().value()))){
                 return false;
                }
             }
@@ -407,7 +438,7 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
       neighbor = *neighbor_iterator;
 
       if (!_search_info.allow_goal_overshoot) {
-        if ((isBehindPose(neighbor, _search_info.getSearchBound())) != is_start_behind_goal) {
+        if ((isBehindPose(neighbor, _search_info.getSearchBound())) != is_start_behind_goal || (_search_info.isSearchSpaceSet() && !isInsideSearchSpace(neighbor, _search_info.getSearchSpace().value()))) {
           continue;
         }
       }

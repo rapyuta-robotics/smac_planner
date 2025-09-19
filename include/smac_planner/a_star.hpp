@@ -24,6 +24,7 @@
 
 #include "costmap_2d/costmap_2d.h"
 
+#include "geometry_msgs/Point.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "smac_planner/thirdparty/robin_hood.h"
 #include "smac_planner/analytic_expansion.hpp"
@@ -125,12 +126,16 @@ public:
    */
   void setSearchBounds(const geometry_msgs::Pose& search_bounds, const geometry_msgs::Point& start_point, bool allow_goal_overshoot);
 
+  void setSearchSpace(const Rectangle& space);
   /**
    * @brief Set the goal for planning, as a node index
    * @param mx The node X index of the goal
    * @param my The node Y index of the goal
    * @param dim_3 The node dim_3 index of the goal
    */
+
+  void removeSearchSpace();
+
   void setGoal(
     const float & mx,
     const float & my,
@@ -259,6 +264,9 @@ protected:
    * @param pose the pose relative to which we want to check the position of the node
    */
   bool isBehindPose(const NodePtr& node, const geometry_msgs::Pose& pose);
+
+
+  bool isInsideSearchSpace(const NodePtr& node, const Rectangle& search_space);
 
     /**
    * @brief Clear Start

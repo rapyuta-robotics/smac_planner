@@ -20,11 +20,25 @@
 #include <string>
 #include <geometry_msgs/PoseStamped.h>
 #include <optional>
+#include "geometry_msgs/Point.h"
+#include "geometry_msgs/Pose.h"
 #include <mbf_msgs/GetPathResult.h>
 namespace smac_planner
 {
 
 typedef std::pair<float, unsigned int> NodeHeuristicPair;
+
+struct Rectangle {
+  Rectangle() = default;
+  Rectangle(geometry_msgs::Point diagonal_corner_1, geometry_msgs::Point diagonal_corner_2);
+
+  bool pointInside(const geometry_msgs::Point& point) const;
+
+  private:
+    geometry_msgs::Point diagonal_corner_1;
+    geometry_msgs::Point diagonal_corner_2;
+    double _max_x, _max_y, _min_x, _min_y;
+};
 
 /**
  * @struct smac_planner::SearchInfo
@@ -54,12 +68,18 @@ struct SearchInfo
   void setStart(const geometry_msgs::Point& start);
   geometry_msgs::Pose getSearchBound();
   void setSearchBound(const geometry_msgs::Pose& search_bound);
+  void setSearchSpace(const Rectangle& space);
+  std::optional<Rectangle> getSearchSpace();
+  bool isSearchSpaceSet();
+  void removeSearchSpace();
   bool isStartBehindSearchBounds();
 
 private:
+  // smac_planner::Rectangle search_space;
   geometry_msgs::Point _start_pose;
   geometry_msgs::Pose _search_bound;
   std::optional<bool> is_start_behind_goal;
+  std::optional<Rectangle> _search_space;
 };
 
 struct PlanResult {

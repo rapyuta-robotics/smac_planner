@@ -21,6 +21,7 @@
 #include <boost/scope_exit.hpp>
 
 #include "costmap_2d/costmap_2d_ros.h"
+#include "geometry_msgs/Point.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/Path.h"
@@ -187,7 +188,13 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
 
   // waypoint to goal pose
   PlanResult segment2;
+
+  Rectangle search_space = Utils::createSearchSpace(waypoint.pose.position, goal_pose.pose.position, 0.2);
+
+  _a_star->setSearchSpace(search_space);
   getPath(waypoint, goal_pose, tolerance, segment2);
+  _a_star->removeSearchSpace();
+
   if (!segment2.isValid())
   {
     // the segment is from waypoint to goal pose, so blocked start means blocked waypoint.
