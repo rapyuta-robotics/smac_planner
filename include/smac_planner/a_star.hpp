@@ -130,11 +130,11 @@ public:
   void removeSearchSpace();
 
   /**
-  * @brief Set the goal for planning, as a node index
-  * @param mx The node X index of the goal
-  * @param my The node Y index of the goal
-  * @param dim_3 The node dim_3 index of the goal
-  */
+   * @brief Set the goal for planning, as a node index
+   * @param mx The node X index of the goal
+   * @param my The node Y index of the goal
+   * @param dim_3 The node dim_3 index of the goal
+   */
   void setGoal(
     const float & mx,
     const float & my,
