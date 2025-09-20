@@ -20,10 +20,6 @@
 #include <string>
 #include <geometry_msgs/PoseStamped.h>
 #include <optional>
-#include "geometry_msgs/Point.h"
-#include "geometry_msgs/Pose.h"
-#include "ros/node_handle.h"
-#include "visualization_msgs/Marker.h"
 #include <mbf_msgs/GetPathResult.h>
 namespace smac_planner
 {
