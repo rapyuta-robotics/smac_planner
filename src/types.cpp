@@ -1,10 +1,7 @@
-#include <algorithm>
 #include <optional>
 #include <smac_planner/types.hpp>
 #include <geometry_msgs/Point.h>
 #include <smac_planner/utils.hpp>
-#include "ros/node_handle.h"
-#include "visualization_msgs/Marker.h"
 
 namespace smac_planner
 {
@@ -31,12 +28,11 @@ void SearchInfo::removeSearchSpace(){
   _search_space.reset();
 }
 
-std::optional<Rectangle >SearchInfo::getSearchSpace() {
+std::optional<Rectangle >SearchInfo::getSearchSpace() const {
   return _search_space;
 }
 
-bool SearchInfo::isSearchSpaceSet()
-{
+bool SearchInfo::isSearchSpaceSet() const {
   return (_search_space.has_value());
 }
 

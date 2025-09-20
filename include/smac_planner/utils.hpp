@@ -25,7 +25,6 @@
 #include "nlohmann/json.hpp"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Pose.h"
-#include "ros/node_handle.h"
 #include "tf2/utils.h"
 #include "costmap_2d/costmap_2d_ros.h"
 #include "costmap_2d/inflation_layer.h"

@@ -21,7 +21,6 @@
 #include <boost/scope_exit.hpp>
 
 #include "costmap_2d/costmap_2d_ros.h"
-#include "geometry_msgs/Point.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "mbf_msgs/GetPathResult.h"
 #include "nav_msgs/Path.h"
@@ -29,7 +28,6 @@
 #include "smac_planner/node_hybrid.hpp"
 #include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
-#include "visualization_msgs/Marker.h"
 #include <base_local_planner/footprint_helper.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include "smac_planner/smac_planner_hybrid.hpp"
@@ -385,7 +383,7 @@ void SmacPlannerHybrid::publishVisualisations(const std::vector<geometry_msgs::P
   }
 
   if (_search_space.has_value()) {
-    std::vector<geometry_msgs::Point> search_space_corners = _search_space.value().getCorners();
+    const std::vector<geometry_msgs::Point> search_space_corners = _search_space.value().getCorners();
     Utils::publishRectangleMarker(_search_space_publisher, "waypt_to_goal_search_space", _global_frame, 1, search_space_corners[0], search_space_corners[1], search_space_corners[2], search_space_corners[3]);
   }
 }

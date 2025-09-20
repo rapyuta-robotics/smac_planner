@@ -74,13 +74,12 @@ struct SearchInfo
   geometry_msgs::Pose getSearchBound();
   void setSearchBound(const geometry_msgs::Pose& search_bound);
   void setSearchSpace(const Rectangle& space);
-  std::optional<Rectangle> getSearchSpace();
-  bool isSearchSpaceSet();
+  std::optional<Rectangle> getSearchSpace() const;
+  bool isSearchSpaceSet() const;
   void removeSearchSpace();
   bool isStartBehindSearchBounds();
 
 private:
-  // smac_planner::Rectangle search_space;
   geometry_msgs::Point _start_pose;
   geometry_msgs::Pose _search_bound;
   std::optional<bool> is_start_behind_goal;
