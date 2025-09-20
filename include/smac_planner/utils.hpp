@@ -133,7 +133,7 @@ public:
     rectangle_marker.id = id;
     rectangle_marker.type = visualization_msgs::Marker::LINE_STRIP;
     rectangle_marker.action = visualization_msgs::Marker::ADD;
-    rectangle_marker.scale.x = 0.05;
+    rectangle_marker.scale.x = 0.01;
 
     rectangle_marker.color.r = 0.0f;
     rectangle_marker.color.g = 1.0f;
@@ -206,7 +206,7 @@ public:
     double dy = goal.y - start.y;
 
     // Calculate the length of the line segment
-    double length = sqrt(dx * dx + dy * dy);
+    double length = std::max(0.01, sqrt(dx * dx + dy * dy));
 
     // Normalize the direction vector
     if (length > 0) {
@@ -220,7 +220,7 @@ public:
     }
 
     const double front_padding = 1.0; // padding in front of goal
-    const double back_padding = 1.0;  // padding behind start
+    const double back_padding = 0.2;  // padding behind start
 
     geometry_msgs::Point diagonal_corner_1, diagonal_corner_2;
 
