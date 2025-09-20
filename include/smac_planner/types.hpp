@@ -33,7 +33,7 @@ typedef std::pair<float, unsigned int> NodeHeuristicPair;
 
 struct Rectangle {
   Rectangle() = default;
-  Rectangle(geometry_msgs::Point diagonal_corner_1, geometry_msgs::Point diagonal_corner_2, double width);
+  Rectangle(const geometry_msgs::Point& diagonal_corner_1, const geometry_msgs::Point& diagonal_corner_2, const double width);
   bool pointInside(const geometry_msgs::Point& point) const;
   std::vector<geometry_msgs::Point> getCorners() const;
 

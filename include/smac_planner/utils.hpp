@@ -209,15 +209,8 @@ public:
     double length = std::max(0.01, sqrt(dx * dx + dy * dy));
 
     // Normalize the direction vector
-    if (length > 0) {
-        dx /= length;
-        dy /= length;
-    } else {
-        // If start and goal are the same point, use arbitrary direction
-        dx = 1.0;
-        dy = 0.0;
-        length = 1.0; // minimum length
-    }
+    dx /= length;
+    dy /= length;
 
     const double front_padding = 1.0; // padding in front of goal
     const double back_padding = 0.2;  // padding behind start
