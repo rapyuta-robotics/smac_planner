@@ -25,6 +25,7 @@
 #include "nlohmann/json.hpp"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Pose.h"
+#include "ros/node_handle.h"
 #include "tf2/utils.h"
 #include "costmap_2d/costmap_2d_ros.h"
 #include "costmap_2d/inflation_layer.h"
@@ -82,38 +83,65 @@ public:
       return (dot < 0);
     }
 
-    /**
-    * @brief Publish an arrow marker at a given pose for debugging
-    * @param marker_publisher ros::Publisher object
-    * @param pose the pose where to publish the arrow marker
-    * @param marker_namespace the namespace to group the marker
-    * @return
-    */
-    static inline void publishArrowMarker(const ros::Publisher &marker_publisher, const geometry_msgs::PoseStamped &pose, const std::string &marker_namespace, const int &id){
-      if (marker_publisher.getNumSubscribers() < 1) {
-        return;
-      }
-
-      visualization_msgs::Marker marker;
-      marker.header = pose.header;
-      marker.header.frame_id = marker.header.frame_id.empty() ? "map" : marker.header.frame_id;
-      marker.ns = marker_namespace;
-      marker.id = id;
-      marker.type = visualization_msgs::Marker::ARROW;
-      marker.action = visualization_msgs::Marker::ADD;
-      marker.pose = pose.pose;
-
-      // set scale and color
-      marker.scale.x = 0.4;
-      marker.scale.y = 0.035;
-      marker.scale.z = 0.1;
-      marker.color.a = 0.5;
-      marker.color.r = 0.0;
-      marker.color.g = 0.0;
-      marker.color.b = 1.0;
-
-      marker_publisher.publish(marker);
+  /**
+  * @brief Publish an arrow marker at a given pose for debugging
+  * @param marker_publisher ros::Publisher object
+  * @param pose the pose where to publish the arrow marker
+  * @param marker_namespace the namespace to group the marker
+  * @return
+  */
+  static inline void publishArrowMarker(const ros::Publisher &marker_publisher, const geometry_msgs::PoseStamped &pose, const std::string &marker_namespace, const int id){
+    if (marker_publisher.getNumSubscribers() < 1) {
+      return;
     }
+
+    visualization_msgs::Marker marker;
+    marker.header = pose.header;
+    marker.header.frame_id = marker.header.frame_id.empty() ? "map" : marker.header.frame_id;
+    marker.ns = marker_namespace;
+    marker.id = id;
+    marker.type = visualization_msgs::Marker::ARROW;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose = pose.pose;
+
+    // set scale and color
+    marker.scale.x = 0.4;
+    marker.scale.y = 0.035;
+    marker.scale.z = 0.1;
+    marker.color.a = 0.5;
+    marker.color.r = 0.0;
+    marker.color.g = 0.0;
+    marker.color.b = 1.0;
+
+    marker_publisher.publish(marker);
+  }
+
+  /**
+  * @brief Visualize a rectangle
+  * @param marker_publisher ros::Publisher object
+  * @param marker_namespace the namespace to group the marker
+  * @param frame_id frame_id of points
+  * @param id marker id
+  * @param p1,p2,p3,p1 the corners of the rectangle
+  * @return
+  */
+  static void publishRectangleMarker(const ros::Publisher &marker_publisher, const std::string& marker_namespace, const std::string& frame_id, const int id , const geometry_msgs::Point& p1, const geometry_msgs::Point& p2, const geometry_msgs::Point& p3, const geometry_msgs::Point& p4) {
+    visualization_msgs::Marker rectangle_marker;
+    rectangle_marker.header.frame_id = frame_id;
+    rectangle_marker.header.stamp = ros::Time::now();
+    rectangle_marker.ns = marker_namespace;
+    rectangle_marker.id = id;
+    rectangle_marker.type = visualization_msgs::Marker::LINE_STRIP;
+    rectangle_marker.action = visualization_msgs::Marker::ADD;
+    rectangle_marker.scale.x = 0.05;
+
+    rectangle_marker.color.r = 0.0f;
+    rectangle_marker.color.g = 1.0f;
+    rectangle_marker.color.b = 0.0f;
+    rectangle_marker.color.a = 0.7f;
+    rectangle_marker.points = {p1, p2, p3, p4, p1};
+    marker_publisher.publish(rectangle_marker);
+  }
 
   /**
   * @brief Check if the input poses are within specified tolerance
@@ -191,14 +219,13 @@ public:
         length = 1.0; // minimum length
     }
 
-    const double front_padding = 2.0; // padding in front of goal
-    const double back_padding = 2.0;  // padding behind start
+    const double front_padding = 1.0; // padding in front of goal
+    const double back_padding = 1.0;  // padding behind start
 
     geometry_msgs::Point diagonal_corner_1, diagonal_corner_2;
 
     const double half_width = width / 2.0;
 
-    // Corner behind start (negative direction along the line)
     diagonal_corner_1.x = start.x - back_padding * dx - half_width * dy;
     diagonal_corner_1.y = start.y - back_padding * dy + half_width * dx;
 

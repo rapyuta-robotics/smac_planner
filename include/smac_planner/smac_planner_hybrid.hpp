@@ -148,12 +148,14 @@ protected:
   SearchInfo _search_info;
   bool _planning_canceled;
   MotionModel _motion_model;
+  std::optional<Rectangle> _search_space ;
   ros::Publisher _raw_plan_publisher;
   ros::Publisher _final_plan_publisher;
   ros::Publisher _planned_footprints_publisher;
   ros::Publisher _expansions_publisher;
   ros::Publisher _waypoint_publisher;
   ros::Publisher _collision_pub;
+  ros::Publisher _search_space_publisher;
   std::mutex _mutex;
 
   std::vector<geometry_msgs::PoseStamped> computeWaypoints(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal, float tolerance);

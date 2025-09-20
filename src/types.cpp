@@ -3,6 +3,8 @@
 #include <smac_planner/types.hpp>
 #include <geometry_msgs/Point.h>
 #include <smac_planner/utils.hpp>
+#include "ros/node_handle.h"
+#include "visualization_msgs/Marker.h"
 
 namespace smac_planner
 {
@@ -111,22 +113,43 @@ Rectangle::Rectangle(geometry_msgs::Point diagonal_corner_1,
 {
     double dx = _corner2.x - _corner1.x;
     double dy = _corner2.y - _corner1.y;
-    _length = std::sqrt(dx * dx + dy * dy);
+    _length = std::max(std::sqrt(dx * dx + dy * dy) , 0.01); // cannot be 0
 
     // Direction unit vector
     _dir.x = dx / _length;
     _dir.y = dy / _length;
-
-    // visualize();
 }
 
-// void Rectangle::visualize() {
-    // get_corners()
-// }
+std::vector<geometry_msgs::Point> Rectangle::getCorners() const {
+    std::vector<geometry_msgs::Point> corners;
+    const double dx = _corner2.x - _corner1.x;
+    const double dy = _corner2.y - _corner1.y;
 
-// get_corners(){
+    // Corner 1
+    geometry_msgs::Point p1;
+    p1.x = _corner1.x - (dy / _length) * (_width / 2.0);
+    p1.y = _corner1.y + (dx / _length) * (_width / 2.0);
 
-// }
+    // Corner 2
+    geometry_msgs::Point p2;
+    p2.x = _corner2.x - (dy / _length) * (_width / 2.0);
+    p2.y = _corner2.y + (dx / _length) * (_width / 2.0);
+
+    // Corner 3
+    geometry_msgs::Point p3;
+    p3.x = _corner2.x + (dy / _length) * (_width / 2.0);
+    p3.y = _corner2.y - (dx / _length) * (_width / 2.0);
+
+    // Corner 4
+    geometry_msgs::Point p4;
+    p4.x = _corner1.x + (dy / _length) * (_width / 2.0);
+    p4.y = _corner1.y - (dx / _length) * (_width / 2.0);
+
+    corners = {p1, p2, p3, p4};
+    return corners;
+}
+
+
 bool Rectangle::pointInside(const geometry_msgs::Point& point) const {
     // Translate point relative to corner1
     double px = point.x - _corner1.x;

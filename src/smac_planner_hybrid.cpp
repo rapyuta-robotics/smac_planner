@@ -29,6 +29,7 @@
 #include "smac_planner/node_hybrid.hpp"
 #include "smac_planner/types.hpp"
 #include "smac_planner/utils.hpp"
+#include "visualization_msgs/Marker.h"
 #include <base_local_planner/footprint_helper.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include "smac_planner/smac_planner_hybrid.hpp"
@@ -79,6 +80,7 @@ void SmacPlannerHybrid::initialize(
   _collision_pub = private_nh.advertise<nav_msgs::OccupancyGrid>("collision_map", 1);
   _planned_footprints_publisher = private_nh.advertise<visualization_msgs::MarkerArray>(
       "planned_footprints", 1);
+  _search_space_publisher = private_nh.advertise<visualization_msgs::Marker>("search_space_waypt_to_goal", 1);
 
   dsrv_ = std::make_unique<dynamic_reconfigure::Server<SmacPlannerHybridConfig>>(private_nh);
   dsrv_->setCallback(boost::bind(&SmacPlannerHybrid::reconfigureCB, this, _1, _2));
@@ -189,10 +191,10 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   // waypoint to goal pose
   PlanResult segment2;
 
-  Rectangle search_space = Utils::createSearchSpace(waypoint.pose.position, goal_pose.pose.position, 0.1);
+  _search_space = Utils::createSearchSpace(waypoint.pose.position, goal_pose.pose.position, 0.1);
 
   // set search space from waypoint to goal to get straight path
-  _a_star->setSearchSpace(search_space);
+  _a_star->setSearchSpace(_search_space.value());
   getPath(waypoint, goal_pose, tolerance, segment2);
   _a_star->removeSearchSpace();
 
@@ -380,6 +382,11 @@ void SmacPlannerHybrid::publishVisualisations(const std::vector<geometry_msgs::P
 
   if (waypoint_ptr) {
     Utils::publishArrowMarker(_waypoint_publisher, * waypoint_ptr, "goal_align_waypoint", 1);
+  }
+
+  if (_search_space.has_value()) {
+    std::vector<geometry_msgs::Point> search_space_corners = _search_space.value().getCorners();
+    Utils::publishRectangleMarker(_search_space_publisher, "waypt_to_goal_search_space", _global_frame, 1, search_space_corners[0], search_space_corners[1], search_space_corners[2], search_space_corners[3]);
   }
 }
 
