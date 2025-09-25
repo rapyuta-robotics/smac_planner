@@ -26,7 +26,6 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
 #include "mbf_msgs/GetPathResult.h"
-#include "ros/console.h"
 #include "smac_planner/utils.hpp"
 
 #include "smac_planner/a_star.hpp"
