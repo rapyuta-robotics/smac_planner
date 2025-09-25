@@ -51,6 +51,7 @@ struct SearchInfo
   bool allow_goal_overshoot{true};
   bool downsample_obstacle_heuristic{true};
   bool use_quadratic_cost_penalty{false};
+  bool search_straight_path{false};
   void setStart(const geometry_msgs::Point& start);
   geometry_msgs::Pose getSearchBound();
   void setSearchBound(const geometry_msgs::Pose& search_bound);

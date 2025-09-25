@@ -130,6 +130,11 @@ void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::Pose& search_bo
   _expander->setSearchBounds(search_bounds, start_point, allow_goal_overshoot);
 }
 
+template <typename NodeT>
+void AStarAlgorithm<NodeT>::setSearchStraightPathFlag(const bool search_straight_path) {
+  _search_info.search_straight_path = search_straight_path;
+}
+
 
 template<typename NodeT>
 typename AStarAlgorithm<NodeT>::NodePtr AStarAlgorithm<NodeT>::addToGraph(
@@ -293,6 +298,114 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
 }
 
 template<typename NodeT>
+uint32_t AStarAlgorithm<NodeT>::getStraightPath(
+  CoordinateVector & path,
+  std::function<bool()> cancel_checker)
+{
+    if (!areInputsValid()) {
+        return mbf_msgs::GetPathResult::INTERNAL_ERROR;
+    }
+
+    typename NodeT::Coordinates start_coords = _start->pose;
+    typename NodeT::Coordinates goal_coords = _goal_coordinates;
+
+    std::vector<Coordinates> path_coordinates;
+
+    // Add goal
+    path_coordinates.push_back(goal_coords);
+
+    // Simple interpolation between start and goal
+    const float dx = goal_coords.x - start_coords.x;
+    const float dy = goal_coords.y - start_coords.y;
+    const float steps = std::max(std::abs(dx), std::abs(dy));
+
+    // Add intermediate points along the straight line
+    for (int i = 1; i < steps; ++i) {
+        const float ratio = static_cast<float>(i) / steps;
+        typename NodeT::Coordinates intermediate;
+        intermediate.x = start_coords.x + dx * ratio;
+        intermediate.y = start_coords.y + dy * ratio;
+        intermediate.theta = start_coords.theta;
+
+        // Check if this point is valid
+        unsigned int index = NodeT::getIndex(
+            static_cast<unsigned int>(intermediate.x),
+            static_cast<unsigned int>(intermediate.y),
+            static_cast<unsigned int>(intermediate.theta));
+
+        NodePtr node = addToGraph(index);
+        node->setPose(intermediate);
+
+        if (!node->isNodeValid(_traverse_unknown, _collision_checker)) {
+            return mbf_msgs::GetPathResult::NO_PATH_FOUND;
+        }
+
+        path_coordinates.push_back(intermediate);
+    }
+
+    // Add start
+    path_coordinates.push_back(start_coords);
+
+    for (auto& coord : path_coordinates) {
+        coord.theta = NodeT::motion_table.getAngleFromBin(coord.theta);
+    }
+
+    path = path_coordinates;
+    return mbf_msgs::GetPathResult::SUCCESS;
+}
+
+template<>
+uint32_t AStarAlgorithm<Node2D>::getStraightPath(
+  CoordinateVector & path,
+  std::function<bool()> cancel_checker)
+{
+    if (!areInputsValid()) {
+        return mbf_msgs::GetPathResult::INTERNAL_ERROR;
+    }
+
+    typename Node2D::Coordinates start_coords = _start->getCoords(_start->getIndex());
+    typename Node2D::Coordinates goal_coords = _goal_coordinates;
+
+    std::vector<Coordinates> path_coordinates;
+
+    // Add goal
+    path_coordinates.push_back(goal_coords);
+
+    // Simple interpolation between start and goal
+    const float dx = goal_coords.x - start_coords.x;
+    const float dy = goal_coords.y - start_coords.y;
+    const float steps = std::max(std::abs(dx), std::abs(dy));
+
+    // Add intermediate points along the straight line
+    for (int i = 1; i < steps; ++i) {
+        const float ratio = static_cast<float>(i) / steps;
+        typename Node2D::Coordinates intermediate;
+        intermediate.x = start_coords.x + dx * ratio;
+        intermediate.y = start_coords.y + dy * ratio;
+
+        // Check if this point is valid
+        unsigned int index = Node2D::getIndex(
+            static_cast<unsigned int>(intermediate.x),
+            static_cast<unsigned int>(intermediate.y),
+            _costmap->getSizeInCellsX());
+
+        NodePtr node = addToGraph(index);
+
+        if (!node->isNodeValid(_traverse_unknown, _collision_checker)) {
+            return mbf_msgs::GetPathResult::NO_PATH_FOUND;
+        }
+
+        path_coordinates.push_back(intermediate);
+    }
+
+    // Add start
+    path_coordinates.push_back(start_coords);
+    path = path_coordinates;
+    return mbf_msgs::GetPathResult::SUCCESS;
+}
+
+
+template<typename NodeT>
 uint32_t AStarAlgorithm<NodeT>::createPath(
   CoordinateVector & path, int & iterations,
   const float & tolerance,
@@ -307,6 +420,12 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
   if (!areInputsValid()) {
     return mbf_msgs::GetPathResult::INTERNAL_ERROR;
   }
+
+  // Check if we should use straight path
+  if (_search_info.search_straight_path) {
+    return getStraightPath(path, cancel_checker);
+  }
+
 
   // 0) Add starting point to the open set
   addNode(0.0, getStart());

@@ -16,6 +16,7 @@
 #ifndef SMAC_PLANNER__A_STAR_HPP_
 #define SMAC_PLANNER__A_STAR_HPP_
 
+#include <cstdint>
 #include <vector>
 #include <memory>
 #include <queue>
@@ -124,6 +125,10 @@ public:
    * @param allow_goal_overshoot enable/disable this feature
    */
   void setSearchBounds(const geometry_msgs::Pose& search_bounds, const geometry_msgs::Point& start_point, bool allow_goal_overshoot);
+
+  void setSearchStraightPathFlag(const bool search_straight_path);
+
+  uint32_t getStraightPath(CoordinateVector & path, std::function<bool()> cancel_checker);
 
   /**
    * @brief Set the goal for planning, as a node index
