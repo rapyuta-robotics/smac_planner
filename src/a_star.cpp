@@ -26,6 +26,7 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
 #include "mbf_msgs/GetPathResult.h"
+#include "ros/console.h"
 #include "smac_planner/utils.hpp"
 
 #include "smac_planner/a_star.hpp"
@@ -302,106 +303,89 @@ uint32_t AStarAlgorithm<NodeT>::getStraightPath(
   CoordinateVector & path,
   std::function<bool()> cancel_checker)
 {
-    if (!areInputsValid()) {
-        return mbf_msgs::GetPathResult::INTERNAL_ERROR;
+  if (!areInputsValid()) {
+    return mbf_msgs::GetPathResult::INTERNAL_ERROR;
+  }
+
+  // Start coordinates differ for Node2D
+  typename NodeT::Coordinates start_coords;
+  if constexpr (std::is_same<NodeT, Node2D>::value) {
+    start_coords = _start->getCoords(_start->getIndex());
+  } else {
+    start_coords = _start->pose;
+  }
+
+  typename NodeT::Coordinates goal_coords = _goal_coordinates;
+
+  std::vector<Coordinates> path_coordinates;
+
+  // Add goal
+  path_coordinates.push_back(goal_coords);
+
+  // Simple interpolation between start and goal
+  const float dx = goal_coords.x - start_coords.x;
+  const float dy = goal_coords.y - start_coords.y;
+  const float steps = std::max(std::abs(dx), std::abs(dy));
+
+  // Add intermediate points along the straight line
+  for (int i = 1; i < steps; ++i) {
+    const float ratio = static_cast<float>(i) / steps;
+    typename NodeT::Coordinates intermediate;
+    intermediate.x = start_coords.x + dx * ratio;
+    intermediate.y = start_coords.y + dy * ratio;
+
+    if constexpr (!std::is_same<NodeT, Node2D>::value) {
+      // Only non-Node2D has theta
+      intermediate.theta = start_coords.theta;
     }
 
-    typename NodeT::Coordinates start_coords = _start->pose;
-    typename NodeT::Coordinates goal_coords = _goal_coordinates;
-
-    std::vector<Coordinates> path_coordinates;
-
-    // Add goal
-    path_coordinates.push_back(goal_coords);
-
-    // Simple interpolation between start and goal
-    const float dx = goal_coords.x - start_coords.x;
-    const float dy = goal_coords.y - start_coords.y;
-    const float steps = std::max(std::abs(dx), std::abs(dy));
-
-    // Add intermediate points along the straight line
-    for (int i = 1; i < steps; ++i) {
-        const float ratio = static_cast<float>(i) / steps;
-        typename NodeT::Coordinates intermediate;
-        intermediate.x = start_coords.x + dx * ratio;
-        intermediate.y = start_coords.y + dy * ratio;
-        intermediate.theta = start_coords.theta;
-
-        // Check if this point is valid
-        unsigned int index = NodeT::getIndex(
-            static_cast<unsigned int>(intermediate.x),
-            static_cast<unsigned int>(intermediate.y),
-            static_cast<unsigned int>(intermediate.theta));
-
-        NodePtr node = addToGraph(index);
-        node->setPose(intermediate);
-
-        if (!node->isNodeValid(_traverse_unknown, _collision_checker)) {
-            return mbf_msgs::GetPathResult::NO_PATH_FOUND;
-        }
-
-        path_coordinates.push_back(intermediate);
+    unsigned int index;
+    if constexpr (std::is_same<NodeT, Node2D>::value) {
+      index = Node2D::getIndex(
+        static_cast<unsigned int>(intermediate.x),
+        static_cast<unsigned int>(intermediate.y),
+        _costmap->getSizeInCellsX());
+    } else {
+      index = NodeT::getIndex(
+        static_cast<unsigned int>(intermediate.x),
+        static_cast<unsigned int>(intermediate.y),
+        static_cast<unsigned int>(intermediate.theta));
     }
 
-    // Add start
-    path_coordinates.push_back(start_coords);
+    NodePtr node = addToGraph(index);
 
-    for (auto& coord : path_coordinates) {
-        coord.theta = NodeT::motion_table.getAngleFromBin(coord.theta);
+    if constexpr (!std::is_same<NodeT, Node2D>::value) {
+      node->setPose(intermediate);
     }
 
-    path = path_coordinates;
-    return mbf_msgs::GetPathResult::SUCCESS;
-}
+    // Check if this node is valid
+    if (!node->isNodeValid(_traverse_unknown, _collision_checker)) {
+      double wx, wy;
+      _costmap->mapToWorld(
+        static_cast<unsigned int>(intermediate.x),
+        static_cast<unsigned int>(intermediate.y),
+        wx, wy);
 
-template<>
-uint32_t AStarAlgorithm<Node2D>::getStraightPath(
-  CoordinateVector & path,
-  std::function<bool()> cancel_checker)
-{
-    if (!areInputsValid()) {
-        return mbf_msgs::GetPathResult::INTERNAL_ERROR;
+    ROS_ERROR_NAMED("smac_planner",
+      "Fail to plan path because point at (%.2f, %.2f) in world frame is in collision",
+      wx, wy);
+    return mbf_msgs::GetPathResult::NO_PATH_FOUND;
     }
 
-    typename Node2D::Coordinates start_coords = _start->getCoords(_start->getIndex());
-    typename Node2D::Coordinates goal_coords = _goal_coordinates;
+    path_coordinates.push_back(intermediate);
+  }
 
-    std::vector<Coordinates> path_coordinates;
+  // Add start
+  path_coordinates.push_back(start_coords);
 
-    // Add goal
-    path_coordinates.push_back(goal_coords);
-
-    // Simple interpolation between start and goal
-    const float dx = goal_coords.x - start_coords.x;
-    const float dy = goal_coords.y - start_coords.y;
-    const float steps = std::max(std::abs(dx), std::abs(dy));
-
-    // Add intermediate points along the straight line
-    for (int i = 1; i < steps; ++i) {
-        const float ratio = static_cast<float>(i) / steps;
-        typename Node2D::Coordinates intermediate;
-        intermediate.x = start_coords.x + dx * ratio;
-        intermediate.y = start_coords.y + dy * ratio;
-
-        // Check if this point is valid
-        unsigned int index = Node2D::getIndex(
-            static_cast<unsigned int>(intermediate.x),
-            static_cast<unsigned int>(intermediate.y),
-            _costmap->getSizeInCellsX());
-
-        NodePtr node = addToGraph(index);
-
-        if (!node->isNodeValid(_traverse_unknown, _collision_checker)) {
-            return mbf_msgs::GetPathResult::NO_PATH_FOUND;
-        }
-
-        path_coordinates.push_back(intermediate);
+  if constexpr (!std::is_same<NodeT, Node2D>::value) {
+    for (auto & coord : path_coordinates) {
+      coord.theta = NodeT::motion_table.getAngleFromBin(coord.theta);
     }
+  }
 
-    // Add start
-    path_coordinates.push_back(start_coords);
-    path = path_coordinates;
-    return mbf_msgs::GetPathResult::SUCCESS;
+  path = path_coordinates;
+  return mbf_msgs::GetPathResult::SUCCESS;
 }
 
 
