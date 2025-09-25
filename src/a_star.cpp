@@ -360,16 +360,14 @@ uint32_t AStarAlgorithm<NodeT>::getStraightPath(
 
     // Check if this node is valid
     if (!node->isNodeValid(_traverse_unknown, _collision_checker)) {
-      double wx, wy;
+      double map_x, map_y;
       _costmap->mapToWorld(
         static_cast<unsigned int>(intermediate.x),
         static_cast<unsigned int>(intermediate.y),
-        wx, wy);
-
-    ROS_ERROR_NAMED("smac_planner",
-      "Fail to plan path because point at (%.2f, %.2f) in world frame is in collision",
-      wx, wy);
-    return mbf_msgs::GetPathResult::NO_PATH_FOUND;
+        map_x, map_y);
+      ROS_ERROR_NAMED("smac_planner",
+        "Fail to plan straight path because point at (%.2f, %.2f) is in collision", map_x, map_y);
+      return mbf_msgs::GetPathResult::NO_PATH_FOUND;
     }
 
     path_coordinates.push_back(intermediate);
