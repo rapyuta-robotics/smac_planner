@@ -16,7 +16,6 @@
 #ifndef SMAC_PLANNER__A_STAR_HPP_
 #define SMAC_PLANNER__A_STAR_HPP_
 
-#include <cstdint>
 #include <vector>
 #include <memory>
 #include <queue>
@@ -128,6 +127,12 @@ public:
 
   void setSearchStraightPathFlag(const bool search_straight_path);
 
+
+    /**
+   * @brief get straight path by interpolating points between start and goal, fails if any interpolated point is in collision.
+   * @param path output path
+   * @param cancel_checker Function to check if the task has been canceled
+   */
   uint32_t getStraightPath(CoordinateVector & path, std::function<bool()> cancel_checker);
 
   /**
