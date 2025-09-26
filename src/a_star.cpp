@@ -328,6 +328,9 @@ uint32_t AStarAlgorithm<NodeT>::getStraightPath(
 
   // Add intermediate points along the straight line
   for (int i = 1; i < steps; ++i) {
+      if (cancel_checker()) {
+        return mbf_msgs::GetPathResult::CANCELED;
+      }
     const float ratio = static_cast<float>(i) / steps;
     typename NodeT::Coordinates intermediate;
     intermediate.x = start_coords.x + dx * ratio;
@@ -381,7 +384,7 @@ uint32_t AStarAlgorithm<NodeT>::getStraightPath(
     }
   }
 
-  path = path_coordinates;
+  path = std::move(path_coordinates);
   return mbf_msgs::GetPathResult::SUCCESS;
 }
 
