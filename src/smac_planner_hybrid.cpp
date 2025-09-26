@@ -185,9 +185,12 @@ PlanResult SmacPlannerHybrid::planWithWaypoint(
   _a_star->setSearchBounds(goal_pose.pose, waypoint.pose.position,  _search_info.allow_goal_overshoot);
   }
 
-  // waypoint to goal pose
+  // waypoint to goal pose (search_straight_path = true for this segment)
   PlanResult segment2;
+  _a_star->setSearchStraightPathFlag(true);
   getPath(waypoint, goal_pose, tolerance, segment2);
+  _a_star->setSearchStraightPathFlag(false);
+
   if (!segment2.isValid())
   {
     ROS_ERROR_NAMED("smac_planner_hybrid", "Could not find path from waypoint to goal, with error: %s",

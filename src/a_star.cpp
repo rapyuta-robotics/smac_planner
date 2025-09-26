@@ -130,6 +130,11 @@ void AStarAlgorithm<NodeT>::setSearchBounds(const geometry_msgs::Pose& search_bo
   _expander->setSearchBounds(search_bounds, start_point, allow_goal_overshoot);
 }
 
+template <typename NodeT>
+void AStarAlgorithm<NodeT>::setSearchStraightPathFlag(const bool search_straight_path) {
+  _search_info.search_straight_path = search_straight_path;
+}
+
 
 template<typename NodeT>
 typename AStarAlgorithm<NodeT>::NodePtr AStarAlgorithm<NodeT>::addToGraph(
@@ -293,6 +298,98 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
 }
 
 template<typename NodeT>
+uint32_t AStarAlgorithm<NodeT>::getStraightPath(
+  CoordinateVector & path,
+  std::function<bool()> cancel_checker)
+{
+  if (!areInputsValid()) {
+    return mbf_msgs::GetPathResult::INTERNAL_ERROR;
+  }
+
+  // Start coordinates differ for Node2D
+  typename NodeT::Coordinates start_coords;
+  if constexpr (std::is_same<NodeT, Node2D>::value) {
+    start_coords = _start->getCoords(_start->getIndex());
+  } else {
+    start_coords = _start->pose;
+  }
+
+  typename NodeT::Coordinates goal_coords = _goal_coordinates;
+
+  std::vector<Coordinates> path_coordinates;
+
+  // Add goal
+  path_coordinates.push_back(goal_coords);
+
+  // Simple interpolation between start and goal
+  const float dx = goal_coords.x - start_coords.x;
+  const float dy = goal_coords.y - start_coords.y;
+  const float steps = std::max(std::abs(dx), std::abs(dy));
+
+  // Add intermediate points along the straight line
+  for (int i = 1; i < steps; ++i) {
+      if (cancel_checker()) {
+        return mbf_msgs::GetPathResult::CANCELED;
+      }
+    const float ratio = static_cast<float>(i) / steps;
+    typename NodeT::Coordinates intermediate;
+    intermediate.x = start_coords.x + dx * ratio;
+    intermediate.y = start_coords.y + dy * ratio;
+
+    if constexpr (!std::is_same<NodeT, Node2D>::value) {
+      // Only non-Node2D has theta
+      intermediate.theta = start_coords.theta;
+    }
+
+    unsigned int index;
+    if constexpr (std::is_same<NodeT, Node2D>::value) {
+      index = Node2D::getIndex(
+        static_cast<unsigned int>(intermediate.x),
+        static_cast<unsigned int>(intermediate.y),
+        _costmap->getSizeInCellsX());
+    } else {
+      index = NodeT::getIndex(
+        static_cast<unsigned int>(intermediate.x),
+        static_cast<unsigned int>(intermediate.y),
+        static_cast<unsigned int>(intermediate.theta));
+    }
+
+    NodePtr node = addToGraph(index);
+
+    if constexpr (!std::is_same<NodeT, Node2D>::value) {
+      node->setPose(intermediate);
+    }
+
+    // Check if this node is valid
+    if (!node->isNodeValid(_traverse_unknown, _collision_checker)) {
+      double map_x, map_y;
+      _costmap->mapToWorld(
+        static_cast<unsigned int>(intermediate.x),
+        static_cast<unsigned int>(intermediate.y),
+        map_x, map_y);
+      ROS_ERROR_NAMED("smac_planner",
+        "Fail to plan straight path because point at (%.2f, %.2f) is in collision", map_x, map_y);
+      return mbf_msgs::GetPathResult::NO_PATH_FOUND;
+    }
+
+    path_coordinates.push_back(intermediate);
+  }
+
+  // Add start
+  path_coordinates.push_back(start_coords);
+
+  if constexpr (!std::is_same<NodeT, Node2D>::value) {
+    for (auto & coord : path_coordinates) {
+      coord.theta = NodeT::motion_table.getAngleFromBin(coord.theta);
+    }
+  }
+
+  path = std::move(path_coordinates);
+  return mbf_msgs::GetPathResult::SUCCESS;
+}
+
+
+template<typename NodeT>
 uint32_t AStarAlgorithm<NodeT>::createPath(
   CoordinateVector & path, int & iterations,
   const float & tolerance,
@@ -307,6 +404,12 @@ uint32_t AStarAlgorithm<NodeT>::createPath(
   if (!areInputsValid()) {
     return mbf_msgs::GetPathResult::INTERNAL_ERROR;
   }
+
+  // Check if we should use straight path
+  if (_search_info.search_straight_path) {
+    return getStraightPath(path, cancel_checker);
+  }
+
 
   // 0) Add starting point to the open set
   addNode(0.0, getStart());
