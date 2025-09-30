@@ -275,6 +275,7 @@ nav_msgs::Path SmacPlanner2D::createPlan(
 
   // Convert to world coordinates
   plan.poses.reserve(path.size());
+  // reverse the path because in a_star.cpp backtracepath gives reversed path
   for (int i = path.size() - 1; i >= 0; --i) {
     pose.pose = getWorldCoords(path[i].x, path[i].y, costmap);
     plan.poses.push_back(pose);

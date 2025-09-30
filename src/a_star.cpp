@@ -318,12 +318,14 @@ uint32_t AStarAlgorithm<NodeT>::getStraightPath(
 
   std::vector<Coordinates> path_coordinates;
 
-  // Add goal
+  // Add goal first, start searching from goal and move towards start
+  // because the path is then reversed in smac_planner_hybrid.cpp,
+  // smac_planner_lattice.cpp, smac_planner_2d.cpp
   path_coordinates.push_back(goal_coords);
 
-  // Simple interpolation between start and goal
-  const float dx = goal_coords.x - start_coords.x;
-  const float dy = goal_coords.y - start_coords.y;
+  // Simple interpolation between goal and start
+  const float dx = start_coords.x - goal_coords.x;
+  const float dy = start_coords.y - goal_coords.y;
   const float steps = std::max(std::abs(dx), std::abs(dy));
 
   // Add intermediate points along the straight line
@@ -333,12 +335,12 @@ uint32_t AStarAlgorithm<NodeT>::getStraightPath(
       }
     const float ratio = static_cast<float>(i) / steps;
     typename NodeT::Coordinates intermediate;
-    intermediate.x = start_coords.x + dx * ratio;
-    intermediate.y = start_coords.y + dy * ratio;
+    intermediate.x = goal_coords.x + dx * ratio;
+    intermediate.y = goal_coords.y + dy * ratio;
 
     if constexpr (!std::is_same<NodeT, Node2D>::value) {
       // Only non-Node2D has theta
-      intermediate.theta = start_coords.theta;
+      intermediate.theta = goal_coords.theta;
     }
 
     unsigned int index;
@@ -375,7 +377,7 @@ uint32_t AStarAlgorithm<NodeT>::getStraightPath(
     path_coordinates.push_back(intermediate);
   }
 
-  // Add start
+  // Add start at the end
   path_coordinates.push_back(start_coords);
 
   if constexpr (!std::is_same<NodeT, Node2D>::value) {
