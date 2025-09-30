@@ -318,7 +318,9 @@ uint32_t AStarAlgorithm<NodeT>::getStraightPath(
 
   std::vector<Coordinates> path_coordinates;
 
-  // Add goal
+  // Add goal first, start searching from goal and move towards start
+  // because the path is then reversed in smac_planner_hybrid.cpp,
+  // smac_planner_lattice.cpp, smac_planner_2d.cpp
   path_coordinates.push_back(goal_coords);
 
   // Simple interpolation between goal and start

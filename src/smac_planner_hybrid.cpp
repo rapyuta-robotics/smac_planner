@@ -599,6 +599,7 @@ void SmacPlannerHybrid::getPath(
 
   // Convert to world coordinates
   output_path.poses.reserve(path.size());
+  // reverse the path because in a_star.cpp backtracepath gives reversed path
   for (int i = path.size() - 1; i >= 0; --i) {
     pose.pose = Utils::getWorldCoords(path[i].x, path[i].y, costmap);
     pose.pose.orientation = Utils::getWorldOrientation(path[i].theta);

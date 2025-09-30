@@ -343,6 +343,7 @@ nav_msgs::Path SmacPlannerLattice::createPlan(
   // Convert to world coordinates
   plan.poses.reserve(path.size());
   geometry_msgs::PoseStamped last_pose = pose;
+  // reverse the path because in a_star.cpp backtracepath gives reversed path
   for (int i = path.size() - 1; i >= 0; --i) {
     pose.pose = getWorldCoords(path[i].x, path[i].y, _costmap);
     pose.pose.orientation = Utils::getWorldOrientation(path[i].theta);
