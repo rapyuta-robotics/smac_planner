@@ -377,7 +377,7 @@ uint32_t AStarAlgorithm<NodeT>::getStraightPath(
     path_coordinates.push_back(intermediate);
   }
 
-  // Add start
+  // Add start at the end
   path_coordinates.push_back(start_coords);
 
   if constexpr (!std::is_same<NodeT, Node2D>::value) {
