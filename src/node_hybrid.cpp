@@ -20,9 +20,11 @@
 #include <limits>
 #include <utility>
 
+#include "costmap_2d/costmap_2d.h"
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
+#include "tf2/utils.h"
 
 #include "smac_planner/node_hybrid.hpp"
 
@@ -504,6 +506,25 @@ void NodeHybrid::initializeFootprintCollisionMap(const std::shared_ptr<costmap_2
         NodeHybrid::footprint_collision_map.info.width *
         NodeHybrid::footprint_collision_map.info.height,
         -1);  // Initialize with -1 (unknown) initially
+bool NodeHybrid::arePosesSameDiscreteState(
+  const geometry_msgs::Pose& pose1,
+  const geometry_msgs::Pose& pose2,
+  costmap_2d::Costmap2D* costmap)
+{
+  unsigned int pose1_mx, pose1_my, pose2_mx, pose2_my;
+
+  // Convert world coordinates to map coordinates
+  costmap->worldToMap(pose1.position.x, pose1.position.y, pose1_mx, pose1_my);
+  costmap->worldToMap(pose2.position.x, pose2.position.y, pose2_mx, pose2_my);
+
+  // Get orientation bins
+  const unsigned int pose1_bin_id = NodeHybrid::motion_table.getClosestAngularBin(tf2::getYaw(pose1.orientation));
+  const unsigned int pose2_bin_id = NodeHybrid::motion_table.getClosestAngularBin(tf2::getYaw(pose2.orientation));
+
+  // Check if they map to the same discrete planning state
+  return (pose1_mx == pose2_mx &&
+          pose1_my == pose2_my &&
+          pose1_bin_id == pose2_bin_id);
 }
 
 void NodeHybrid::resetObstacleHeuristic(

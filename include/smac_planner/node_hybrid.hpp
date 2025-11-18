@@ -26,6 +26,7 @@
 #include <limits>
 
 #include "nav_msgs/OccupancyGrid.h"
+#include "costmap_2d/costmap_2d.h"
 #include "ompl/base/StateSpace.h"
 
 #include "smac_planner/constants.hpp"
@@ -397,6 +398,12 @@ public:
     const MotionModel & motion_model,
     const unsigned int & dim_3_size,
     const SearchInfo & search_info);
+
+  static bool arePosesSameDiscreteState(
+    const geometry_msgs::Pose& pose1,
+    const geometry_msgs::Pose& pose2,
+    costmap_2d::Costmap2D* costmap
+  );
 
   /**
    * @brief Compute the Obstacle heuristic

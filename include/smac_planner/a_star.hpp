@@ -125,6 +125,16 @@ public:
    */
   void setSearchBounds(const geometry_msgs::Pose& search_bounds, const geometry_msgs::Point& start_point, bool allow_goal_overshoot);
 
+  void setSearchStraightPathFlag(const bool search_straight_path);
+
+
+    /**
+   * @brief get straight path by interpolating points between start and goal, fails if any interpolated point is in collision.
+   * @param path output path
+   * @param cancel_checker Function to check if the task has been canceled
+   */
+  uint32_t getStraightPath(CoordinateVector & path, std::function<bool()> cancel_checker);
+
   /**
    * @brief Set the goal for planning, as a node index
    * @param mx The node X index of the goal

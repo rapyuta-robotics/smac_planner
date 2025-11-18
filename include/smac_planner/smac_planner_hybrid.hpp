@@ -157,6 +157,8 @@ protected:
   ros::Publisher _footprint_collision_pub;
   std::mutex _mutex;
 
+  std::vector<geometry_msgs::PoseStamped> computeWaypoints(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal, float tolerance);
+
   /**
    *@brief publishes the visualisations like path, waypoint, footprints. To be called at end of the planning
    *@param plan vector of geometry_msgs::PoseStamped
