@@ -415,8 +415,8 @@ void SmacPlannerHybrid::collision(const geometry_msgs::Pose& robot_pose, const r
   }
 
   // Dimensions of the bounding box
-  const int width = max_x - min_x + 1;
-  const int height = max_y - min_y + 1;
+  const int width = max_x - min_x + 3;
+  const int height = max_y - min_y + 3;
 
   // Create occupancy grid
   nav_msgs::OccupancyGrid grid;
