@@ -490,9 +490,8 @@ void SmacPlannerHybrid::getPath(
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Start pose is blocked";
     plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
-    geometry_msgs::Pose collision_pose;
-    collision_pose.position = start.pose.position;
-    Utils::yawToPose(collision_pose, orientation_bin * _angle_bin_size);
+    geometry_msgs::Pose collision_pose = start.pose;
+    Utils::setYaw(orientation_bin * _angle_bin_size, collision_pose);
     collision(collision_pose, _collision_pub);
     return;
   }
@@ -520,9 +519,8 @@ void SmacPlannerHybrid::getPath(
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Goal pose is blocked";
     plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_GOAL;
-    geometry_msgs::Pose collision_pose;
-    collision_pose.position = goal.pose.position;
-    Utils::yawToPose(collision_pose, orientation_bin * _angle_bin_size);
+    geometry_msgs::Pose collision_pose = goal.pose;
+    Utils::setYaw(orientation_bin * _angle_bin_size, collision_pose);
     collision(collision_pose, _collision_pub);
     return;
   }

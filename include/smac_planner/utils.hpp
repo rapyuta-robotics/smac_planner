@@ -133,7 +133,7 @@ public:
   * @param input_pose the pose which we want to check
   * @param yaw yaw to convert
   */
-  static inline void yawToPose(geometry_msgs::Pose& input_pose, const double yaw) {
+  static inline void setYaw(const double yaw, geometry_msgs::Pose& input_pose) {
       tf2::Quaternion q;
       q.setRPY(0, 0, yaw);
       input_pose.orientation.x = q.x();
