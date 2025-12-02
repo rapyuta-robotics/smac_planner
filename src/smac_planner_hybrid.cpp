@@ -444,7 +444,6 @@ void SmacPlannerHybrid::collision(const geometry_msgs::Pose& robot_pose, const r
   collision_map_publisher.publish(grid);
 }
 
-
 void SmacPlannerHybrid::getPath(
     const geometry_msgs::PoseStamped & start,
     const geometry_msgs::PoseStamped & goal,
@@ -491,7 +490,9 @@ void SmacPlannerHybrid::getPath(
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Start pose is blocked";
     plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_START;
-    collision(start.pose, _collision_pub);
+    geometry_msgs::Pose collision_pose = start.pose;
+    Utils::setYaw(orientation_bin * _angle_bin_size, collision_pose);
+    collision(collision_pose, _collision_pub);
     return;
   }
 
@@ -518,7 +519,9 @@ void SmacPlannerHybrid::getPath(
   if (_collision_checker->inCollision(mx, my, orientation_bin_id, _config.allow_unknown)) {
     plan_result.message = "Goal pose is blocked";
     plan_result.result_code = mbf_msgs::GetPathResult::BLOCKED_GOAL;
-    collision(goal.pose, _collision_pub);
+    geometry_msgs::Pose collision_pose = goal.pose;
+    Utils::setYaw(orientation_bin * _angle_bin_size, collision_pose);
+    collision(collision_pose, _collision_pub);
     return;
   }
 

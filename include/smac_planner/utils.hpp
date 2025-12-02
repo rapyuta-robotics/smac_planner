@@ -129,6 +129,20 @@ public:
 
 
   /**
+  * @brief sets the orientation of a geometry_msgs::Pose from yaw
+  * @param input_pose the pose which we want to check
+  * @param yaw yaw to convert
+  */
+  static inline void setYaw(const double yaw, geometry_msgs::Pose& input_pose) {
+      tf2::Quaternion q;
+      q.setRPY(0, 0, yaw);
+      input_pose.orientation.x = q.x();
+      input_pose.orientation.y = q.y();
+      input_pose.orientation.z = q.z();
+      input_pose.orientation.w = q.w();
+  }
+
+  /**
   * @brief checks if the pose is between pose_1 and pose_2
   * @param pose the pose which we want to check
   * @param pose_1 other pose
