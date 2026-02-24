@@ -278,6 +278,8 @@ uint32_t SmacPlannerHybrid::makePlan(
   _planning_canceled = false;
 
   geometry_msgs::PoseStamped* waypoint_ptr = nullptr;
+  std::vector<geometry_msgs::PoseStamped> waypoints;
+
   BOOST_SCOPE_EXIT(&plan, &waypoint_ptr, this_) {
     this_->publishVisualisations(plan, waypoint_ptr);
   } BOOST_SCOPE_EXIT_END
@@ -295,7 +297,7 @@ uint32_t SmacPlannerHybrid::makePlan(
     _a_star->setSearchBounds(goal.pose, start.pose.position, _search_info.allow_goal_overshoot);
   }
 
-  std::vector<geometry_msgs::PoseStamped> waypoints = computeWaypoints(start, goal, tolerance);
+  waypoints = computeWaypoints(start, goal, tolerance);
 
   // If no waypoint, proceed with normal planning
   if (waypoints.size() ==0) {
