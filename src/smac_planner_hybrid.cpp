@@ -94,6 +94,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   _search_info.non_straight_penalty = _config.non_straight_penalty;
   _search_info.change_penalty = _config.change_penalty;
   _search_info.reverse_penalty = _config.reverse_penalty;
+  _search_info.rotation_penalty = _config.rotation_penalty;
   _search_info.cost_penalty = _config.cost_penalty;
   _search_info.retrospective_penalty = _config.retrospective_penalty;
   _search_info.analytic_expansion_ratio = _config.analytic_expansion_ratio;
@@ -102,6 +103,7 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
   _search_info.analytic_expansion_max_cost_override = _config.analytic_expansion_max_cost_override;
   _search_info.cache_obstacle_heuristic = _config.cache_obstacle_heuristic;
   _search_info.allow_primitive_interpolation = _config.allow_primitive_interpolation;
+  _search_info.allow_in_place_rotation = _config.allow_in_place_rotation;
   _search_info.downsample_obstacle_heuristic = _config.downsample_obstacle_heuristic;
   _search_info.use_quadratic_cost_penalty = _config.use_quadratic_cost_penalty;
   _search_info.allow_goal_overshoot = _config.allow_goal_overshoot;
