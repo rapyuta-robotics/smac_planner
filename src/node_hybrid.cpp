@@ -31,6 +31,16 @@
 namespace smac_planner
 {
 
+namespace
+{
+inline bool isInPlaceRotationPrimitive(const MotionPose & primitive)
+{
+  return std::fabs(primitive._x) < 1e-4f &&
+         std::fabs(primitive._y) < 1e-4f &&
+         std::fabs(primitive._theta) > 1e-4f;
+}
+}  // namespace
+
 // defining static member for all instance to share
 LookupTable NodeHybrid::obstacle_heuristic_lookup_table;
 float NodeHybrid::travel_distance_cost = sqrtf(2.0f);
@@ -61,13 +71,17 @@ void HybridMotionTable::initDubin(
   non_straight_penalty = search_info.non_straight_penalty;
   cost_penalty = search_info.cost_penalty;
   reverse_penalty = search_info.reverse_penalty;
+  rotation_penalty = search_info.rotation_penalty;
   travel_distance_reward = 1.0f - search_info.retrospective_penalty;
+  allow_in_place_rotation = search_info.allow_in_place_rotation;
   downsample_obstacle_heuristic = search_info.downsample_obstacle_heuristic;
   use_quadratic_cost_penalty = search_info.use_quadratic_cost_penalty;
 
   // if nothing changed, no need to re-compute primitives
   if (num_angle_quantization_in == num_angle_quantization &&
     min_turning_radius == search_info.minimum_turning_radius &&
+    rotation_penalty == search_info.rotation_penalty &&
+    allow_in_place_rotation == search_info.allow_in_place_rotation &&
     motion_model == MotionModel::DUBIN)
   {
     return;
@@ -118,11 +132,19 @@ void HybridMotionTable::initDubin(
   projections.emplace_back(delta_x, delta_y, increments, TurnDirection::LEFT);  // Left
   projections.emplace_back(delta_x, -delta_y, -increments, TurnDirection::RIGHT);  // Right
 
+  if (allow_in_place_rotation) {
+    projections.reserve(projections.size() + 2);
+    projections.emplace_back(0.0f, 0.0f, 1.0f, TurnDirection::ROTATE_LEFT);   // Rotate in place left
+    projections.emplace_back(0.0f, 0.0f, -1.0f, TurnDirection::ROTATE_RIGHT); // Rotate in place right
+    ROS_WARN("SmacPlannerHybrid: Dubin in-place rotation ENABLED. Total primitives: %zu",
+             projections.size());
+  }
+
   if (search_info.allow_primitive_interpolation && increments > 1.0f) {
     // Create primitives that are +/- N to fill in search space to use all set angular quantizations
     // Allows us to create N many primitives so that each search iteration can expand into any angle
     // bin possible with the minimum turning radius constraint, not just the most extreme turns.
-    projections.reserve(3 + (2 * (increments - 1)));
+     projections.reserve(projections.size() + (2 * (increments - 1)));
     for (unsigned int i = 1; i < static_cast<unsigned int>(increments); i++) {
       const float angle_n = static_cast<float>(i) * bin_size;
       const float turning_rad_n = delta_dist / (2.0f * sin(angle_n / 2.0f));
@@ -162,6 +184,11 @@ void HybridMotionTable::initDubin(
   // Precompute travel costs for each motion primitive
   travel_costs.resize(projections.size());
   for (unsigned int i = 0; i != projections.size(); i++) {
+    if (isInPlaceRotationPrimitive(projections[i])) {
+      travel_costs[i] = 0.0f;
+      continue;
+    }
+
     const TurnDirection turn_dir = projections[i]._turn_dir;
     if (turn_dir != TurnDirection::FORWARD && turn_dir != TurnDirection::REVERSE) {
       // Turning, so length is the arc length
@@ -188,13 +215,17 @@ void HybridMotionTable::initReedsShepp(
   non_straight_penalty = search_info.non_straight_penalty;
   cost_penalty = search_info.cost_penalty;
   reverse_penalty = search_info.reverse_penalty;
+  rotation_penalty = search_info.rotation_penalty;
   travel_distance_reward = 1.0f - search_info.retrospective_penalty;
+  allow_in_place_rotation = search_info.allow_in_place_rotation;
   downsample_obstacle_heuristic = search_info.downsample_obstacle_heuristic;
   use_quadratic_cost_penalty = search_info.use_quadratic_cost_penalty;
 
   // if nothing changed, no need to re-compute primitives
   if (num_angle_quantization_in == num_angle_quantization &&
     min_turning_radius == search_info.minimum_turning_radius &&
+    rotation_penalty == search_info.rotation_penalty &&
+    allow_in_place_rotation == search_info.allow_in_place_rotation &&
     motion_model == MotionModel::REEDS_SHEPP)
   {
     return;
@@ -233,11 +264,19 @@ void HybridMotionTable::initReedsShepp(
   projections.emplace_back(
     -delta_x, -delta_y, increments, TurnDirection::REV_RIGHT);  // Backward + Right
 
+  if (allow_in_place_rotation) {
+    projections.reserve(projections.size() + 2);
+    projections.emplace_back(0.0f, 0.0f, 1.0f, TurnDirection::ROTATE_LEFT);   // Rotate in place left
+    projections.emplace_back(0.0f, 0.0f, -1.0f, TurnDirection::ROTATE_RIGHT); // Rotate in place right
+    ROS_WARN("SmacPlannerHybrid: Reeds-Shepp in-place rotation ENABLED. Total primitives: %zu",
+             projections.size());
+  }
+
   if (search_info.allow_primitive_interpolation && increments > 1.0f) {
     // Create primitives that are +/- N to fill in search space to use all set angular quantizations
     // Allows us to create N many primitives so that each search iteration can expand into any angle
     // bin possible with the minimum turning radius constraint, not just the most extreme turns.
-    projections.reserve(6 + (4 * (increments - 1)));
+     projections.reserve(projections.size() + (4 * (increments - 1)));
     for (unsigned int i = 1; i < static_cast<unsigned int>(increments); i++) {
       const float angle_n = static_cast<float>(i) * bin_size;
       const float turning_rad_n = delta_dist / (2.0f * sin(angle_n / 2.0f));
@@ -283,6 +322,11 @@ void HybridMotionTable::initReedsShepp(
   // Precompute travel costs for each motion primitive
   travel_costs.resize(projections.size());
   for (unsigned int i = 0; i != projections.size(); i++) {
+    if (isInPlaceRotationPrimitive(projections[i])) {
+      travel_costs[i] = 0.0f;
+      continue;
+    }
+
     const TurnDirection turn_dir = projections[i]._turn_dir;
     if (turn_dir != TurnDirection::FORWARD && turn_dir != TurnDirection::REVERSE) {
       // Turning, so length is the arc length
@@ -386,13 +430,25 @@ float NodeHybrid::getTraversalCost(const NodePtr & child)
             "cost without a known SE2 collision cost!");
   }
 
+  const unsigned int child_primitive_index = child->getMotionPrimitiveIndex();
+  float travel_cost_raw = motion_table.travel_costs[child_primitive_index];
+
+  // Pure in-place rotation should always use dedicated penalty
+  if (travel_cost_raw < 1e-4f) {
+    if (motion_table.use_quadratic_cost_penalty) {
+      return motion_table.rotation_penalty *
+             (1.0f + motion_table.cost_penalty * normalized_cost * normalized_cost);
+    }
+    return motion_table.rotation_penalty *
+           (1.0f + motion_table.cost_penalty * normalized_cost);
+  }
+
   // this is the first node
   if (getMotionPrimitiveIndex() == std::numeric_limits<unsigned int>::max()) {
     return NodeHybrid::travel_distance_cost;
   }
 
   const TurnDirection & child_turn_dir = child->getTurnDirection();
-  float travel_cost_raw = motion_table.travel_costs[child->getMotionPrimitiveIndex()];
   float travel_cost = 0.0;
 
   if (motion_table.use_quadratic_cost_penalty) {
@@ -406,6 +462,9 @@ float NodeHybrid::getTraversalCost(const NodePtr & child)
 
   if (child_turn_dir == TurnDirection::FORWARD || child_turn_dir == TurnDirection::REVERSE) {
     // New motion is a straight motion, no additional costs to be applied
+    travel_cost = travel_cost_raw;
+  } else if (child_turn_dir == TurnDirection::ROTATE_LEFT || child_turn_dir == TurnDirection::ROTATE_RIGHT) {
+    // Pure rotation, no distance traveled
     travel_cost = travel_cost_raw;
   } else {
     if (getTurnDirection() == child_turn_dir) {

@@ -48,6 +48,7 @@ struct SearchInfo
   bool cache_obstacle_heuristic{false};
   bool allow_reverse_expansion{false};
   bool allow_primitive_interpolation{false};
+  bool allow_in_place_rotation{false};
   bool allow_goal_overshoot{true};
   bool downsample_obstacle_heuristic{true};
   bool use_quadratic_cost_penalty{false};
@@ -94,7 +95,9 @@ enum struct TurnDirection
   RIGHT = 3,
   REVERSE = 4,
   REV_LEFT = 5,
-  REV_RIGHT = 6
+  REV_RIGHT = 6,
+  ROTATE_LEFT = 7,
+  ROTATE_RIGHT = 8
 };
 
 /**
