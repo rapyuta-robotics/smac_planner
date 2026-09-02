@@ -119,6 +119,15 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
     _config.max_iterations = std::numeric_limits<int>::max();
   }
 
+  // The search runs on the downsampled costmap only when downsampling is enabled, so the factor has to be
+  // neutralised BEFORE it is used to convert the turning radius into grid cells. Done afterwards (as it was),
+  // a configuration with downsample_costmap false and downsampling_factor 3 -- which is what the maneuvering
+  // profile inherits -- divides the radius by three times the real cell size, and the planner searches with
+  // an effective turning radius of r/3.
+  if (!_config.downsample_costmap) {
+    _config.downsampling_factor = 1;
+  }
+
   if (_config.minimum_turning_radius < _costmap->getResolution() * _config.downsampling_factor) {
     ROS_WARN("Min turning radius cannot be less than the search grid cell resolution!");
     _config.minimum_turning_radius = _costmap->getResolution() * _config.downsampling_factor;
@@ -127,11 +136,6 @@ void SmacPlannerHybrid::reconfigureCB(SmacPlannerHybridConfig& config, uint32_t 
       _config.minimum_turning_radius / (_costmap->getResolution() * _config.downsampling_factor);
 
   _path_smoother.setMinTurningRadius(_config.minimum_turning_radius);
-
-  // convert to grid coordinates
-  if (!_config.downsample_costmap) {
-    _config.downsampling_factor = 1;
-  }
 
   _lookup_table_dim =
     static_cast<float>(_config.lookup_table_size) /
