@@ -88,37 +88,37 @@ add_dependencies(${library_name}
 #        ${PROJECT_NAME}_gencfg
 #)
 #
-## TODO Lattice plugin
-#add_library(${library_name}_lattice SHARED
-#        src/smac_planner_lattice.cpp
-#        src/a_star.cpp
-#        src/smoother.cpp
-#        src/collision_checker.cpp
-#        src/analytic_expansion.cpp
-#        src/node_hybrid.cpp
-#        src/node_lattice.cpp
-#        src/costmap_downsampler.cpp
-#        src/node_2d.cpp
-#        src/node_basic.cpp
-#)
-#
-#target_link_libraries(${library_name}_lattice
-#        ${catkin_LIBRARIES}
-#        ${OMPL_LIBRARIES}
-#)
-#
-#add_dependencies(${library_name}_lattice
-#        ${PROJECT_NAME}_gencfg
-#)
+# Lattice plugin
+add_library(${library_name}_lattice SHARED
+        src/smac_planner_lattice.cpp
+        src/a_star.cpp
+        src/smoother.cpp
+        src/collision_checker.cpp
+        src/analytic_expansion.cpp
+        src/node_hybrid.cpp
+        src/node_lattice.cpp
+        src/costmap_downsampler.cpp
+        src/node_2d.cpp
+        src/node_basic.cpp
+)
 
-install(TARGETS ${library_name} # ${library_name}_2d ${library_name}_lattice
+target_link_libraries(${library_name}_lattice
+        ${catkin_LIBRARIES}
+        ${OMPL_LIBRARIES}
+)
+
+add_dependencies(${library_name}_lattice
+        ${PROJECT_NAME}_gencfg
+)
+
+install(TARGETS ${library_name} ${library_name}_lattice # ${library_name}_2d
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
 install(DIRECTORY include/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
-install(FILES smac_plugin_hybrid.xml # smac_plugin_2d.xml smac_plugin_lattice.xml
+install(FILES smac_plugin_hybrid.xml smac_plugin_lattice.xml # smac_plugin_2d.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
